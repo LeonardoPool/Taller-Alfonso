@@ -7,6 +7,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { 
     getFirestore, 
+    initializeFirestore,
+    persistentLocalCache,
+    persistentMultipleTabManager,
+    getCountFromServer,
     collection, 
     doc, 
     getDoc, 
@@ -47,7 +51,21 @@ export const firebaseConfig = {
 // Inicialización
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app, 'almacenvirtual');
+
+// Inicialización optimizada de Firestore con caché persistente en IndexedDB (multi-tab)
+let firestoreDb;
+try {
+    firestoreDb = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager()
+        })
+    }, 'almacenvirtual');
+} catch (e) {
+    console.info("Firestore Zafiro ya inicializado o usando fallback:", e);
+    firestoreDb = getFirestore(app, 'almacenvirtual');
+}
+
+export const db = firestoreDb;
 export const storage = getStorage(app);
 
 let analyticsInstance = null;
@@ -58,26 +76,28 @@ try {
 }
 export const analytics = analyticsInstance;
 
+// Re-exportar utilidades comunes
 export {
     signOut,
     onAuthStateChanged,
-    collection,
-    doc,
-    getDoc,
-    getDocs,
-    addDoc,
-    setDoc,
-    updateDoc,
-    deleteDoc,
-    query,
-    where,
-    orderBy,
-    limit,
-    onSnapshot,
-    serverTimestamp,
+    collection, 
+    doc, 
+    getDoc, 
+    getDocs, 
+    addDoc, 
+    setDoc, 
+    updateDoc, 
+    deleteDoc, 
+    query, 
+    where, 
+    orderBy, 
+    limit, 
+    onSnapshot, 
+    getCountFromServer,
+    serverTimestamp, 
     Timestamp,
-    storageRef,
-    uploadBytesResumable,
+    storageRef, 
+    uploadBytesResumable, 
     getDownloadURL,
     logEvent
 };

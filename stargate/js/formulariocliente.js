@@ -7,6 +7,7 @@ import {
     setDoc, 
     serverTimestamp 
 } from './firebase-config.js';
+import { enqueueOfflineOperation } from './pwa-manager.js';
 
 function onReady(fn) {
     if (document.readyState === 'loading') {
@@ -39,6 +40,30 @@ onReady(() => {
 
             if (!clientName) {
                 alert("Por favor ingresa el nombre del cliente");
+                return;
+            }
+
+            // Manejo de modo sin conexión (Offline Sync)
+            if (!navigator.onLine) {
+                try {
+                    await enqueueOfflineOperation('CREATE_CLIENT', {
+                        clientName,
+                        phone: phone || "",
+                        email: email || "",
+                        company: company || "",
+                        address: address || "",
+                        notes: notes || "",
+                        timestamp: new Date().toISOString()
+                    });
+                    if (statusMessage) {
+                        statusMessage.innerHTML = `<i class="fas fa-clock"></i> Guardado localmente (Modo offline). Se sincronizará automáticamente al conectar a internet.`;
+                        statusMessage.className = 'status-message info';
+                        statusMessage.style.display = 'block';
+                    }
+                    clientForm.reset();
+                } catch (e) {
+                    alert("Error guardando cliente offline: " + e.message);
+                }
                 return;
             }
 

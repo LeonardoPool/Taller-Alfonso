@@ -1,0 +1,247 @@
+// Service Worker — DEFCON5 Admin (Stargate)
+// Ámbito exclusivo: /admin/
+const CACHE_VERSION = 'v1.0.0';
+const CACHE_NAME = `defcon5-admin-${CACHE_VERSION}`;
+const STATIC_CACHE = `defcon5-admin-static-${CACHE_VERSION}`;
+
+// Recursos esenciales del App Shell administrativo
+const PRECACHE_ASSETS = [
+  '/admin/',
+  '/admin/index.html',
+  '/admin/dashboard.html',
+  '/admin/almacen.html',
+  '/admin/clientes.html',
+  '/admin/empleados.html',
+  '/admin/trabajos.html',
+  '/admin/formulariocliente.html',
+  '/admin/formularioempleado.html',
+  '/admin/formulariotrabajo.html',
+  '/admin/manifest.json',
+  '/admin/icons/icon-192.png',
+  '/admin/icons/icon-512.png',
+  '/admin/icons/icon-maskable-512.png',
+  '/admin/icons/apple-touch-icon.png',
+  '/admin/icons/favicon.png',
+  '/admin/css/login.css',
+  '/admin/css/dashboard.css',
+  '/admin/css/almacen.css',
+  '/admin/css/clientes.css',
+  '/admin/css/empleados.css',
+  '/admin/css/trabajos.css',
+  '/admin/css/formulariocliente.css',
+  '/admin/css/formularioempleado.css',
+  '/admin/css/formulariotrabajo.css',
+  '/admin/js/login.js',
+  '/admin/js/dashboard.js',
+  '/admin/js/almacen.js',
+  '/admin/js/clientes.js',
+  '/admin/js/empleados.js',
+  '/admin/js/trabajos.js',
+  '/admin/js/formulariocliente.js',
+  '/admin/js/formularioempleado.js',
+  '/admin/js/formulariotrabajo.js',
+  '/admin/js/firebase-config.js',
+  '/admin/js/auth-guard.js',
+  '/admin/js/pwa-manager.js'
+];
+
+// Dominios que NUNCA deben almacenarse en cache por seguridad y privacidad
+const SENSITIVE_DOMAINS = [
+  'firestore.googleapis.com',
+  'identitytoolkit.googleapis.com',
+  'securetoken.googleapis.com',
+  'firebaseinstallations.googleapis.com',
+  'firebasestorage.googleapis.com',
+  'google-analytics.com',
+  'analytics.google.com'
+];
+
+// Instalación: Precarga de recursos esenciales
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      // Usamos addAll con tolerancia a fallas de elementos individuales
+      return Promise.allSettled(
+        PRECACHE_ASSETS.map((url) =>
+          cache.add(url).catch((err) => {
+            console.warn(`[SW Admin] No se pudo precachear ${url}:`, err);
+          })
+        )
+      );
+    })
+  );
+});
+
+// Activación: Limpieza exclusiva de cachés antiguas de DEFCON5 Admin
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
+          if (key.startsWith('defcon5-admin-') && key !== CACHE_NAME && key !== STATIC_CACHE) {
+            console.log(`[SW Admin] Eliminando caché antigua: ${key}`);
+            return caches.delete(key);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
+// Intercepción de solicitudes de red
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  const url = new URL(request.url);
+
+  // 1. Si no es método GET, permitir paso directo por red
+  if (request.method !== 'GET') {
+    return;
+  }
+
+  // 2. Si es para el portal de empleados (/empleados/), ignorar completamente
+  if (url.pathname.startsWith('/empleados')) {
+    return;
+  }
+
+  // 3. Excluir dominios sensibles (Firebase Auth, Firestore, Analytics)
+  if (SENSITIVE_DOMAINS.some((domain) => url.hostname.includes(domain))) {
+    return;
+  }
+
+  // 4. Estrategia Network-First para páginas HTML (navegación)
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseClone);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          // Fallback a caché
+          const cachedResponse = await caches.match(request);
+          if (cachedResponse) return cachedResponse;
+
+          // Si es ruta interna admin, entregar index.html precacheado
+          const fallback = await caches.match('/admin/index.html');
+          if (fallback) return fallback;
+
+          return new Response(
+            `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Sin Conexión - DEFCON5 Admin</title><style>body{font-family:sans-serif;text-align:center;padding:50px;background:#2c3e50;color:#fff;}h1{color:#e74c3c;}a{color:#3498db;text-decoration:none;}</style></head><body><h1>Sin Conexión</h1><p>No tienes acceso a internet en este momento y esta vista aún no ha sido descargada.</p><p><a href="/admin/">Volver al inicio de DEFCON5 Admin</a></p></body></html>`,
+            { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+          );
+        })
+    );
+    return;
+  }
+
+  // 5. Estrategia Stale-While-Revalidate para recursos estáticos (CSS, JS, Fuentes, Imágenes, Iconos)
+  const isStatic =
+    url.pathname.includes('/css/') ||
+    url.pathname.includes('/js/') ||
+    url.pathname.includes('/icons/') ||
+    url.pathname.endsWith('.png') ||
+    url.pathname.endsWith('.jpg') ||
+    url.pathname.endsWith('.svg') ||
+    url.pathname.endsWith('.woff2') ||
+    url.hostname.includes('cdnjs.cloudflare.com') ||
+    url.hostname.includes('fonts.googleapis.com') ||
+    url.hostname.includes('fonts.gstatic.com');
+
+  if (isStatic) {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        const fetchPromise = fetch(request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              const responseClone = networkResponse.clone();
+              caches.open(STATIC_CACHE).then((cache) => {
+                cache.put(request, responseClone);
+              });
+            }
+            return networkResponse;
+          })
+          .catch(() => cachedResponse);
+
+        return cachedResponse || fetchPromise;
+      })
+    );
+  }
+});
+
+// Manejo de mensajes (actualización controlada)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Manejo de notificaciones Push (Firebase Cloud Messaging)
+self.addEventListener('push', (event) => {
+  let data = {
+    title: 'DEFCON5 Admin',
+    body: 'Nueva actualización en el sistema administrativo.',
+    icon: '/admin/icons/icon-192.png',
+    badge: '/admin/icons/favicon.png',
+    data: { url: '/admin/dashboard.html' }
+  };
+
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      data.title = payload.title || payload.notification?.title || data.title;
+      data.body = payload.body || payload.notification?.body || data.body;
+      data.icon = payload.icon || payload.notification?.icon || data.icon;
+      if (payload.data?.url) data.data.url = payload.data.url;
+    } catch (e) {
+      data.body = event.data.text() || data.body;
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: data.icon,
+      badge: data.badge,
+      vibrate: [100, 50, 100],
+      data: data.data,
+      actions: [
+        { action: 'open', title: 'Abrir portal' },
+        { action: 'close', title: 'Cerrar' }
+      ]
+    })
+  );
+});
+
+// Clic en notificación push
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  if (event.action === 'close') {
+    return;
+  }
+
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/admin/dashboard.html';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Si ya hay una ventana abierta en el portal admin, enfocarla
+      for (const client of clientList) {
+        if (client.url.includes('/admin/') && 'focus' in client) {
+          if ('navigate' in client) {
+            client.navigate(targetUrl);
+          }
+          return client.focus();
+        }
+      }
+      // Si no, abrir una nueva ventana
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});

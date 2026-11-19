@@ -1,6 +1,54 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/admin/sw.js",
+      "headers": [
+        { "key": "Service-Worker-Allowed", "value": "/admin/" },
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Content-Type", "value": "application/javascript; charset=utf-8" }
+      ]
+    },
+    {
+      "source": "/stargate/sw.js",
+      "headers": [
+        { "key": "Service-Worker-Allowed", "value": "/admin/" },
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Content-Type", "value": "application/javascript; charset=utf-8" }
+      ]
+    },
+    {
+      "source": "/empleados/sw.js",
+      "headers": [
+        { "key": "Service-Worker-Allowed", "value": "/empleados/" },
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Content-Type", "value": "application/javascript; charset=utf-8" }
+      ]
+    },
+    {
+      "source": "/zafiro/sw.js",
+      "headers": [
+        { "key": "Service-Worker-Allowed", "value": "/empleados/" },
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Content-Type", "value": "application/javascript; charset=utf-8" }
+      ]
+    },
+    {
+      "source": "/admin/manifest.json",
+      "headers": [
+        { "key": "Content-Type", "value": "application/manifest+json; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    },
+    {
+      "source": "/empleados/manifest.json",
+      "headers": [
+        { "key": "Content-Type", "value": "application/manifest+json; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    }
+  ],
   "redirects": [
     {
       "source": "/admin",
@@ -57,6 +105,30 @@
     {
       "source": "/",
       "destination": "/public/index.html"
+    },
+    {
+      "source": "/admin/sw.js",
+      "destination": "/stargate/sw.js"
+    },
+    {
+      "source": "/admin/manifest.json",
+      "destination": "/stargate/manifest.json"
+    },
+    {
+      "source": "/admin/icons/:match*",
+      "destination": "/stargate/icons/:match*"
+    },
+    {
+      "source": "/empleados/sw.js",
+      "destination": "/zafiro/sw.js"
+    },
+    {
+      "source": "/empleados/manifest.json",
+      "destination": "/zafiro/manifest.json"
+    },
+    {
+      "source": "/empleados/icons/:match*",
+      "destination": "/zafiro/icons/:match*"
     },
     {
       "source": "/admin/",

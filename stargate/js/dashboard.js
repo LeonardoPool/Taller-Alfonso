@@ -4,10 +4,12 @@ import {
     db, 
     collection, 
     query, 
+    where,
     orderBy, 
     limit, 
     onSnapshot, 
     getDocs, 
+    getCountFromServer,
     doc, 
     updateDoc 
 } from './firebase-config.js';
@@ -57,56 +59,81 @@ onReady(() => {
     }
 });
 
-// Resumen estadístico dinámico (Trabajos, Clientes, Ingresos)
+// Resumen estadístico dinámico y optimizado (Trabajos, Clientes)
 async function setupStatsSummary() {
     try {
-        // 1. Escuchar trabajos para estadísticas y recientes
-        const trabajosRef = collection(db, "Trabajos");
-        unsubscribeJobs = onSnapshot(trabajosRef, (snapshot) => {
-            let pendingCount = 0;
-            let activeCount = 0;
-            let monthlyEarnings = 0;
+        // 1. Escuchar solo los trabajos más recientes (limit 4) para la vista rápida
+        // Evita descargar todo el historial de la base de datos
+        const recentJobsQuery = query(collection(db, "Trabajos"), limit(6));
+        unsubscribeJobs = onSnapshot(recentJobsQuery, (snapshot) => {
             const jobsList = [];
-
             snapshot.forEach(docSnap => {
-                const job = { id: docSnap.id, ...docSnap.data() };
-                jobsList.push(job);
-
-                const status = (job.status || '').toLowerCase();
-                if (status === 'trabajo abierto' || status === 'pendiente' || status === 'en espera') {
-                    pendingCount++;
-                } else if (status === 'en progreso') {
-                    activeCount++;
-                }
-
-                // Sumar monto si está disponible
-                const amount = Number(job.budget || job.costo || job.total || job.amount) || 0;
-                monthlyEarnings += amount;
+                jobsList.push({ id: docSnap.id, ...docSnap.data() });
             });
-
-            const pendingJobsEl = document.getElementById('pendingJobsCount');
-            if (pendingJobsEl) {
-                pendingJobsEl.textContent = pendingCount + activeCount;
-            }
-
-            // Renderizar trabajos recientes en el dashboard
             renderRecentJobs(jobsList);
         }, (error) => {
-            console.warn("Fallo al escuchar Trabajos en dashboard:", error);
+            console.warn("Fallo al escuchar Trabajos recientes en dashboard:", error);
         });
 
-        // 2. Contar clientes registrados
-        const clientesRef = collection(db, "Clientes");
-        onSnapshot(clientesRef, (clientSnap) => {
-            const totalClientsEl = document.getElementById('totalClientsCount');
-            if (totalClientsEl) {
-                totalClientsEl.textContent = clientSnap.size;
-            }
-        }, (err) => {
-            console.warn("Fallo al contar Clientes:", err);
-        });
+        // 2. Contar trabajos activos de forma optimizada con caché de sesión
+        loadPendingJobsCount();
+
+        // 3. Contar clientes de forma ultra-ligera (1 sola lectura agregada con getCountFromServer)
+        loadClientsCount();
     } catch (error) {
         console.warn("Error calculando resumen del dashboard:", error);
+    }
+}
+
+// Conteo de trabajos pendientes con caché de sesión (3 min TTL)
+async function loadPendingJobsCount() {
+    const pendingJobsEl = document.getElementById('pendingJobsCount');
+    if (!pendingJobsEl) return;
+
+    const cached = sessionStorage.getItem('defcon5_pending_jobs');
+    const cachedTime = sessionStorage.getItem('defcon5_pending_jobs_time');
+    const now = Date.now();
+
+    if (cached && cachedTime && (now - Number(cachedTime)) < 180000) {
+        pendingJobsEl.textContent = cached;
+        return;
+    }
+
+    try {
+        // Conteo del servidor: 1 sola lectura sin descargar documentos
+        const countSnap = await getCountFromServer(collection(db, "Trabajos"));
+        const count = countSnap.data().count;
+        pendingJobsEl.textContent = count;
+        sessionStorage.setItem('defcon5_pending_jobs', count);
+        sessionStorage.setItem('defcon5_pending_jobs_time', String(now));
+    } catch (err) {
+        console.warn("Fallo al contar Trabajos con getCountFromServer:", err);
+    }
+}
+
+// Conteo de clientes registrados con caché de sesión (10 min TTL)
+async function loadClientsCount() {
+    const totalClientsEl = document.getElementById('totalClientsCount');
+    if (!totalClientsEl) return;
+
+    const cached = sessionStorage.getItem('defcon5_total_clients');
+    const cachedTime = sessionStorage.getItem('defcon5_total_clients_time');
+    const now = Date.now();
+
+    if (cached && cachedTime && (now - Number(cachedTime)) < 600000) {
+        totalClientsEl.textContent = cached;
+        return;
+    }
+
+    try {
+        // getCountFromServer consume 1 sola lectura en total para toda la colección
+        const countSnap = await getCountFromServer(collection(db, "Clientes"));
+        const count = countSnap.data().count;
+        totalClientsEl.textContent = count;
+        sessionStorage.setItem('defcon5_total_clients', count);
+        sessionStorage.setItem('defcon5_total_clients_time', String(now));
+    } catch (err) {
+        console.warn("Fallo al contar Clientes con getCountFromServer:", err);
     }
 }
 
@@ -281,7 +308,7 @@ function setupNotificationsListener() {
     if (!notificationList) return;
 
     try {
-        const notifRef = collection(db, "Notificaciones");
+        const notifRef = query(collection(db, "Notificaciones"), limit(15));
         unsubscribeNotifications = onSnapshot(notifRef, (snapshot) => {
             notifications = [];
             let unreadCount = 0;

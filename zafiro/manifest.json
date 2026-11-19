@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
+  "id": "/empleados/",
+  "name": "DEFCON5 Empleados",
+  "short_name": "D5 Empleados",
+  "description": "Portal de Mecánicos y Operaciones DEFCON5",
+  "start_url": "/empleados/",
+  "scope": "/empleados/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#4a6cf7",
+  "lang": "es-MX",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mis Trabajos",
+      "url": "/empleados/admin.html",
+      "description": "Consultar mis trabajos asignados y temporizadores"
+    },
+    {
+      "name": "Registrar Trabajo",
+      "url": "/empleados/formulariotrabajos.html",
+      "description": "Crear nueva orden de trabajo con fotos e inspección"
+    }
+  ]
+}

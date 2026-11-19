@@ -20,6 +20,7 @@ let currentEditPart = null;
 let notifications = [];
 let unsubscribeParts = null;
 let unsubscribeNotifications = null;
+const storageUrlCache = new Map();
 
 // Referencias a elementos DOM
 const partsContainer = document.getElementById('partsContainer');
@@ -107,15 +108,20 @@ async function loadParts() {
                     images: data.images || []
                 };
 
-                // Procesar imagen si existe
+                // Procesar imagen si existe (con caché en memoria para no saturar Storage)
                 if (part.images.length > 0) {
                     const imageUrl = part.images[0];
                     if (imageUrl && !imageUrl.startsWith('http') && storage) {
-                        try {
-                            const ref = storageRef(storage, imageUrl);
-                            part.fotoURL = await getDownloadURL(ref);
-                        } catch (e) {
-                            part.fotoURL = null;
+                        if (storageUrlCache.has(imageUrl)) {
+                            part.fotoURL = storageUrlCache.get(imageUrl);
+                        } else {
+                            try {
+                                const ref = storageRef(storage, imageUrl);
+                                part.fotoURL = await getDownloadURL(ref);
+                                storageUrlCache.set(imageUrl, part.fotoURL);
+                            } catch (e) {
+                                part.fotoURL = null;
+                            }
                         }
                     } else {
                         part.fotoURL = imageUrl;

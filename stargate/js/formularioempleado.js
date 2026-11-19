@@ -6,6 +6,7 @@ import {
     addDoc, 
     serverTimestamp 
 } from './firebase-config.js';
+import { enqueueOfflineOperation } from './pwa-manager.js';
 
 function onReady(fn) {
     if (document.readyState === 'loading') {
@@ -71,6 +72,31 @@ onReady(() => {
             // Validar que el PIN no sea trivial (ej. 1111 o 1234)
             if (pin === pin[0].repeat(4)) {
                 alert("El PIN no debe tener todos los dígitos repetidos (ej. 1111)");
+                return;
+            }
+
+            // Modo sin conexión
+            if (!navigator.onLine) {
+                try {
+                    await enqueueOfflineOperation('CREATE_EMPLOYEE', {
+                        fullName,
+                        hireDate: hireDate || "",
+                        curp: curp || "",
+                        rfc: rfc || "",
+                        employeeNumber: employeeNumber || "",
+                        pin,
+                        tipoEmpleado: tipoEmpleado || "Mecánico",
+                        createdAt: new Date().toISOString()
+                    });
+                    if (statusMessage) {
+                        statusMessage.innerHTML = `<i class="fas fa-clock"></i> Colaborador guardado localmente (Modo offline). Se sincronizará al conectar a internet.`;
+                        statusMessage.className = 'status-message info';
+                        statusMessage.style.display = 'block';
+                    }
+                    form.reset();
+                } catch (e) {
+                    alert("Error guardando colaborador offline: " + e.message);
+                }
                 return;
             }
 

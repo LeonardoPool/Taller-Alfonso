@@ -12,6 +12,7 @@ import {
     updateDoc, 
     serverTimestamp 
 } from './firebase-config.js';
+import { enqueueOfflineOperation } from './pwa-manager.js';
 
 let currentMechanic = null;
 let jobsCache = [];
@@ -510,6 +511,23 @@ async function handleConfirmStatusUpdate() {
     const job = jobsCache.find(j => j.id === currentJobId);
     if (!job) return;
 
+    // Modo offline
+    if (!navigator.onLine) {
+        try {
+            await enqueueOfflineOperation('UPDATE_JOB_STATUS', {
+                jobId: currentJobId,
+                status: selectedStatus
+            });
+            job.status = selectedStatus;
+            renderJobs(jobsCache);
+            statusModal.classList.remove('active');
+            showStatus('Estado guardado localmente (Offline). Se sincronizará al conectar a internet.', 'info');
+        } catch (e) {
+            alert("Error guardando estado offline: " + e.message);
+        }
+        return;
+    }
+
     try {
         confirmStatusUpdate.disabled = true;
         confirmStatusUpdate.textContent = 'Actualizando...';
@@ -636,22 +654,33 @@ function openPartsModal() {
     });
 }
 
+let partsMemoryCache = null;
+let partsMemoryCacheTime = 0;
+
 async function fetchParts(term = '') {
     try {
-        const snapshot = await getDocs(collection(db, "Piezas"));
-        const parts = [];
-        snapshot.forEach(docSnap => {
-            const data = docSnap.data();
-            const p = {
-                id: docSnap.id,
-                name: data.partName || data.nombre || 'Pieza',
-                serial: data.serialNumber || data.codigo || ''
-            };
-            if (!term || p.name.toLowerCase().includes(term.toLowerCase()) || p.serial.toLowerCase().includes(term.toLowerCase())) {
-                parts.push(p);
-            }
-        });
-        return parts;
+        const now = Date.now();
+        // Si ya cargamos las piezas hace menos de 5 minutos, filtrar en memoria (0 lecturas a Firestore)
+        if (!partsMemoryCache || (now - partsMemoryCacheTime) > 300000) {
+            const snapshot = await getDocs(collection(db, "Piezas"));
+            partsMemoryCache = [];
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                partsMemoryCache.push({
+                    id: docSnap.id,
+                    name: data.partName || data.nombre || 'Pieza',
+                    serial: data.serialNumber || data.codigo || ''
+                });
+            });
+            partsMemoryCacheTime = now;
+        }
+
+        const lowerTerm = term.toLowerCase();
+        return partsMemoryCache.filter(p => 
+            !lowerTerm || 
+            p.name.toLowerCase().includes(lowerTerm) || 
+            p.serial.toLowerCase().includes(lowerTerm)
+        );
     } catch (err) {
         console.error("Error consultando piezas:", err);
         return [];

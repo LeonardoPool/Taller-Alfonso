@@ -12,6 +12,7 @@ import {
     uploadBytesResumable, 
     getDownloadURL 
 } from './firebase-config.js';
+import { enqueueOfflineOperation } from './pwa-manager.js';
 
 let currentMechanic = null;
 const imageFiles = {
@@ -84,6 +85,46 @@ onReady(async () => {
     setupFormSubmit();
 });
 
+// Caché en memoria para evitar consultas repetitivas a Firestore durante la captura
+let clientsCache = null;
+let lastClientsFetch = 0;
+let allPartsCache = null;
+let lastPartsFetch = 0;
+
+async function getCachedClients() {
+    const now = Date.now();
+    if (clientsCache && (now - lastClientsFetch) < 300000) {
+        return clientsCache;
+    }
+    const snapshot = await getDocs(collection(db, "Clientes"));
+    clientsCache = [];
+    snapshot.forEach(docSnap => {
+        clientsCache.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    lastClientsFetch = now;
+    return clientsCache;
+}
+
+async function getCachedParts() {
+    const now = Date.now();
+    if (allPartsCache && (now - lastPartsFetch) < 300000) {
+        return allPartsCache;
+    }
+    const snapshot = await getDocs(collection(db, "Piezas"));
+    allPartsCache = [];
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        allPartsCache.push({
+            id: docSnap.id,
+            name: data.partName || data.nombre || "Pieza",
+            serial: data.serialNumber || data.codigo || "-",
+            stock: Number(data.stock) || 0
+        });
+    });
+    lastPartsFetch = now;
+    return allPartsCache;
+}
+
 function setupClientSearch() {
     if (!clientNameInput || !clientResults) return;
 
@@ -98,12 +139,12 @@ function setupClientSearch() {
 
         debounce = setTimeout(async () => {
             try {
-                const snapshot = await getDocs(collection(db, "Clientes"));
+                // Utiliza la caché local en memoria para no disparar lecturas en cada tecla
+                const clients = await getCachedClients();
                 clientResults.innerHTML = '';
                 let count = 0;
 
-                snapshot.forEach(docSnap => {
-                    const c = docSnap.data();
+                clients.forEach(c => {
                     const name = (c.clientName || '').toLowerCase();
                     const comp = (c.company || '').toLowerCase();
 
@@ -129,7 +170,7 @@ function setupClientSearch() {
             } catch (err) {
                 console.warn("Error buscando clientes:", err);
             }
-        }, 300);
+        }, 200);
     });
 
     document.addEventListener('click', (e) => {
@@ -176,22 +217,10 @@ async function loadParts(filter = '') {
     partsListContainer.innerHTML = '<p style="padding:15px;color:#ccc;">Cargando almacén...</p>';
 
     try {
-        const snapshot = await getDocs(collection(db, "Piezas"));
-        modalParts = [];
-
-        snapshot.forEach(docSnap => {
-            const data = docSnap.data();
-            const part = {
-                id: docSnap.id,
-                name: data.partName || data.nombre || "Pieza",
-                serial: data.serialNumber || data.codigo || "-",
-                stock: Number(data.stock) || 0
-            };
-
-            const term = filter.toLowerCase();
-            if (!term || part.name.toLowerCase().includes(term) || part.serial.toLowerCase().includes(term)) {
-                modalParts.push(part);
-            }
+        const parts = await getCachedParts();
+        const term = filter.toLowerCase();
+        modalParts = parts.filter(part => {
+            return !term || part.name.toLowerCase().includes(term) || part.serial.toLowerCase().includes(term);
         });
 
         if (modalParts.length === 0) {
@@ -336,6 +365,55 @@ function setupFormSubmit() {
 
         if (!clientName || !unit || !driverName || !diagnosis) {
             alert("Por favor completa los campos obligatorios: Cliente, Unidad, Chofer y Diagnóstico.");
+            return;
+        }
+
+        // Manejo de modo sin conexión
+        if (!navigator.onLine) {
+            const hasImages = Object.values(imageFiles).some(files => files.length > 0);
+            if (hasImages) {
+                alert("Estás sin conexión a internet. La subida de fotografías requiere conexión a la red. Conéctate a internet para registrar la orden con imágenes.");
+                return;
+            }
+
+            try {
+                const engineStartEl = document.querySelector('input[name="engineStart"]:checked');
+                const hasSpareEl = document.querySelector('input[name="hasSpare"]:checked');
+
+                const offlineJob = {
+                    client: {
+                        name: clientName,
+                        company: companyInput?.value?.trim() || "Particular"
+                    },
+                    vehicle: {
+                        unit: unit,
+                        engineNumber: document.getElementById('engineNumber')?.value?.trim() || "N/A",
+                        plates: document.getElementById('plates')?.value?.trim() || "N/A"
+                    },
+                    workDetails: {
+                        driverName: driverName,
+                        diagnosis: diagnosis,
+                        engineStart: engineStartEl ? engineStartEl.value : "no_especificado",
+                        hasSpare: hasSpareEl ? hasSpareEl.value : "no_especificado",
+                        usedParts: usedParts
+                    },
+                    mechanic: currentMechanic?.fullName || "Mecánico",
+                    status: "trabajando",
+                    createdAt: new Date().toISOString()
+                };
+
+                await enqueueOfflineOperation('CREATE_JOB', offlineJob);
+                if (statusMessage) {
+                    statusMessage.innerHTML = `<i class="fas fa-clock"></i> Trabajo guardado localmente (Modo offline). Se enviará al servidor al recuperar conexión.`;
+                    statusMessage.className = 'status-message info';
+                    statusMessage.style.display = 'block';
+                }
+                jobForm.reset();
+                usedParts = [];
+                renderUsedPartsList();
+            } catch (err) {
+                alert("Error al guardar trabajo offline: " + err.message);
+            }
             return;
         }
 
