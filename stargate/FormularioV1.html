@@ -742,7 +742,7 @@
                     <h2 class="section-title"><i class="fas fa-images"></i> Imágenes de la Refacción</h2>
                     <p>Suba de 1 a 5 imágenes de la refacción:</p>
                     
-                    <div class="image-upload" onclick="document.getElementById('partImage').click()">
+                    <div class="image-upload" onclick="openPhotoSourceModal('partImage')">
                         <i class="fas fa-camera"></i>
                         <p>Arrastra y suelta las imágenes aquí o haz clic para seleccionar</p>
                         <p class="image-counter">Seleccionadas: <span id="imageCount">0</span>/5</p>
@@ -1400,5 +1400,6 @@
             }
         }
     </script>
+    <script src="js/photo-picker.js"></script>
 </body>
 </html>

@@ -120,7 +120,7 @@
                     
                     <div class="photo-category">
                         <h3 class="section-subtitle"><i class="fas fa-couch"></i> Interior</h3>
-                        <div class="image-upload" onclick="document.getElementById('interiorPhotos').click()">
+                        <div class="image-upload" onclick="openPhotoSourceModal('interiorPhotos')">
                             <i class="fas fa-camera"></i>
                             <p>Arrastra y suelta las imágenes aquí o haz clic para seleccionar (2-5 imágenes)</p>
                             <p class="image-counter">Seleccionadas: <span id="interiorCount">0</span>/5</p>
@@ -134,7 +134,7 @@
                     
                     <div class="photo-category">
                         <h3 class="section-subtitle"><i class="fas fa-car-side"></i> Exterior</h3>
-                        <div class="image-upload" onclick="document.getElementById('exteriorPhotos').click()">
+                        <div class="image-upload" onclick="openPhotoSourceModal('exteriorPhotos')">
                             <i class="fas fa-camera"></i>
                             <p>Arrastra y suelta las imágenes aquí o haz clic para seleccionar (2-5 imágenes)</p>
                             <p class="image-counter">Seleccionadas: <span id="exteriorCount">0</span>/5</p>
@@ -148,7 +148,7 @@
                     
                     <div class="photo-category">
                         <h3 class="section-subtitle"><i class="fas fa-car-rear"></i> Frente Trasero</h3>
-                        <div class="image-upload" onclick="document.getElementById('rearPhotos').click()">
+                        <div class="image-upload" onclick="openPhotoSourceModal('rearPhotos')">
                             <i class="fas fa-camera"></i>
                             <p>Arrastra y suelta las imágenes aquí o haz clic para seleccionar (2-5 imágenes)</p>
                             <p class="image-counter">Seleccionadas: <span id="rearCount">0</span>/5</p>
@@ -162,7 +162,7 @@
                     
                     <div class="photo-category">
                         <h3 class="section-subtitle"><i class="fas fa-car-front"></i> Frente Delantero</h3>
-                        <div class="image-upload" onclick="document.getElementById('frontPhotos').click()">
+                        <div class="image-upload" onclick="openPhotoSourceModal('frontPhotos')">
                             <i class="fas fa-camera"></i>
                             <p>Arrastra y suelta las imágenes aquí o haz clic para seleccionar (2-5 imágenes)</p>
                             <p class="image-counter">Seleccionadas: <span id="frontCount">0</span>/5</p>
@@ -176,7 +176,7 @@
                     
                     <div class="photo-category">
                         <h3 class="section-subtitle"><i class="fas fa-arrow-left"></i> Lateral Izquierdo</h3>
-                        <div class="image-upload" onclick="document.getElementById('leftPhotos').click()">
+                        <div class="image-upload" onclick="openPhotoSourceModal('leftPhotos')">
                             <i class="fas fa-camera"></i>
                             <p>Arrastra y suelta las imágenes aquí o haz clic para seleccionar (2-5 imágenes)</p>
                             <p class="image-counter">Seleccionadas: <span id="leftCount">0</span>/5</p>
@@ -190,7 +190,7 @@
                     
                     <div class="photo-category">
                         <h3 class="section-subtitle"><i class="fas fa-arrow-right"></i> Lateral Derecho</h3>
-                        <div class="image-upload" onclick="document.getElementById('rightPhotos').click()">
+                        <div class="image-upload" onclick="openPhotoSourceModal('rightPhotos')">
                             <i class="fas fa-camera"></i>
                             <p>Arrastra y suelta las imágenes aquí o haz clic para seleccionar (2-5 imágenes)</p>
                             <p class="image-counter">Seleccionadas: <span id="rightCount">0</span>/5</p>
@@ -204,7 +204,7 @@
                     
                     <div class="photo-category">
                         <h3 class="section-subtitle"><i class="fas fa-id-card"></i> Placas</h3>
-                        <div class="image-upload" onclick="document.getElementById('platePhotos').click()">
+                        <div class="image-upload" onclick="openPhotoSourceModal('platePhotos')">
                             <i class="fas fa-camera"></i>
                             <p>Arrastra y suelta las imágenes aquí o haz clic para seleccionar (2 imágenes)</p>
                             <p class="image-counter">Seleccionadas: <span id="plateCount">0</span>/2</p>
@@ -218,7 +218,7 @@
                     
                     <div class="photo-category">
                         <h3 class="section-subtitle"><i class="fas fa-cogs"></i> Motor</h3>
-                        <div class="image-upload" onclick="document.getElementById('enginePhotos').click()">
+                        <div class="image-upload" onclick="openPhotoSourceModal('enginePhotos')">
                             <i class="fas fa-camera"></i>
                             <p>Arrastra y suelta las imágenes aquí o haz clic para seleccionar (2 imágenes)</p>
                             <p class="image-counter">Seleccionadas: <span id="engineCount">0</span>/2</p>
@@ -232,7 +232,7 @@
                     
                     <div class="photo-category">
                         <h3 class="section-subtitle"><i class="fas fa-mirror"></i> Espejos</h3>
-                        <div class="image-upload" onclick="document.getElementById('mirrorPhotos').click()">
+                        <div class="image-upload" onclick="openPhotoSourceModal('mirrorPhotos')">
                             <i class="fas fa-camera"></i>
                             <p>Arrastra y suelta las imágenes aquí o haz clic para seleccionar (2 imágenes)</p>
                             <p class="image-counter">Seleccionadas: <span id="mirrorCount">0</span>/2</p>
@@ -246,7 +246,7 @@
                     
                     <div class="photo-category">
                         <h3 class="section-subtitle"><i class="fas fa-car-mirrors"></i> Retrovisores</h3>
-                        <div class="image-upload" onclick="document.getElementById('rearviewPhotos').click()">
+                        <div class="image-upload" onclick="openPhotoSourceModal('rearviewPhotos')">
                             <i class="fas fa-camera"></i>
                             <p>Arrastra y suelta las imágenes aquí o haz clic para seleccionar (2 imágenes)</p>
                             <p class="image-counter">Seleccionadas: <span id="rearviewCount">0</span>/2</p>
@@ -359,6 +359,7 @@
     <!-- Firebase SDK -->
 
     
+    <script src="js/photo-picker.js"></script>
     <script type="module" src="js/formulariotrabajo.js"></script>
     <script type="module" src="js/pwa-manager.js"></script>
 </body>

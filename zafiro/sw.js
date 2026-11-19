@@ -24,6 +24,7 @@ const PRECACHE_ASSETS = [
   '/empleados/js/formulariotrabajos.js',
   '/empleados/js/firebase-config.js',
   '/empleados/js/auth-guard.js',
+  '/empleados/js/photo-picker.js',
   '/empleados/js/pwa-manager.js'
 ];
 

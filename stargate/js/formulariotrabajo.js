@@ -282,9 +282,12 @@ function setupPhotoUploads() {
 
         if (input && previewContainer) {
             input.addEventListener('change', (e) => {
-                const files = Array.from(e.target.files);
-                imageFiles[cat] = imageFiles[cat].concat(files);
-                renderCategoryPreviews(cat, previewContainer);
+                const files = Array.from(e.target.files || []);
+                if (files.length > 0) {
+                    imageFiles[cat] = imageFiles[cat].concat(files);
+                    renderCategoryPreviews(cat, previewContainer);
+                }
+                input.value = '';
             });
         }
     });
@@ -292,6 +295,11 @@ function setupPhotoUploads() {
 
 function renderCategoryPreviews(cat, container) {
     container.innerHTML = '';
+    const counter = document.getElementById(`${cat}Count`);
+    if (counter) {
+        counter.textContent = imageFiles[cat].length;
+    }
+
     imageFiles[cat].forEach((file, index) => {
         const div = document.createElement('div');
         div.className = 'preview-item';

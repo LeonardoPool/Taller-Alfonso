@@ -304,9 +304,12 @@ function setupPhotoUploads() {
         const preview = document.getElementById(`${cat}Preview`);
         if (input && preview) {
             input.addEventListener('change', (e) => {
-                const files = Array.from(e.target.files);
-                imageFiles[cat] = imageFiles[cat].concat(files);
-                renderPreviews(cat, preview);
+                const files = Array.from(e.target.files || []);
+                if (files.length > 0) {
+                    imageFiles[cat] = imageFiles[cat].concat(files);
+                    renderPreviews(cat, preview);
+                }
+                input.value = '';
             });
         }
     });
@@ -314,6 +317,11 @@ function setupPhotoUploads() {
 
 function renderPreviews(cat, container) {
     container.innerHTML = '';
+    const counter = document.getElementById(`${cat}Count`);
+    if (counter) {
+        counter.textContent = imageFiles[cat].length;
+    }
+
     imageFiles[cat].forEach((file, index) => {
         const div = document.createElement('div');
         div.style.position = 'relative';

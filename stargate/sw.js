@@ -42,6 +42,7 @@ const PRECACHE_ASSETS = [
   '/admin/js/formulariotrabajo.js',
   '/admin/js/firebase-config.js',
   '/admin/js/auth-guard.js',
+  '/admin/js/photo-picker.js',
   '/admin/js/pwa-manager.js'
 ];
 

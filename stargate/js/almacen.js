@@ -12,6 +12,7 @@ import {
     serverTimestamp,
     storage,
     storageRef,
+    uploadBytesResumable,
     getDownloadURL
 } from './firebase-config.js';
 
@@ -20,6 +21,7 @@ let currentEditPart = null;
 let notifications = [];
 let unsubscribeParts = null;
 let unsubscribeNotifications = null;
+let newPartImageFile = null;
 const storageUrlCache = new Map();
 
 // Referencias a elementos DOM
@@ -316,7 +318,38 @@ function setupEventListeners() {
     // Abrir modal nueva pieza
     if (openNewPartModalBtn && newPartModal) {
         openNewPartModalBtn.addEventListener('click', () => {
+            newPartImageFile = null;
+            const prev = document.getElementById('newPartImagePreview');
+            if (prev) { prev.innerHTML = ''; prev.style.display = 'none'; }
+            const inp = document.getElementById('newPartImage');
+            if (inp) inp.value = '';
             newPartModal.classList.add('active');
+        });
+    }
+
+    // Listener para preview de imagen de nueva pieza
+    const newPartImageInput = document.getElementById('newPartImage');
+    const newPartImagePreview = document.getElementById('newPartImagePreview');
+    if (newPartImageInput && newPartImagePreview) {
+        newPartImageInput.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (file) {
+                newPartImageFile = file;
+                newPartImagePreview.innerHTML = `
+                    <div style="position:relative;display:inline-block;">
+                        <img src="${URL.createObjectURL(file)}" style="width:75px;height:75px;object-fit:cover;border-radius:8px;border:2px solid #4a6cf7;">
+                        <button type="button" id="removeNewPartImgBtn" style="position:absolute;top:-6px;right:-6px;background:#e74c3c;color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:12px;font-weight:bold;line-height:1;display:flex;align-items:center;justify-content:center;">&times;</button>
+                    </div>
+                `;
+                newPartImagePreview.style.display = 'block';
+                document.getElementById('removeNewPartImgBtn')?.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    newPartImageFile = null;
+                    newPartImagePreview.innerHTML = '';
+                    newPartImagePreview.style.display = 'none';
+                    newPartImageInput.value = '';
+                });
+            }
         });
     }
 
@@ -575,6 +608,20 @@ async function handleSaveNewPart() {
         saveNewPartBtn.disabled = true;
         saveNewPartBtn.textContent = 'Guardando...';
 
+        let uploadedImages = [];
+        if (newPartImageFile && storage) {
+            saveNewPartBtn.textContent = 'Subiendo fotografía...';
+            try {
+                const cleanCode = code.replace(/[^a-zA-Z0-9_-]/g, '_');
+                const fileRef = storageRef(storage, `Piezas/${cleanCode}_${Date.now()}`);
+                const uploadSnap = await uploadBytesResumable(fileRef, newPartImageFile);
+                const downloadUrl = await getDownloadURL(uploadSnap.ref);
+                uploadedImages = [downloadUrl];
+            } catch (err) {
+                console.warn("Fallo subida de foto de pieza:", err);
+            }
+        }
+
         await addDoc(collection(db, "Piezas"), {
             partName: name,
             nombre: name,
@@ -587,7 +634,7 @@ async function handleSaveNewPart() {
             storageLocation: location,
             estante: location,
             timestamp: serverTimestamp(),
-            images: []
+            images: uploadedImages
         });
 
         newPartModal.classList.remove('active');
@@ -597,6 +644,11 @@ async function handleSaveNewPart() {
         document.getElementById('newPartPrice').value = '';
         document.getElementById('newPartStock').value = '1';
         document.getElementById('newPartMinStock').value = '5';
+        newPartImageFile = null;
+        const prev = document.getElementById('newPartImagePreview');
+        if (prev) { prev.innerHTML = ''; prev.style.display = 'none'; }
+        const inp = document.getElementById('newPartImage');
+        if (inp) inp.value = '';
 
         showStatus(`Pieza "${name}" registrada exitosamente`, 'success');
     } catch (error) {
