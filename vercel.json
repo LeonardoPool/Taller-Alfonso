@@ -1,7 +1,16 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": true,
+  "cleanUrls": false,
   "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
     {
       "source": "/admin/sw.js",
       "headers": [
@@ -61,6 +70,21 @@
       "permanent": false
     },
     {
+      "source": "/public",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/public/",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/public/index.html",
+      "destination": "/",
+      "permanent": false
+    },
+    {
       "source": "/stargate",
       "destination": "/admin/",
       "permanent": false
@@ -73,11 +97,6 @@
     {
       "source": "/stargate/index.html",
       "destination": "/admin/",
-      "permanent": false
-    },
-    {
-      "source": "/stargate/:match*",
-      "destination": "/admin/:match*",
       "permanent": false
     },
     {
@@ -94,17 +113,28 @@
       "source": "/zafiro/index.html",
       "destination": "/empleados/",
       "permanent": false
-    },
-    {
-      "source": "/zafiro/:match*",
-      "destination": "/empleados/:match*",
-      "permanent": false
     }
   ],
   "rewrites": [
     {
       "source": "/",
       "destination": "/public/index.html"
+    },
+    {
+      "source": "/index.html",
+      "destination": "/public/index.html"
+    },
+    {
+      "source": "/.firebaserc",
+      "destination": "/404.html"
+    },
+    {
+      "source": "/firebase.json",
+      "destination": "/404.html"
+    },
+    {
+      "source": "/.vscode/:match*",
+      "destination": "/404.html"
     },
     {
       "source": "/admin/sw.js",

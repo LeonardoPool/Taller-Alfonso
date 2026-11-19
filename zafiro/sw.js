@@ -103,9 +103,14 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch(async () => {
-          // Fallback a caché
-          const cachedResponse = await caches.match(request);
+          // Fallback a caché: coincidencia exacta o con extensión .html
+          let cachedResponse = await caches.match(request);
           if (cachedResponse) return cachedResponse;
+
+          if (!url.pathname.endsWith('.html') && !url.pathname.endsWith('/')) {
+            cachedResponse = await caches.match(request.url + '.html');
+            if (cachedResponse) return cachedResponse;
+          }
 
           // Si es ruta interna empleados, entregar index.html precacheado
           const fallback = await caches.match('/empleados/index.html');
