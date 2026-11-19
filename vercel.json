@@ -1,0 +1,174 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/admin",
+      "destination": "/admin/",
+      "permanent": false
+    },
+    {
+      "source": "/empleados",
+      "destination": "/empleados/",
+      "permanent": false
+    },
+    {
+      "source": "/stargate",
+      "destination": "/admin/",
+      "permanent": false
+    },
+    {
+      "source": "/stargate/",
+      "destination": "/admin/",
+      "permanent": false
+    },
+    {
+      "source": "/stargate/index.html",
+      "destination": "/admin/",
+      "permanent": false
+    },
+    {
+      "source": "/stargate/:match*",
+      "destination": "/admin/:match*",
+      "permanent": false
+    },
+    {
+      "source": "/zafiro",
+      "destination": "/empleados/",
+      "permanent": false
+    },
+    {
+      "source": "/zafiro/",
+      "destination": "/empleados/",
+      "permanent": false
+    },
+    {
+      "source": "/zafiro/index.html",
+      "destination": "/empleados/",
+      "permanent": false
+    },
+    {
+      "source": "/zafiro/:match*",
+      "destination": "/empleados/:match*",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/public/index.html"
+    },
+    {
+      "source": "/admin/",
+      "destination": "/stargate/index.html"
+    },
+    {
+      "source": "/admin/index",
+      "destination": "/stargate/index.html"
+    },
+    {
+      "source": "/admin/index.html",
+      "destination": "/stargate/index.html"
+    },
+    {
+      "source": "/admin/dashboard",
+      "destination": "/stargate/dashboard.html"
+    },
+    {
+      "source": "/admin/dashboard.html",
+      "destination": "/stargate/dashboard.html"
+    },
+    {
+      "source": "/admin/almacen",
+      "destination": "/stargate/almacen.html"
+    },
+    {
+      "source": "/admin/almacen.html",
+      "destination": "/stargate/almacen.html"
+    },
+    {
+      "source": "/admin/clientes",
+      "destination": "/stargate/clientes.html"
+    },
+    {
+      "source": "/admin/clientes.html",
+      "destination": "/stargate/clientes.html"
+    },
+    {
+      "source": "/admin/empleados",
+      "destination": "/stargate/empleados.html"
+    },
+    {
+      "source": "/admin/empleados.html",
+      "destination": "/stargate/empleados.html"
+    },
+    {
+      "source": "/admin/trabajos",
+      "destination": "/stargate/trabajos.html"
+    },
+    {
+      "source": "/admin/trabajos.html",
+      "destination": "/stargate/trabajos.html"
+    },
+    {
+      "source": "/admin/formulariocliente",
+      "destination": "/stargate/formulariocliente.html"
+    },
+    {
+      "source": "/admin/formulariocliente.html",
+      "destination": "/stargate/formulariocliente.html"
+    },
+    {
+      "source": "/admin/formularioempleado",
+      "destination": "/stargate/formularioempleado.html"
+    },
+    {
+      "source": "/admin/formularioempleado.html",
+      "destination": "/stargate/formularioempleado.html"
+    },
+    {
+      "source": "/admin/formulariotrabajo",
+      "destination": "/stargate/formulariotrabajo.html"
+    },
+    {
+      "source": "/admin/formulariotrabajo.html",
+      "destination": "/stargate/formulariotrabajo.html"
+    },
+    {
+      "source": "/admin/:match*",
+      "destination": "/stargate/:match*"
+    },
+    {
+      "source": "/empleados/",
+      "destination": "/zafiro/index.html"
+    },
+    {
+      "source": "/empleados/index",
+      "destination": "/zafiro/index.html"
+    },
+    {
+      "source": "/empleados/index.html",
+      "destination": "/zafiro/index.html"
+    },
+    {
+      "source": "/empleados/admin",
+      "destination": "/zafiro/admin.html"
+    },
+    {
+      "source": "/empleados/admin.html",
+      "destination": "/zafiro/admin.html"
+    },
+    {
+      "source": "/empleados/formulariotrabajos",
+      "destination": "/zafiro/formulariotrabajos.html"
+    },
+    {
+      "source": "/empleados/formulariotrabajos.html",
+      "destination": "/zafiro/formulariotrabajos.html"
+    },
+    {
+      "source": "/empleados/:match*",
+      "destination": "/zafiro/:match*"
+    }
+  ]
+}
