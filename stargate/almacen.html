@@ -1,0 +1,2311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Almacén - Taller Mecánico</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a3a, #2c3e50);
+            color: #fff;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Barra lateral / Navbar */
+        .sidebar {
+            width: 250px;
+            background: rgba(44, 62, 80, 0.95);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            transition: all 0.3s;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            position: fixed;
+        }
+        
+        .logo-container {
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(52, 73, 94, 0.7);
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            font-size: 28px;
+            color: #3498db;
+        }
+        
+        .nav-links {
+            padding: 20px 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .nav-top {
+            flex: 1;
+        }
+        
+        .nav-bottom {
+            padding: 15px 0;
+            border-top: 1px solid rgba(52, 73, 94, 0.7);
+            margin-top: auto;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 18px 25px;
+            color: #bdc3c7;
+            text-decoration: none;
+            transition: all 0.3s;
+            position: relative;
+            margin-bottom: 8px;
+            cursor: pointer;
+            border-radius: 0 30px 30px 0;
+        }
+        
+        .nav-link:hover {
+            color: #fff;
+            background: rgba(52, 152, 219, 0.2);
+        }
+        
+        .nav-link.active {
+            color: #fff;
+            background: linear-gradient(90deg, rgba(52, 152, 219, 0.4), transparent);
+            border-left: 4px solid #3498db;
+        }
+        
+        .nav-link i {
+            font-size: 20px;
+            margin-right: 15px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        /* Contenido principal */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(245, 247, 250, 0.98);
+            margin-left: 250px;
+        }
+        
+        .topbar {
+            background: rgba(255, 255, 255, 0.97);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        
+        .search-container {
+            position: relative;
+            width: 300px;
+        }
+        
+        .search-container input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            font-size: 14px;
+            background: rgba(245, 247, 250, 0.8);
+            transition: all 0.3s;
+        }
+        
+        .search-container input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .search-container i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #777;
+        }
+        
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+        }
+        
+        .notification-btn {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(245, 247, 250, 0.8);
+            color: #555;
+        }
+        
+        .notification-btn:hover {
+            background: #3498db;
+            color: #fff;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            background: #e74c3c;
+            color: #fff;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .notification-dropdown {
+            position: absolute;
+            top: 55px;
+            right: 0;
+            width: 350px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .notification-dropdown.active {
+            display: block;
+        }
+        
+        .notification-header {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .notification-header h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .clear-btn {
+            background: none;
+            border: none;
+            color: #3498db;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .notification-list {
+            padding: 0;
+        }
+        
+        .notification-item {
+            padding: 15px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .notification-title i {
+            font-size: 14px;
+        }
+        
+        .notification-text {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+        
+        .notification-time {
+            font-size: 12px;
+            color: #95a5a6;
+            text-align: right;
+        }
+        
+        .notification-critical i { color: #e74c3c; }
+        .notification-warning i { color: #f39c12; }
+        .notification-info i { color: #3498db; }
+        .notification-success i { color: #27ae60; }
+        
+        .user-profile {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: #fff;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .dashboard-container {
+            padding: 30px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .welcome-banner {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 20px rgba(44, 62, 80, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .welcome-banner::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+        
+        .welcome-text h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .welcome-text p {
+            font-size: 16px;
+            opacity: 0.9;
+            max-width: 600px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .welcome-icon {
+            font-size: 70px;
+            opacity: 0.2;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .warehouse-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        /* Tarjeta de pieza */
+        .part-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #eee;
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s forwards;
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .low-stock-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #e74c3c;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .part-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .part-image {
+            height: 180px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .part-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .part-card:hover .part-image img {
+            transform: scale(1.05);
+        }
+        
+        .default-part-image {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            font-size: 60px;
+        }
+        
+        .part-info {
+            padding: 20px;
+        }
+        
+        .part-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .part-code {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .part-code i {
+            color: #3498db;
+        }
+        
+        .part-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            border-top: 1px solid #f5f5f5;
+            padding-top: 15px;
+        }
+        
+        .detail-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .detail-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+        
+        .stock-value {
+            color: #27ae60;
+        }
+        
+        .low-stock {
+            color: #e74c3c;
+            font-weight: 700;
+        }
+        
+        .part-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+        
+        .rack-location {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .rack-location i {
+            color: #3498db;
+        }
+        
+        .part-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .part-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #ecf0f1;
+            color: #7f8c8d;
+            border: none;
+            font-size: 14px;
+        }
+        
+        .part-btn:hover {
+            background: #3498db;
+            color: white;
+        }
+        
+        .detail-btn:hover {
+            background: #9b59b6;
+        }
+        
+        .update-btn:hover {
+            background: #f39c12;
+        }
+        
+        .delete-btn:hover {
+            background: #e74c3c;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .section-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .section-action {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-action:hover {
+            text-decoration: underline;
+        }
+        
+        .register-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .register-btn:hover {
+            background: #219653;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 150, 83, 0.3);
+        }
+        
+        /* Filtros */
+        .filters-container {
+            background: #fff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .filter-select {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            background: #f5f7fa;
+            font-size: 14px;
+            min-width: 150px;
+        }
+        
+        /* Mensaje de estado */
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            display: none;
+            font-weight: 500;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Nuevos estilos para mensajes de carga */
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+            display: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            display: none;
+        }
+        
+        .empty-state i {
+            font-size: 60px;
+            color: #bdc3c7;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .empty-state p {
+            color: #7f8c8d;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        /* Modal de edición */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            cursor : pointer;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            cursor : auto;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            background: #3498db;
+            color: white;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .modal-footer {
+            padding: 15px 25px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-secondary {
+            background: #bdc3c7;
+            color: #2c3e50;
+        }
+        
+        .btn-secondary:hover {
+            background: #95a5a6;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        /* Modal de detalles con diseño vertical */
+        .detail-modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .detail-header {
+            padding: 20px;
+            background: #2c3e50;
+            color: white;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .detail-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .detail-body {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .detail-image-container {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        
+        .detail-image {
+            height: 250px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .detail-image img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .default-detail-image {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            font-size: 60px;
+        }
+        
+        .detail-info {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .detail-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .detail-subtitle {
+            font-size: 18px;
+            color: #7f8c8d;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .detail-subtitle i {
+            color: #3498db;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .detail-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .detail-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .detail-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .detail-stock {
+            color: #27ae60;
+        }
+        
+        .detail-low-stock {
+            color: #e74c3c;
+        }
+        
+        .detail-price {
+            color: #3498db;
+        }
+        
+        .detail-cost {
+            color: #9b59b6;
+        }
+        
+        .detail-location {
+            color: #f39c12;
+        }
+        
+        .detail-supplier {
+            color: #16a085;
+        }
+        
+        .detail-history {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .detail-history-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .detail-history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .history-label {
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+        
+        .history-value {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        .detail-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .logo span, .nav-link span {
+                display: none;
+            }
+            
+            .logo i, .nav-link i {
+                margin-right: 0;
+                font-size: 24px;
+            }
+            
+            .nav-link {
+                justify-content: center;
+                padding: 15px 10px;
+            }
+            
+            .search-container {
+                width: 200px;
+            }
+            
+            .section-actions {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+            
+            .warehouse-container {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .welcome-banner {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            
+            .welcome-icon {
+                display: none;
+            }
+            
+            .filters-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .notification-dropdown {
+                width: 300px;
+                right: -30px;
+            }
+            
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .detail-image {
+                height: 200px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .topbar {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .search-container {
+                width: 100%;
+            }
+            
+            .sidebar {
+                position: fixed;
+                left: -250px;
+                height: 100vh;
+            }
+            
+            .sidebar.active {
+                left: 0;
+            }
+            
+            .menu-toggle {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                width: 40px;
+                height: 40px;
+                background: #3498db;
+                color: white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                cursor: pointer;
+            }
+            
+            .section-actions {
+                width: 100%;
+                margin-top: 15px;
+                flex-direction: row;
+                justify-content: flex-end;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .section-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .notification-dropdown {
+                width: 280px;
+                right: -50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Menú toggle para móviles -->
+    <div class="menu-toggle">
+        <i class="fas fa-bars"></i>
+    </div>
+    
+    <!-- Barra lateral / Navbar -->
+    <div class="sidebar">
+        <div class="logo-container">
+            <a href="#" class="logo">
+                <i class="fas fa-tools"></i>
+                <span>Taller Mecánico</span>
+            </a>
+        </div>
+        
+        <div class="nav-links">
+            <div class="nav-top">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Inicio</span>
+                </a>
+                <a href="almacen.html" class="nav-link active">
+                    <i class="fas fa-boxes"></i>
+                    <span>Almacén</span>
+                </a>
+                <a href="clientes.html" class="nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>Clientes</span>
+                </a>
+                <a href="trabajos.html" class="nav-link">
+                    <i class="fas fa-wrench"></i>
+                    <span>Trabajos</span>
+                </a>
+                <a href="empleados.html" class="nav-link">
+                    <i class="fas fa-user-friends"></i>
+                    <span>Colaboradores</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    <span>Ajustes</span>
+                </a>
+            </div>
+            
+            <!-- Botón de cerrar sesión -->
+            <div class="nav-bottom">
+                <div class="nav-link" id="logoutBtn" style="background: rgba(231, 76, 60, 0.2);">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Cerrar Sesión</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="topbar">
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Buscar piezas...">
+            </div>
+            
+            <div class="user-actions">
+                <div class="notification-btn" id="notificationBtn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notificationBadge">0</span>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h3>Notificaciones</h3>
+                            <button class="clear-btn" id="clearNotifications">Marcar todas como leídas</button>
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <!-- Las notificaciones se cargarán aquí -->
+                        </div>
+                    </div>
+                </div>
+                <div class="user-profile" id="userProfile">
+                    R
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-container">
+            <!-- Mensaje de estado para cierre de sesión -->
+            <div class="status-message" id="statusMessage"></div>
+            
+            <div class="welcome-banner">
+                <div class="welcome-text">
+                    <h1 id="welcomeTitle">Gestión de Almacén</h1>
+                    <p>Administra y controla todas las piezas de repuesto disponibles en tu taller</p>
+                </div>
+                <div class="welcome-icon">
+                    <i class="fas fa-warehouse"></i>
+                </div>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="filters-container">
+                <div class="filter-group">
+                    <label class="filter-label">Filtrar por estante:</label>
+                    <select class="filter-select" id="rackFilter">
+                        <option value="all">Todos los estantes</option>
+                        <option value="A">Estante A</option>
+                        <option value="B">Estante B</option>
+                        <option value="C">Estante C</option>
+                        <option value="D">Estante D</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Ordenar por:</label>
+                    <select class="filter-select" id="sortFilter">
+                        <option value="name">Nombre (A-Z)</option>
+                        <option value="stock">Stock (Mayor a menor)</option>
+                        <option value="stock-low">Stock (Menor a mayor)</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Mostrar:</label>
+                    <select class="filter-select" id="stockFilter">
+                        <option value="all">Todas las piezas</option>
+                        <option value="low">Solo bajo stock</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Inventario de Piezas</h2>
+                    <div class="section-actions">
+                        <a href="FormularioV1.html" class="register-btn">
+                            <i class="fas fa-plus"></i>
+                            Nueva Pieza
+                        </a>
+                        <a href="#" class="section-action">
+                            Ver reporte
+                            <i class="fas fa-file-pdf"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Estado vacío -->
+                <div class="empty-state" id="emptyState">
+                    <i class="fas fa-box-open"></i>
+                    <h3>No se encontraron piezas</h3>
+                    <p>No hay piezas que coincidan con los filtros seleccionados. Intenta cambiar los criterios de búsqueda o agregar nuevas piezas.</p>
+                </div>
+                
+                <!-- Indicador de carga -->
+                <div class="loader" id="loader"></div>
+                
+                <!-- Contenedor principal con grid 3x3 -->
+                <div class="warehouse-container" id="partsContainer">
+                    <!-- El contenido se generará dinámicamente con datos de Firebase -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar pieza -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Editar Pieza</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editName">Nombre de la Pieza</label>
+                    <input type="text" id="editName" placeholder="Ingrese el nombre">
+                </div>
+                <div class="form-group">
+                    <label for="editCode">Código de la Pieza</label>
+                    <input type="text" id="editCode" placeholder="Ingrese el código">
+                </div>
+                <div class="form-group">
+                    <label for="editPrice">Precio ($)</label>
+                    <input type="number" id="editPrice" step="0.01" placeholder="Ingrese el precio">
+                </div>
+                <div class="form-group">
+                    <label for="editStock">Stock Actual</label>
+                    <input type="number" id="editStock" placeholder="Ingrese el stock">
+                </div>
+                <div class="form-group">
+                    <label for="editMinStock">Stock Mínimo</label>
+                    <input type="number" id="editMinStock" placeholder="Ingrese el stock mínimo">
+                </div>
+                <div class="form-group">
+                    <label for="editLocation">Ubicación en Almacén</label>
+                    <select id="editLocation">
+                        <option value="A">Estante A</option>
+                        <option value="B">Estante B</option>
+                        <option value="C">Estante C</option>
+                        <option value="D">Estante D</option>
+                        <option value="General">General</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary close-modal">Cancelar</button>
+                <button class="btn btn-primary" id="saveChangesBtn">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para actualizar stock -->
+    <div class="modal" id="stockModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Actualizar Stock</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="currentStock">Stock Actual</label>
+                    <input type="number" id="currentStock" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="stockAction">Acción</label>
+                    <select id="stockAction">
+                        <option value="add">Agregar Stock</option>
+                        <option value="remove">Quitar Stock</option>
+                        <option value="set">Establecer Nuevo Valor</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="stockAmount">Cantidad</label>
+                    <input type="number" id="stockAmount" min="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label for="stockReason">Motivo</label>
+                    <input type="text" id="stockReason" placeholder="Ej: Compra de proveedor, venta, etc.">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary close-modal">Cancelar</button>
+                <button class="btn btn-primary" id="updateStockBtn">Actualizar Stock</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para detalles de pieza (diseño vertical) -->
+    <div class="modal" id="detailModal">
+        <div class="detail-modal-content">
+            <div class="detail-header">
+                <h2 id="detailModalTitle">Detalles de Pieza</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="detail-body" id="detailBody">
+                <!-- Los detalles se cargarán aquí con estructura vertical -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importar las funciones necesarias de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signOut, 
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            getDocs, 
+            doc,
+            deleteDoc,
+            updateDoc,
+            onSnapshot,
+            query,
+            orderBy,
+            serverTimestamp,
+            addDoc
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { 
+            getStorage, 
+            ref, 
+            getDownloadURL,
+            deleteObject
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
+        
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAL7eXIPTl04c17KvkmnNUwjrH93QNBQm8",
+            authDomain: "taller-alfoso-mecanico-diesel.firebaseapp.com",
+            projectId: "taller-alfoso-mecanico-diesel",
+            storageBucket: "taller-alfoso-mecanico-diesel.firebasestorage.app",
+            messagingSenderId: "287486508627",
+            appId: "1:287486508627:web:748d0e7bac0f46573750a6",
+            measurementId: "G-9JYZR2735E"
+        };
+        
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app,'almacenvirtual');     
+        const storage = getStorage(app);
+        
+        // Referencias a elementos
+        const logoutBtn = document.getElementById('logoutBtn');
+        const welcomeTitle = document.getElementById('welcomeTitle');
+        const userProfile = document.getElementById('userProfile');
+        const statusMessage = document.getElementById('statusMessage');
+        const partsContainer = document.getElementById('partsContainer');
+        const searchInput = document.getElementById('searchInput');
+        const rackFilter = document.getElementById('rackFilter');
+        const sortFilter = document.getElementById('sortFilter');
+        const stockFilter = document.getElementById('stockFilter');
+        const loader = document.getElementById('loader');
+        const emptyState = document.getElementById('emptyState');
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+        const notificationBadge = document.getElementById('notificationBadge');
+        const notificationList = document.getElementById('notificationList');
+        const clearNotifications = document.getElementById('clearNotifications');
+        const editModal = document.getElementById('editModal');
+        const stockModal = document.getElementById('stockModal');
+        const detailModal = document.getElementById('detailModal');
+        const closeModalBtns = document.querySelectorAll('.close-modal');
+        const saveChangesBtn = document.getElementById('saveChangesBtn');
+        const updateStockBtn = document.getElementById('updateStockBtn');
+        const detailBody = document.getElementById('detailBody');
+        
+        // Variables globales
+        let partsCache = [];
+        let currentEditPart = null;
+        let notifications = [];
+        
+        // Verificar estado de autenticación al cargar
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                const displayName = user.displayName || 'Usuario';
+                const firstName = displayName.split(' ')[0];
+                const firstLetter = firstName.charAt(0).toUpperCase();
+                
+                welcomeTitle.textContent = `Gestión de Almacén`;
+                userProfile.textContent = firstLetter;
+                loadParts();
+                listenForNotifications();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+        
+        // Funcionalidad de cierre de sesión
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth).then(() => {
+                statusMessage.textContent = 'Sesión cerrada exitosamente. Redirigiendo...';
+                statusMessage.className = 'status-message success';
+                statusMessage.style.display = 'block';
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            }).catch((error) => {
+                statusMessage.textContent = `Error al cerrar sesión: ${error.message}`;
+                statusMessage.className = 'status-message error';
+                statusMessage.style.display = 'block';
+            });
+        });
+        
+        // Toggle sidebar en móviles
+        document.querySelector('.menu-toggle').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+        
+        // Resaltar la opción activa en el menú
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                navLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                if (window.innerWidth < 576) {
+                    document.querySelector('.sidebar').classList.remove('active');
+                }
+                window.location.href = this.href;
+            });
+        });
+        
+        // Función para cargar piezas desde Firebase
+        async function loadParts() {
+            try {
+                loader.style.display = 'block';
+                partsContainer.innerHTML = '';
+                emptyState.style.display = 'none';
+                
+                if (partsCache.length > 0) {
+                    renderParts(partsCache);
+                    loader.style.display = 'none';
+                    return;
+                }
+                
+                const querySnapshot = await getDocs(collection(db, "Piezas"));
+                partsCache = [];
+                
+                if (querySnapshot.empty) {
+                    emptyState.style.display = 'block';
+                    loader.style.display = 'none';
+                    return;
+                }
+                
+                for (const docRef of querySnapshot.docs) {
+                    const part = docRef.data();
+                    part.id = docRef.id;
+                    
+                    // Asegurar que todos los campos tengan valores válidos
+                    part.nombre = part.partName || "Sin nombre";
+                    part.codigo = part.serialNumber || "Sin código";
+                    part.precio = Number(part.salePrice) || 0; // Convertir a número
+                    part.estante = part.storageLocation || "General";
+                    part.minStock = Number(part.minStock) || 5;
+                    part.stock = Number(part.stock) || 0;
+                    part.supplier = part.supplier || "Sin proveedor";
+                    part.purchasePrice = Number(part.purchasePrice) || 0;
+                    
+                    // Guardar la marca de tiempo original
+                    part.timestamp = part.timestamp || null;
+                    
+                    part.images = part.images || [];
+                    
+                    if (part.images.length > 0) {
+                        const imageUrl = part.images[0];
+                        if (imageUrl && !imageUrl.startsWith('http')) {
+                            try {
+                                const storageRef = ref(storage, imageUrl);
+                                part.fotoURL = await getDownloadURL(storageRef);
+                            } catch (error) {
+                                part.fotoURL = null;
+                            }
+                        } else {
+                            part.fotoURL = imageUrl;
+                        }
+                    } else {
+                        part.fotoURL = null;
+                    }
+                    
+                    partsCache.push(part);
+                }
+                
+                renderParts(partsCache);
+                loader.style.display = 'none';
+                listenForPartChanges();
+                
+            } catch (error) {
+                console.error("Error al cargar piezas: ", error);
+                statusMessage.textContent = `Error al cargar piezas: ${error.message}`;
+                statusMessage.className = 'status-message error';
+                statusMessage.style.display = 'block';
+                loader.style.display = 'none';
+                emptyState.style.display = 'block';
+            }
+        }
+        
+        // Escuchar cambios en tiempo real en las piezas
+        function listenForPartChanges() {
+            const q = collection(db, "Piezas");
+            
+            onSnapshot(q, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    const partId = change.doc.id;
+                    const newData = change.doc.data();
+                    newData.id = partId;
+                    
+                    if (change.type === "added") {
+                        if (!partsCache.some(p => p.id === partId)) {
+                            // Procesar los datos como en loadParts
+                            newData.nombre = newData.partName || "Sin nombre";
+                            newData.codigo = newData.serialNumber || "Sin código";
+                            newData.precio = Number(newData.salePrice) || 0;
+                            newData.estante = newData.storageLocation || "General";
+                            newData.minStock = Number(newData.minStock) || 5;
+                            newData.stock = Number(newData.stock) || 0;
+                            newData.supplier = newData.supplier || "Sin proveedor";
+                            newData.purchasePrice = Number(newData.purchasePrice) || 0;
+                            newData.timestamp = newData.timestamp || null;
+                            newData.images = newData.images || [];
+                            partsCache.push(newData);
+                            renderParts(partsCache);
+                            createNotification('success', 'info', `Nueva pieza agregada: ${newData.partName || "Sin nombre"}`);
+                        }
+                    } 
+                    else if (change.type === "modified") {
+                        const index = partsCache.findIndex(p => p.id === partId);
+                        if (index !== -1) {
+                            const oldPart = partsCache[index];
+                            
+                            // Actualizar solo los campos necesarios
+                            if (newData.partName) partsCache[index].nombre = newData.partName;
+                            if (newData.serialNumber) partsCache[index].codigo = newData.serialNumber;
+                            if (newData.salePrice) partsCache[index].precio = Number(newData.salePrice);
+                            if (newData.storageLocation) partsCache[index].estante = newData.storageLocation;
+                            if (newData.minStock) partsCache[index].minStock = Number(newData.minStock);
+                            if (newData.stock !== undefined) partsCache[index].stock = Number(newData.stock);
+                            if (newData.supplier) partsCache[index].supplier = newData.supplier;
+                            if (newData.purchasePrice) partsCache[index].purchasePrice = Number(newData.purchasePrice);
+                            if (newData.timestamp) partsCache[index].timestamp = newData.timestamp;
+                            if (newData.images) partsCache[index].images = newData.images;
+                            
+                            // Actualizar la marca de tiempo con la hora actual si hay cambios
+                            if (Object.keys(newData).some(key => 
+                                key !== 'images' && 
+                                key !== 'timestamp' && 
+                                JSON.stringify(oldPart[key]) !== JSON.stringify(newData[key])
+                            )) {
+                                partsCache[index].timestamp = serverTimestamp();
+                            }
+                            
+                            // Verificar cambios en stock
+                            if (oldPart.stock !== partsCache[index].stock) {
+                                if (partsCache[index].stock === 0) {
+                                    createNotification('critical', 'exclamation-triangle', `¡ALERTA! ${partsCache[index].nombre} se ha agotado`);
+                                } else if (partsCache[index].stock <= partsCache[index].minStock) {
+                                    createNotification('warning', 'exclamation-circle', `Stock bajo: ${partsCache[index].nombre} (${partsCache[index].stock} unidades)`);
+                                } else if (partsCache[index].stock > oldPart.stock) {
+                                    createNotification('info', 'box-open', `Stock actualizado: ${partsCache[index].nombre} (${oldPart.stock} → ${partsCache[index].stock})`);
+                                }
+                            } else {
+                                createNotification('info', 'info-circle', `Pieza actualizada: ${partsCache[index].nombre}`);
+                            }
+                            
+                            renderParts(partsCache);
+                        }
+                    } 
+                    else if (change.type === "removed") {
+                        partsCache = partsCache.filter(p => p.id !== partId);
+                        renderParts(partsCache);
+                        createNotification('warning', 'trash-alt', `Pieza eliminada: ${change.doc.data().partName || "Sin nombre"}`);
+                    }
+                });
+            });
+        }
+        
+        // Función para renderizar piezas con los filtros aplicados
+        function renderParts(parts) {
+            let filteredParts = [...parts];
+            
+            if (rackFilter.value !== 'all') {
+                filteredParts = filteredParts.filter(part => part.estante === rackFilter.value);
+            }
+            
+            if (stockFilter.value === 'low') {
+                filteredParts = filteredParts.filter(part => part.stock < (part.minStock || 5));
+            }
+            
+            if (sortFilter.value === 'name') {
+                filteredParts.sort((a, b) => {
+                    const nameA = a.nombre ? a.nombre.toUpperCase() : '';
+                    const nameB = b.nombre ? b.nombre.toUpperCase() : '';
+                    return nameA.localeCompare(nameB);
+                });
+            } else if (sortFilter.value === 'stock') {
+                filteredParts.sort((a, b) => (b.stock || 0) - (a.stock || 0));
+            } else if (sortFilter.value === 'stock-low') {
+                filteredParts.sort((a, b) => (a.stock || 0) - (b.stock || 0));
+            }
+            
+            if (filteredParts.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            partsContainer.innerHTML = '';
+            
+            filteredParts.forEach((part, index) => {
+                const partCard = createPartCard(part);
+                partCard.style.animationDelay = `${index * 0.1}s`;
+                partsContainer.appendChild(partCard);
+            });
+        }
+        
+        // Función para crear tarjeta de pieza con datos reales
+        function createPartCard(part) {
+            const card = document.createElement('div');
+            card.className = 'part-card';
+            
+            const isLowStock = part.stock < (part.minStock || 5);
+            const precio = part.precio ? part.precio.toFixed(2) : '0.00';
+            
+            card.innerHTML = `
+                ${isLowStock ? `<div class="low-stock-indicator">BAJO STOCK</div>` : ''}
+                <div class="part-image">
+                    ${part.fotoURL ? 
+                        `<img src="${part.fotoURL}" alt="${part.nombre}" onerror="this.parentElement.innerHTML='<div class=\'default-part-image\'><i class=\'fas fa-cog\'></i></div>'">` : 
+                        `<div class="default-part-image"><i class="fas fa-cog"></i></div>`
+                    }
+                </div>
+                <div class="part-info">
+                    <h3 class="part-name">${part.nombre}</h3>
+                    <div class="part-code">
+                        <i class="fas fa-barcode"></i>
+                        <span>${part.codigo}</span>
+                    </div>
+                    <div class="part-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Stock</div>
+                            <div class="detail-value stock-value ${isLowStock ? 'low-stock' : ''}">${part.stock}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Mínimo</div>
+                            <div class="detail-value">${part.minStock}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Precio</div>
+                            <div class="detail-value">$${precio}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="part-footer">
+                    <div class="rack-location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${part.estante}</span>
+                    </div>
+                    <div class="part-actions">
+                        <button class="part-btn detail-btn" data-id="${part.id}" title="Ver detalles">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="part-btn edit-btn" data-id="${part.id}" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="part-btn update-btn" data-id="${part.id}" title="Actualizar stock">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="part-btn delete-btn" data-id="${part.id}" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        // Event listeners para filtros
+        rackFilter.addEventListener('change', () => renderParts(partsCache));
+        sortFilter.addEventListener('change', () => renderParts(partsCache));
+        stockFilter.addEventListener('change', () => renderParts(partsCache));
+        
+        // Event listener para búsqueda
+        searchInput.addEventListener('input', () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const partCards = document.querySelectorAll('.part-card');
+            let hasVisibleItems = false;
+            
+            partCards.forEach(card => {
+                const partName = card.querySelector('.part-name').textContent.toLowerCase();
+                const partCode = card.querySelector('.part-code span').textContent.toLowerCase();
+                
+                if (partName.includes(searchTerm) || partCode.includes(searchTerm)) {
+                    card.style.display = 'block';
+                    hasVisibleItems = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            emptyState.style.display = hasVisibleItems ? 'none' : 'block';
+        });
+        
+        // Event listeners para botones de acciones
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.detail-btn')) {
+                const partId = e.target.closest('.detail-btn').dataset.id;
+                openDetailModal(partId);
+            }
+            
+            if (e.target.closest('.edit-btn')) {
+                const partId = e.target.closest('.edit-btn').dataset.id;
+                openEditModal(partId);
+            }
+            
+            if (e.target.closest('.update-btn')) {
+                const partId = e.target.closest('.update-btn').dataset.id;
+                openStockModal(partId);
+            }
+            
+            if (e.target.closest('.delete-btn')) {
+                const partId = e.target.closest('.delete-btn').dataset.id;
+                const part = partsCache.find(p => p.id === partId);
+                if (part) {
+                    if (confirm(`¿Estás seguro de que quieres eliminar la pieza "${part.nombre}"?`)) {
+                        deletePart(partId);
+                    }
+                }
+            }
+        });
+        
+        // Función para abrir modal de detalles con diseño vertical
+        function openDetailModal(partId) {
+            const part = partsCache.find(p => p.id === partId);
+            if (part) {
+                const isLowStock = part.stock < (part.minStock || 5);
+                const precioVenta = part.precio ? part.precio.toFixed(2) : '0.00';
+                const precioCompra = part.purchasePrice ? part.purchasePrice.toFixed(2) : '0.00';
+                
+                // Formatear la fecha de última actualización
+                let fechaActualizacion = 'No disponible';
+                if (part.timestamp) {
+                    try {
+                        const date = part.timestamp.toDate ? part.timestamp.toDate() : new Date(part.timestamp);
+                        fechaActualizacion = date.toLocaleString('es-ES', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    } catch (error) {
+                        console.error("Error al formatear fecha:", error);
+                    }
+                }
+
+                document.getElementById('detailModalTitle').textContent = `Detalles: ${part.nombre}`;
+                
+                // Construir el contenido del modal con diseño vertical
+                detailBody.innerHTML = `
+                    <div class="detail-image-container">
+                        <div class="detail-image">
+                            ${part.fotoURL ? 
+                                `<img src="${part.fotoURL}" alt="${part.nombre}" onerror="this.parentElement.innerHTML='<div class=\'default-detail-image\'><i class=\'fas fa-cog\'></i></div>'">` : 
+                                `<div class="default-detail-image"><i class="fas fa-cog"></i></div>`
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="detail-info">
+                        <h3 class="detail-title">${part.nombre}</h3>
+                        <div class="detail-subtitle">
+                            <i class="fas fa-barcode"></i>
+                            <span>${part.codigo}</span>
+                        </div>
+                        
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">
+                                    <i class="fas fa-box"></i> Stock
+                                </div>
+                                <div class="detail-value ${isLowStock ? 'detail-low-stock' : 'detail-stock'}">
+                                    ${part.stock}
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">
+                                    <i class="fas fa-tag"></i> Precio de Venta
+                                </div>
+                                <div class="detail-value detail-price">
+                                    $${precioVenta}
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">
+                                    <i class="fas fa-money-bill-wave"></i> Precio de Compra
+                                </div>
+                                <div class="detail-value detail-cost">
+                                    $${precioCompra}
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">
+                                    <i class="fas fa-map-marker-alt"></i> Ubicación
+                                </div>
+                                <div class="detail-value detail-location">
+                                    ${part.estante}
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">
+                                    <i class="fas fa-truck"></i> Proveedor
+                                </div>
+                                <div class="detail-value detail-supplier">
+                                    ${part.supplier}
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">
+                                    <i class="fas fa-database"></i> Stock Mínimo
+                                </div>
+                                <div class="detail-value">
+                                    ${part.minStock || 5}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-history">
+                            <div class="detail-history-title">
+                                <i class="fas fa-history"></i> Historial
+                            </div>
+                            <div class="detail-history-item">
+                                <div class="history-label">Última actualización:</div>
+                                <div class="history-value">${fechaActualizacion}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-actions">
+                            <button class="btn btn-secondary close-modal">Cerrar</button>
+                            <button class="btn btn-primary edit-btn" data-id="${part.id}">
+                                <i class="fas fa-edit"></i> Editar Pieza
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Mostrar el modal
+                detailModal.classList.add('active');
+                
+                // Agregar evento para botón de editar dentro del modal
+                detailBody.querySelector('.edit-btn').addEventListener('click', () => {
+                    detailModal.classList.remove('active');
+                    openEditModal(partId);
+                });
+            }
+        }
+        
+        // Función para abrir modal de edición
+        function openEditModal(partId) {
+            const part = partsCache.find(p => p.id === partId);
+            if (part) {
+                currentEditPart = part;
+                document.getElementById('modalTitle').textContent = `Editar: ${part.nombre}`;
+                document.getElementById('editName').value = part.nombre;
+                document.getElementById('editCode').value = part.codigo;
+                document.getElementById('editPrice').value = part.precio || 0;
+                document.getElementById('editStock').value = part.stock;
+                document.getElementById('editMinStock').value = part.minStock;
+                document.getElementById('editLocation').value = part.estante;
+                editModal.classList.add('active');
+            }
+        }
+        
+        // Función para abrir modal de actualización de stock
+        function openStockModal(partId) {
+            const part = partsCache.find(p => p.id === partId);
+            if (part) {
+                currentEditPart = part;
+                document.getElementById('currentStock').value = part.stock;
+                document.getElementById('stockAmount').value = 1;
+                document.getElementById('stockReason').value = '';
+                stockModal.classList.add('active');
+            }
+        }
+        
+        // Cerrar modales
+        closeModalBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                editModal.classList.remove('active');
+                stockModal.classList.remove('active');
+                detailModal.classList.remove('active');
+                currentEditPart = null;
+            });
+        });
+        
+        // Guardar cambios en la edición
+        saveChangesBtn.addEventListener('click', async () => {
+            if (!currentEditPart) return;
+            
+            const name = document.getElementById('editName').value;
+            const code = document.getElementById('editCode').value;
+            const price = parseFloat(document.getElementById('editPrice').value);
+            const stock = parseInt(document.getElementById('editStock').value);
+            const minStock = parseInt(document.getElementById('editMinStock').value);
+            const location = document.getElementById('editLocation').value;
+            
+            if (!name || !code || isNaN(price) || isNaN(stock) || isNaN(minStock)) {
+                alert("Por favor complete todos los campos correctamente");
+                return;
+            }
+            
+            try {
+                loader.style.display = 'block';
+                
+                const partRef = doc(db, "Piezas", currentEditPart.id);
+                await updateDoc(partRef, {
+                    partName: name,
+                    serialNumber: code,
+                    salePrice: price,
+                    stock: stock,
+                    minStock: minStock,
+                    storageLocation: location,
+                    timestamp: serverTimestamp() // Actualizar marca de tiempo
+                });
+                
+                const index = partsCache.findIndex(p => p.id === currentEditPart.id);
+                if (index !== -1) {
+                    partsCache[index].nombre = name;
+                    partsCache[index].codigo = code;
+                    partsCache[index].precio = price;
+                    partsCache[index].stock = stock;
+                    partsCache[index].minStock = minStock;
+                    partsCache[index].estante = location;
+                    partsCache[index].timestamp = serverTimestamp();
+                }
+                
+                renderParts(partsCache);
+                
+                statusMessage.textContent = 'Pieza actualizada correctamente';
+                statusMessage.className = 'status-message success';
+                statusMessage.style.display = 'block';
+                
+                editModal.classList.remove('active');
+                currentEditPart = null;
+                
+                createNotification('success', 'check-circle', `Pieza actualizada: ${name}`);
+                
+            } catch (error) {
+                console.error("Error al actualizar pieza:", error);
+                statusMessage.textContent = `Error al actualizar pieza: ${error.message}`;
+                statusMessage.className = 'status-message error';
+                statusMessage.style.display = 'block';
+            } finally {
+                loader.style.display = 'none';
+            }
+        });
+        
+        // Actualizar stock
+        updateStockBtn.addEventListener('click', async () => {
+            if (!currentEditPart) return;
+            
+            const action = document.getElementById('stockAction').value;
+            const amount = parseInt(document.getElementById('stockAmount').value);
+            const reason = document.getElementById('stockReason').value;
+            
+            if (isNaN(amount)) {
+                alert("Por favor ingrese una cantidad válida");
+                return;
+            }
+            
+            if (!reason) {
+                alert("Por favor ingrese un motivo para la actualización");
+                return;
+            }
+            
+            try {
+                loader.style.display = 'block';
+                
+                const partRef = doc(db, "Piezas", currentEditPart.id);
+                let newStock = currentEditPart.stock;
+                const oldStock = currentEditPart.stock;
+                
+                switch (action) {
+                    case 'add':
+                        newStock += amount;
+                        break;
+                    case 'remove':
+                        newStock -= amount;
+                        if (newStock < 0) newStock = 0;
+                        break;
+                    case 'set':
+                        newStock = amount;
+                        break;
+                }
+                
+                await updateDoc(partRef, {
+                    stock: newStock,
+                    timestamp: serverTimestamp() // Actualizar marca de tiempo
+                });
+                
+                const index = partsCache.findIndex(p => p.id === currentEditPart.id);
+                if (index !== -1) {
+                    partsCache[index].stock = newStock;
+                    partsCache[index].timestamp = serverTimestamp();
+                }
+                
+                renderParts(partsCache);
+                
+                const partName = currentEditPart.nombre;
+                
+                statusMessage.textContent = `Stock actualizado correctamente (${oldStock} → ${newStock})`;
+                statusMessage.className = 'status-message success';
+                statusMessage.style.display = 'block';
+                
+                stockModal.classList.remove('active');
+                currentEditPart = null;
+                
+                createNotification('info', 'box-open', `Stock actualizado: ${partName} (${oldStock} → ${newStock})`);
+                
+            } catch (error) {
+                console.error("Error al actualizar stock:", error);
+                statusMessage.textContent = `Error al actualizar stock: ${error.message}`;
+                statusMessage.className = 'status-message error';
+                statusMessage.style.display = 'block';
+            } finally {
+                loader.style.display = 'none';
+            }
+        });
+        
+        // Función para eliminar pieza
+        async function deletePart(partId) {
+            const part = partsCache.find(p => p.id === partId);
+            if (!part) return;
+            
+            try {
+                loader.style.display = 'block';
+                
+                if (part.images) {
+                    for (const imagePath of part.images) {
+                        if (imagePath && !imagePath.startsWith('http')) {
+                            const imageRef = ref(storage, imagePath);
+                            await deleteObject(imageRef);
+                        }
+                    }
+                }
+                
+                await deleteDoc(doc(db, "Piezas", partId));
+                
+                partsCache = partsCache.filter(p => p.id !== partId);
+                
+                renderParts(partsCache);
+                
+                statusMessage.textContent = 'Pieza eliminada correctamente';
+                statusMessage.className = 'status-message success';
+                statusMessage.style.display = 'block';
+                
+                createNotification('warning', 'trash-alt', `Pieza eliminada: ${part.nombre}`);
+                
+            } catch (error) {
+                console.error("Error al eliminar pieza: ", error);
+                statusMessage.textContent = `Error al eliminar pieza: ${error.message}`;
+                statusMessage.className = 'status-message error';
+                statusMessage.style.display = 'block';
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+        
+        // Función para crear notificación
+        async function createNotification(type, icon, message) {
+            try {
+                const notification = {
+                    type: type,
+                    message: message,
+                    timestamp: serverTimestamp(),
+                    read: false
+                };
+                
+                await addDoc(collection(db, "Notificaciones"), notification);
+                
+            } catch (error) {
+                console.error("Error al crear notificación:", error);
+            }
+        }
+        
+        // Función para escuchar notificaciones en tiempo real
+        function listenForNotifications() {
+            const q = query(collection(db, "Notificaciones"), 
+                         orderBy("timestamp", "desc"));
+            
+            onSnapshot(q, (snapshot) => {
+                notifications = [];
+                let unreadCount = 0;
+                
+                snapshot.forEach(doc => {
+                    const notification = {
+                        id: doc.id,
+                        ...doc.data()
+                    };
+                    
+                    if (notification.timestamp) {
+                        const date = notification.timestamp.toDate();
+                        notification.formattedTime = date.toLocaleTimeString('es-ES', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    } else {
+                        notification.formattedTime = "Ahora";
+                    }
+                    
+                    notifications.push(notification);
+                    
+                    if (!notification.read) unreadCount++;
+                });
+                
+                notificationBadge.textContent = unreadCount;
+                renderNotifications();
+            });
+        }
+        
+        // Función para renderizar notificaciones
+        function renderNotifications() {
+            notificationList.innerHTML = '';
+            
+            if (notifications.length === 0) {
+                notificationList.innerHTML = '<div class="notification-item"><p class="notification-text">No hay notificaciones</p></div>';
+                return;
+            }
+            
+            notifications.forEach(notification => {
+                const item = document.createElement('div');
+                item.className = `notification-item ${notification.read ? '' : 'unread'}`;
+                
+                let typeClass = '';
+                if (notification.type === 'critical') typeClass = 'notification-critical';
+                else if (notification.type === 'warning') typeClass = 'notification-warning';
+                else if (notification.type === 'success') typeClass = 'notification-success';
+                else typeClass = 'notification-info';
+                
+                item.innerHTML = `
+                    <div class="notification-title ${typeClass}">
+                        <i class="fas fa-${notification.icon}"></i>
+                        <span>${notification.message}</span>
+                    </div>
+                    <div class="notification-time">${notification.formattedTime}</div>
+                `;
+                
+                item.addEventListener('click', async () => {
+                    if (!notification.read) {
+                        await markNotificationAsRead(notification.id);
+                    }
+                });
+                
+                notificationList.appendChild(item);
+            });
+        }
+        
+        // Función para marcar notificación como leída
+        async function markNotificationAsRead(notificationId) {
+            try {
+                const notificationRef = doc(db, "Notificaciones", notificationId);
+                await updateDoc(notificationRef, {
+                    read: true
+                });
+            } catch (error) {
+                console.error("Error al marcar notificación como leída:", error);
+            }
+        }
+        
+        // Función para marcar todas las notificaciones como leídas
+        async function markAllNotificationsAsRead() {
+            try {
+                const unreadNotifications = notifications.filter(n => !n.read);
+                
+                for (const notification of unreadNotifications) {
+                    const notificationRef = doc(db, "Notificaciones", notification.id);
+                    await updateDoc(notificationRef, {
+                        read: true
+                    });
+                }
+                
+            } catch (error) {
+                console.error("Error al marcar todas las notificaciones como leídas:", error);
+            }
+        }
+        
+        // Event listeners para notificaciones
+        notificationBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationDropdown.classList.toggle('active');
+        });
+        
+        clearNotifications.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            await markAllNotificationsAsRead();
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!notificationBtn.contains(e.target)) {
+                notificationDropdown.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

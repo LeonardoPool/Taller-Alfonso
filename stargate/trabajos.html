@@ -1,0 +1,2226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Trabajos - Taller Mecánico</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a3a, #2c3e50);
+            color: #fff;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Barra lateral / Navbar */
+        .sidebar {
+            width: 250px;
+            background: rgba(44, 62, 80, 0.95);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            transition: all 0.3s;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            position: fixed;
+        }
+        
+        .logo-container {
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(52, 73, 94, 0.7);
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            font-size: 28px;
+            color: #3498db;
+        }
+        
+        .nav-links {
+            padding: 20px 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .nav-top {
+            flex: 1;
+        }
+        
+        .nav-bottom {
+            padding: 15px 0;
+            border-top: 1px solid rgba(52, 73, 94, 0.7);
+            margin-top: auto;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 18px 25px;
+            color: #bdc3c7;
+            text-decoration: none;
+            transition: all 0.3s;
+            position: relative;
+            margin-bottom: 8px;
+            cursor: pointer;
+            border-radius: 0 30px 30px 0;
+        }
+        
+        .nav-link:hover {
+            color: #fff;
+            background: rgba(52, 152, 219, 0.2);
+        }
+        
+        .nav-link.active {
+            color: #fff;
+            background: linear-gradient(90deg, rgba(52, 152, 219, 0.4), transparent);
+            border-left: 4px solid #3498db;
+        }
+        
+        .nav-link i {
+            font-size: 20px;
+            margin-right: 15px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        /* Contenido principal */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(245, 247, 250, 0.98);
+            margin-left: 250px;
+        }
+        
+        .topbar {
+            background: rgba(255, 255, 255, 0.97);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        
+        .search-container {
+            position: relative;
+            width: 300px;
+        }
+        
+        .search-container input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            font-size: 14px;
+            background: rgba(245, 247, 250, 0.8);
+            transition: all 0.3s;
+        }
+        
+        .search-container input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .search-container i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #777;
+        }
+        
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+        }
+        
+        .notification-btn {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(245, 247, 250, 0.8);
+            color: #555;
+        }
+        
+        .notification-btn:hover {
+            background: #3498db;
+            color: #fff;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            background: #e74c3c;
+            color: #fff;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .notification-dropdown {
+            position: absolute;
+            top: 55px;
+            right: 0;
+            width: 350px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .notification-dropdown.active {
+            display: block;
+        }
+        
+        .notification-header {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .notification-header h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .clear-btn {
+            background: none;
+            border: none;
+            color: #3498db;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .notification-list {
+            padding: 0;
+        }
+        
+        .notification-item {
+            padding: 15px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .notification-title i {
+            font-size: 14px;
+        }
+        
+        .notification-text {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+        
+        .notification-time {
+            font-size: 12px;
+            color: #95a5a6;
+            text-align: right;
+        }
+        
+        .notification-critical i { color: #e74c3c; }
+        .notification-warning i { color: #f39c12; }
+        .notification-info i { color: #3498db; }
+        .notification-success i { color: #27ae60; }
+        
+        .user-profile {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: #fff;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .dashboard-container {
+            padding: 30px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .welcome-banner {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 20px rgba(44, 62, 80, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .welcome-banner::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+        
+        .welcome-text h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .welcome-text p {
+            font-size: 16px;
+            opacity: 0.9;
+            max-width: 600px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .welcome-icon {
+            font-size: 70px;
+            opacity: 0.2;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .jobs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        /* Grupo de trabajos por cliente */
+        .client-group {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .client-header {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .client-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .client-name {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .client-company {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .client-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+        }
+        
+        .stat-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .jobs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        /* Tarjeta de trabajo */
+        .job-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #eee;
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s forwards;
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .job-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .job-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .status-open {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .status-in-progress {
+            background: #3498db;
+            color: white;
+        }
+        
+        .status-completed {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .status-cancelled {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .job-image {
+            height: 180px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-bottom: 1px solid #eee;
+            position: relative;
+        }
+        
+        .job-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .job-card:hover .job-image img {
+            transform: scale(1.05);
+        }
+        
+        .default-job-image {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            font-size: 60px;
+        }
+        
+        .job-info {
+            padding: 20px;
+        }
+        
+        .job-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .job-id {
+            font-size: 14px;
+            color: #7f8c8d;
+            font-weight: normal;
+        }
+        
+        .job-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f5f5f5;
+        }
+        
+        .detail-item {
+            flex: 1 1 120px;
+        }
+        
+        .detail-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+            font-size: 14px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .detail-value i {
+            color: #3498db;
+        }
+        
+        .job-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+        
+        .job-date {
+            font-size: 14px;
+            color: #7f8c8d;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .job-date i {
+            color: #3498db;
+        }
+        
+        .job-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .job-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #ecf0f1;
+            color: #7f8c8d;
+            border: none;
+            font-size: 14px;
+        }
+        
+        .job-btn:hover {
+            background: #3498db;
+            color: white;
+        }
+        
+        .detail-btn:hover {
+            background: #9b59b6;
+        }
+        
+        .update-btn:hover {
+            background: #f39c12;
+        }
+        
+        .delete-btn:hover {
+            background: #e74c3c;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .section-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .section-action {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-action:hover {
+            text-decoration: underline;
+        }
+        
+        .new-job-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .new-job-btn:hover {
+            background: #219653;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 150, 83, 0.3);
+        }
+        
+        /* Filtros */
+        .filters-container {
+            background: #fff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .filter-select {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            background: #f5f7fa;
+            font-size: 14px;
+            min-width: 150px;
+        }
+        
+        /* Mensaje de estado */
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            display: none;
+            font-weight: 500;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Nuevos estilos para mensajes de carga */
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+            display: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            display: none;
+        }
+        
+        .empty-state i {
+            font-size: 60px;
+            color: #bdc3c7;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .empty-state p {
+            color: #7f8c8d;
+            max-width: 500px;
+            margin: 0 auto;
+            font-size: 16px;
+        }
+        
+        /* Modal de detalles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            cursor: auto;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            background: #3498db;
+            color: white;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            padding: 25px;
+            color: #2c3e50;
+        }
+        
+        .job-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .detail-section {
+            margin-bottom: 20px;
+        }
+        
+        .detail-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #3498db;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .detail-item {
+            margin-bottom: 12px;
+            display: flex;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            min-width: 140px;
+            color: #7f8c8d;
+        }
+        
+        .detail-value {
+            flex: 1;
+        }
+        
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .gallery-item {
+            height: 120px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+        
+        .gallery-category {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-top: 20px;
+        }
+        
+        .modal-footer {
+            padding: 15px 25px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-secondary {
+            background: #bdc3c7;
+            color: #2c3e50;
+        }
+        
+        .btn-secondary:hover {
+            background: #95a5a6;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .logo span, .nav-link span {
+                display: none;
+            }
+            
+            .logo i, .nav-link i {
+                margin-right: 0;
+                font-size: 24px;
+            }
+            
+            .nav-link {
+                justify-content: center;
+                padding: 15px 10px;
+            }
+            
+            .search-container {
+                width: 200px;
+            }
+            
+            .section-actions {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+            
+            .jobs-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .welcome-banner {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            
+            .welcome-icon {
+                display: none;
+            }
+            
+            .filters-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .notification-dropdown {
+                width: 300px;
+                right: -30px;
+            }
+            
+            .job-detail-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .client-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .client-stats {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .topbar {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .search-container {
+                width: 100%;
+            }
+            
+            .sidebar {
+                position: fixed;
+                left: -250px;
+                height: 100vh;
+            }
+            
+            .sidebar.active {
+                left: 0;
+            }
+            
+            .menu-toggle {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                width: 40px;
+                height: 40px;
+                background: #3498db;
+                color: white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                cursor: pointer;
+            }
+            
+            .section-actions {
+                width: 100%;
+                margin-top: 15px;
+                flex-direction: row;
+                justify-content: flex-end;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .section-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .notification-dropdown {
+                width: 280px;
+                right: -50px;
+            }
+            
+            .jobs-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Menú toggle para móviles -->
+    <div class="menu-toggle">
+        <i class="fas fa-bars"></i>
+    </div>
+    
+    <!-- Barra lateral / Navbar -->
+    <div class="sidebar">
+        <div class="logo-container">
+            <a href="dashboard.html" class="logo">
+                <i class="fas fa-tools"></i>
+                <span>Taller Mecánico</span>
+            </a>
+        </div>
+        
+        <div class="nav-links">
+            <div class="nav-top">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Inicio</span>
+                </a>
+                <a href="almacen.html" class="nav-link">
+                    <i class="fas fa-boxes"></i>
+                    <span>Almacén</span>
+                </a>
+                <a href="clientes.html" class="nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>Clientes</span>
+                </a>
+                <a href="trabajos.html" class="nav-link active">
+                    <i class="fas fa-wrench"></i>
+                    <span>Trabajos</span>
+                </a>
+                <a href="empleados.html" class="nav-link">
+                    <i class="fas fa-user-friends"></i>
+                    <span>Colaboradores</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    <span>Ajustes</span>
+                </a>
+            </div>
+            
+            <!-- Botón de cerrar sesión -->
+            <div class="nav-bottom">
+                <div class="nav-link" id="logoutBtn" style="background: rgba(231, 76, 60, 0.2);">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Cerrar Sesión</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="topbar">
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Buscar trabajos...">
+            </div>
+            
+            <div class="user-actions">
+                <div class="notification-btn" id="notificationBtn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notificationBadge">0</span>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h3>Notificaciones</h3>
+                            <button class="clear-btn" id="clearNotifications">Marcar todas como leídas</button>
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <!-- Las notificaciones se cargarán aquí -->
+                        </div>
+                    </div>
+                </div>
+                <div class="user-profile" id="userProfile">
+                    R
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-container">
+            <!-- Mensaje de estado para cierre de sesión -->
+            <div class="status-message" id="statusMessage"></div>
+            
+            <div class="welcome-banner">
+                <div class="welcome-text">
+                    <h1 id="welcomeTitle">Gestión de Trabajos</h1>
+                    <p>Administra y controla todos los trabajos realizados en el taller</p>
+                </div>
+                <div class="welcome-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="filters-container">
+                <div class="filter-group">
+                    <label class="filter-label">Filtrar por estado:</label>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="all">Todos los estados</option>
+                        <option value="open">Abierto</option>
+                        <option value="in-progress">En progreso</option>
+                        <option value="completed">Completado</option>
+                        <option value="cancelled">Cancelado</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Ordenar por:</label>
+                    <select class="filter-select" id="sortFilter">
+                        <option value="newest">Más recientes primero</option>
+                        <option value="oldest">Más antiguos primero</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Mostrar:</label>
+                    <select class="filter-select" id="showFilter">
+                        <option value="all">Todos los trabajos</option>
+                        <option value="last7">Últimos 7 días</option>
+                        <option value="last30">Últimos 30 días</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Trabajos Registrados</h2>
+                    <div class="section-actions">
+                        <a href="formulariotrabajo.html" class="new-job-btn">
+                            <i class="fas fa-plus"></i>
+                            Nuevo Trabajo
+                        </a>
+                        <a href="#" class="section-action">
+                            Ver reporte
+                            <i class="fas fa-file-pdf"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Estado vacío -->
+                <div class="empty-state" id="emptyState">
+                    <i class="fas fa-wrench"></i>
+                    <h3>No se encontraron trabajos</h3>
+                    <p>No hay trabajos que coincidan con los filtros seleccionados. Intenta cambiar los criterios de búsqueda o crear nuevos trabajos.</p>
+                </div>
+                
+                <!-- Indicador de carga -->
+                <div class="loader" id="loader"></div>
+                
+                <!-- Contenedor principal con grupos de trabajos -->
+                <div class="jobs-container" id="jobsContainer">
+                    <!-- El contenido se generará dinámicamente con datos de Firebase -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para detalles de trabajo -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Detalles del Trabajo</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="detailBody">
+                <!-- Los detalles se cargarán aquí -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary close-modal">Cerrar</button>
+                <button class="btn btn-primary" id="generatePdf">Generar Reporte PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importar las funciones necesarias de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signOut, 
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            getDocs, 
+            query,
+            orderBy,
+            onSnapshot,
+            serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAL7eXIPTl04c17KvkmnNUwjrH93QNBQm8",
+            authDomain: "taller-alfoso-mecanico-diesel.firebaseapp.com",
+            projectId: "taller-alfoso-mecanico-diesel",
+            storageBucket: "taller-alfoso-mecanico-diesel.firebasestorage.app",
+            messagingSenderId: "287486508627",
+            appId: "1:287486508627:web:748d0e7bac0f46573750a6",
+            measurementId: "G-9JYZR2735E"
+        };
+        
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app,'almacenvirtual');     
+        
+        // Referencias a elementos
+        const logoutBtn = document.getElementById('logoutBtn');
+        const welcomeTitle = document.getElementById('welcomeTitle');
+        const userProfile = document.getElementById('userProfile');
+        const statusMessage = document.getElementById('statusMessage');
+        const jobsContainer = document.getElementById('jobsContainer');
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const sortFilter = document.getElementById('sortFilter');
+        const showFilter = document.getElementById('showFilter');
+        const loader = document.getElementById('loader');
+        const emptyState = document.getElementById('emptyState');
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+        const notificationBadge = document.getElementById('notificationBadge');
+        const notificationList = document.getElementById('notificationList');
+        const clearNotifications = document.getElementById('clearNotifications');
+        const detailModal = document.getElementById('detailModal');
+        const closeModalBtns = document.querySelectorAll('.close-modal');
+        const detailBody = document.getElementById('detailBody');
+        const generatePdfBtn = document.getElementById('generatePdf');
+        
+        // Variables globales
+        let jobsCache = [];
+        let notifications = [];
+        let currentJobForPdf = null;
+        
+        // Verificar estado de autenticación al cargar
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                const displayName = user.displayName || 'Usuario';
+                const firstName = displayName.split(' ')[0];
+                const firstLetter = firstName.charAt(0).toUpperCase();
+                
+                welcomeTitle.textContent = `Gestión de Trabajos`;
+                userProfile.textContent = firstLetter;
+                loadJobs();
+                listenForNotifications();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+        
+        // Funcionalidad de cierre de sesión
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth).then(() => {
+                statusMessage.textContent = 'Sesión cerrada exitosamente. Redirigiendo...';
+                statusMessage.className = 'status-message success';
+                statusMessage.style.display = 'block';
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            }).catch((error) => {
+                statusMessage.textContent = `Error al cerrar sesión: ${error.message}`;
+                statusMessage.className = 'status-message error';
+                statusMessage.style.display = 'block';
+            });
+        });
+        
+        // Toggle sidebar en móviles
+        document.querySelector('.menu-toggle').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+        
+        // Resaltar la opción activa en el menú
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                navLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                if (window.innerWidth < 576) {
+                    document.querySelector('.sidebar').classList.remove('active');
+                }
+                window.location.href = this.href;
+            });
+        });
+        
+        // Función para cargar trabajos desde Firebase
+        async function loadJobs() {
+            try {
+                loader.style.display = 'block';
+                jobsContainer.innerHTML = '';
+                emptyState.style.display = 'none';
+                
+                if (jobsCache.length > 0) {
+                    renderJobs(jobsCache);
+                    loader.style.display = 'none';
+                    return;
+                }
+                
+                const q = query(collection(db, "Trabajos"), orderBy("createdAt", "desc"));
+                const querySnapshot = await getDocs(q);
+                jobsCache = [];
+                
+                if (querySnapshot.empty) {
+                    emptyState.style.display = 'block';
+                    loader.style.display = 'none';
+                    return;
+                }
+                
+                querySnapshot.forEach(doc => {
+                    const job = {
+                        id: doc.id,
+                        ...doc.data()
+                    };
+                    jobsCache.push(job);
+                });
+                
+                renderJobs(jobsCache);
+                loader.style.display = 'none';
+                listenForJobChanges();
+                
+            } catch (error) {
+                console.error("Error al cargar trabajos: ", error);
+                statusMessage.textContent = `Error al cargar trabajos: ${error.message}`;
+                statusMessage.className = 'status-message error';
+                statusMessage.style.display = 'block';
+                loader.style.display = 'none';
+                emptyState.style.display = 'block';
+            }
+        }
+        
+        // Escuchar cambios en tiempo real en los trabajos
+        function listenForJobChanges() {
+            const q = query(collection(db, "Trabajos"), orderBy("createdAt", "desc"));
+            
+            onSnapshot(q, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    const jobId = change.doc.id;
+                    const newData = {
+                        id: jobId,
+                        ...change.doc.data()
+                    };
+                    
+                    if (change.type === "added") {
+                        if (!jobsCache.some(j => j.id === jobId)) {
+                            jobsCache.push(newData);
+                            renderJobs(jobsCache);
+                            createNotification('info', 'plus-circle', `Nuevo trabajo creado: ${newData.vehicle.unit}`);
+                        }
+                    } 
+                    else if (change.type === "modified") {
+                        const index = jobsCache.findIndex(j => j.id === jobId);
+                        if (index !== -1) {
+                            jobsCache[index] = newData;
+                            renderJobs(jobsCache);
+                            createNotification('info', 'edit', `Trabajo actualizado: ${newData.vehicle.unit}`);
+                        }
+                    } 
+                    else if (change.type === "removed") {
+                        jobsCache = jobsCache.filter(j => j.id !== jobId);
+                        renderJobs(jobsCache);
+                        createNotification('warning', 'trash-alt', `Trabajo eliminado: ${change.doc.data().vehicle.unit}`);
+                    }
+                });
+            });
+        }
+        
+        // Función para renderizar trabajos agrupados por cliente
+        function renderJobs(jobs) {
+            let filteredJobs = [...jobs];
+            
+            // Aplicar filtros
+            if (statusFilter.value !== 'all') {
+                filteredJobs = filteredJobs.filter(job => {
+                    if (statusFilter.value === 'open') return job.status === "Trabajo abierto";
+                    if (statusFilter.value === 'in-progress') return job.status === "En progreso";
+                    if (statusFilter.value === 'completed') return job.status === "Completado";
+                    if (statusFilter.value === 'cancelled') return job.status === "Cancelado";
+                    return true;
+                });
+            }
+            
+            // Agrupar trabajos por cliente
+            const clientsMap = {};
+            
+            filteredJobs.forEach(job => {
+                const clientName = job.client.name;
+                
+                if (!clientsMap[clientName]) {
+                    clientsMap[clientName] = {
+                        client: job.client,
+                        jobs: []
+                    };
+                }
+                
+                clientsMap[clientName].jobs.push(job);
+            });
+            
+            // Ordenar clientes alfabéticamente
+            const clients = Object.values(clientsMap);
+            clients.sort((a, b) => a.client.name.localeCompare(b.client.name));
+            
+            // Renderizar grupos
+            jobsContainer.innerHTML = '';
+            
+            if (clients.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            clients.forEach((clientGroup, index) => {
+                const clientContainer = document.createElement('div');
+                clientContainer.className = 'client-group';
+                
+                // Calcular estadísticas del cliente
+                const openJobs = clientGroup.jobs.filter(j => j.status === "Trabajo abierto").length;
+                const inProgressJobs = clientGroup.jobs.filter(j => j.status === "En progreso").length;
+                const completedJobs = clientGroup.jobs.filter(j => j.status === "Completado").length;
+                
+                clientContainer.innerHTML = `
+                    <div class="client-header">
+                        <div class="client-info">
+                            <div class="client-name">${clientGroup.client.name}</div>
+                            <div class="client-company">${clientGroup.client.company}</div>
+                        </div>
+                        <div class="client-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-folder-open"></i> ${openJobs} Abiertos
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-cogs"></i> ${inProgressJobs} En progreso
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-check-circle"></i> ${completedJobs} Completados
+                            </div>
+                        </div>
+                    </div>
+                    <div class="jobs-grid" id="jobs-${index}">
+                        <!-- Los trabajos de este cliente se agregarán aquí -->
+                    </div>
+                `;
+                
+                jobsContainer.appendChild(clientContainer);
+                
+                // Renderizar trabajos para este cliente
+                const jobsGrid = document.getElementById(`jobs-${index}`);
+                
+                clientGroup.jobs.forEach((job, jobIndex) => {
+                    const jobCard = createJobCard(job);
+                    jobCard.style.animationDelay = `${jobIndex * 0.1}s`;
+                    jobsGrid.appendChild(jobCard);
+                });
+            });
+        }
+        
+        // Función para crear tarjeta de trabajo
+        function createJobCard(job) {
+            const card = document.createElement('div');
+            card.className = 'job-card';
+            
+            // Formatear fecha
+            const date = job.createdAt?.toDate ? job.createdAt.toDate() : new Date();
+            const formattedDate = date.toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+            
+            // Obtener imagen representativa
+            let mainImage = '';
+            if (job.photos && job.photos.interior && job.photos.interior.length > 0) {
+                mainImage = job.photos.interior[0];
+            } else if (job.photos && job.photos.exterior && job.photos.exterior.length > 0) {
+                mainImage = job.photos.exterior[0];
+            }
+            
+            // Determinar clase de estado
+            let statusClass = 'status-open';
+            if (job.status === "En progreso") statusClass = 'status-in-progress';
+            else if (job.status === "Completado") statusClass = 'status-completed';
+            else if (job.status === "Cancelado") statusClass = 'status-cancelled';
+            
+            card.innerHTML = `
+                <div class="job-status ${statusClass}">${job.status}</div>
+                <div class="job-image">
+                    ${mainImage ? 
+                        `<img src="${mainImage}" alt="${job.vehicle.unit}" onerror="this.parentElement.innerHTML='<div class=\'default-job-image\'><i class=\'fas fa-car\'></i></div>'">` : 
+                        `<div class="default-job-image"><i class="fas fa-car"></i></div>`
+                    }
+                </div>
+                <div class="job-info">
+                    <div class="job-title">
+                        ${job.vehicle.unit}
+                        <span class="job-id">ID: ${job.id.substring(0, 8)}</span>
+                    </div>
+                    <div class="job-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Motor</div>
+                            <div class="detail-value">
+                                <i class="fas fa-engine"></i> ${job.vehicle.engineNumber}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Placas</div>
+                            <div class="detail-value">
+                                <i class="fas fa-id-card"></i> ${job.vehicle.plates}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Mecánico</div>
+                            <div class="detail-value">
+                                <i class="fas fa-user-cog"></i> ${job.mechanic || 'Sin asignar'}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Chofer</div>
+                            <div class="detail-value">
+                                <i class="fas fa-user"></i> ${job.workDetails.driverName}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Diagnóstico</div>
+                            <div class="detail-value">
+                                <i class="fas fa-stethoscope"></i> ${job.workDetails.diagnosis.substring(0, 40)}...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="job-footer">
+                    <div class="job-date">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>${formattedDate}</span>
+                    </div>
+                    <div class="job-actions">
+                        <button class="job-btn detail-btn" data-id="${job.id}" title="Ver detalles">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="job-btn update-btn" data-id="${job.id}" title="Actualizar estado">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        // Event listeners para filtros
+        statusFilter.addEventListener('change', () => renderJobs(jobsCache));
+        sortFilter.addEventListener('change', () => renderJobs(jobsCache));
+        showFilter.addEventListener('change', () => renderJobs(jobsCache));
+        
+        // Event listener para búsqueda
+        searchInput.addEventListener('input', () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const jobCards = document.querySelectorAll('.job-card');
+            let hasVisibleItems = false;
+            
+            jobCards.forEach(card => {
+                const jobTitle = card.querySelector('.job-title').textContent.toLowerCase();
+                const jobId = card.querySelector('.job-id').textContent.toLowerCase();
+                const jobDetails = card.querySelectorAll('.detail-value');
+                let detailsText = '';
+                
+                jobDetails.forEach(detail => {
+                    detailsText += detail.textContent.toLowerCase() + ' ';
+                });
+                
+                if (jobTitle.includes(searchTerm) || jobId.includes(searchTerm) || detailsText.includes(searchTerm)) {
+                    card.style.display = 'block';
+                    hasVisibleItems = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            emptyState.style.display = hasVisibleItems ? 'none' : 'block';
+        });
+        
+        // Event listeners para botones de acciones
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.detail-btn')) {
+                const jobId = e.target.closest('.detail-btn').dataset.id;
+                openDetailModal(jobId);
+            }
+        });
+        
+        // Función para abrir modal de detalles
+        function openDetailModal(jobId) {
+            const job = jobsCache.find(j => j.id === jobId);
+            if (job) {
+                // Formatear fecha
+                const date = job.createdAt?.toDate ? job.createdAt.toDate() : new Date();
+                const formattedDate = date.toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // Determinar clase de estado
+                let statusClass = 'status-open';
+                if (job.status === "En progreso") statusClass = 'status-in-progress';
+                else if (job.status === "Completado") statusClass = 'status-completed';
+                else if (job.status === "Cancelado") statusClass = 'status-cancelled';
+                
+                document.getElementById('modalTitle').textContent = `Detalles del Trabajo: ${job.vehicle.unit}`;
+                const usedParts = Array.isArray(job?.workDetails?.usedParts)
+  ? job.workDetails.usedParts
+  : [];
+                // Construir el contenido del modal
+                detailBody.innerHTML = `
+                    <div class="job-detail-grid">
+                        <div class="detail-section">
+                            <h3 class="detail-section-title"><i class="fas fa-user"></i> Información del Cliente</h3>
+                            <div class="detail-item">
+                                <span class="detail-label">Nombre:</span>
+                                <span class="detail-value">${job.client.name}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Empresa:</span>
+                                <span class="detail-value">${job.client.company}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3 class="detail-section-title"><i class="fas fa-car"></i> Información del Vehículo</h3>
+                            <div class="detail-item">
+                                <span class="detail-label">Unidad:</span>
+                                <span class="detail-value">${job.vehicle.unit}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Motor:</span>
+                                <span class="detail-value">${job.vehicle.engineNumber}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Placas:</span>
+                                <span class="detail-value">${job.vehicle.plates}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Nivel Diesel:</span>
+                                <span class="detail-value">${job.vehicle.dieselLevel}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Estado Llantas:</span>
+                                <span class="detail-value">${job.vehicle.tireCondition}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3 class="detail-section-title"><i class="fas fa-tools"></i> Detalles del Trabajo</h3>
+                            <div class="detail-item">
+                                <span class="detail-label">Estado:</span>
+                                <span class="detail-value"><span class="job-status ${statusClass}">${job.status}</span></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Fecha de creación:</span>
+                                <span class="detail-value">${formattedDate}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Mecánico:</span>
+                                <span class="detail-value">${job.mechanic || 'Sin asignar'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Chofer:</span>
+                                <span class="detail-value">${job.workDetails.driverName}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Refacción:</span>
+                                <span class="detail-value">${job.workDetails.hasSpare === 'si' ? 'Sí' : 'No'}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3 class="detail-section-title"><i class="fas fa-stethoscope"></i> Diagnóstico</h3>
+                            <div class="detail-item" style="flex-direction:column;align-items:flex-start;">
+                                <span class="detail-value">${job.workDetails.diagnosis}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                        <h3 class="detail-section-title"><i class="fas fa-clipboard-list"></i> Piezas Utilizadas</h3>
+                        ${usedParts.length > 0 
+                            ? `
+                            <table style="width:100%; border-collapse: collapse; margin-top:10px;">
+                                <thead>
+                                <tr>
+                                    <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;">Pieza</th>
+                                    <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;">Serial</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                ${usedParts.map(part => `
+                                    <tr>
+                                    <td style="padding:8px; border-bottom:1px solid #eee;">${part?.name ?? ''}</td>
+                                    <td style="padding:8px; border-bottom:1px solid #eee;">${part?.serial ?? ''}</td>
+                                    </tr>
+                                `).join('')}
+                                </tbody>
+                            </table>
+                            `
+                            : '<div class="detail-item">No se utilizaron piezas del almacén</div>'
+                        }
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3 class="detail-section-title"><i class="fas fa-box-open"></i> Piezas Externas</h3>
+                            <div class="detail-item" style="flex-direction:column;align-items:flex-start;">
+                                <span class="detail-value">${job.workDetails.outsideParts || 'No se registraron piezas externas'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="detail-section-title"><i class="fas fa-camera"></i> Fotos del Trabajo</h3>
+                    ${renderPhotoGallery(job.photos)}
+                `;
+                
+                // Guardar trabajo para generar PDF
+                currentJobForPdf = job;
+                
+                // Mostrar el modal
+                detailModal.classList.add('active');
+            }
+        }
+        
+        // Función para renderizar la galería de fotos
+        function renderPhotoGallery(photos) {
+            if (!photos) return '<p>No hay fotos disponibles para este trabajo</p>';
+            
+            let galleryHTML = '';
+            const categories = {
+                interior: 'Interior',
+                exterior: 'Exterior',
+                rear: 'Frente Trasero',
+                front: 'Frente Delantero',
+                left: 'Lateral Izquierdo',
+                right: 'Lateral Derecho',
+                plate: 'Placas',
+                engine: 'Motor',
+                mirror: 'Espejos',
+                rearview: 'Retrovisores'
+            };
+            
+            for (const category in photos) {
+                if (photos[category] && photos[category].length > 0) {
+                    galleryHTML += `<div class="gallery-category">${categories[category] || category}</div>`;
+                    galleryHTML += '<div class="image-gallery">';
+                    
+                    photos[category].forEach(photo => {
+                        galleryHTML += `
+                            <div class="gallery-item">
+                                <img src="${photo}" alt="${category}">
+                            </div>
+                        `;
+                    });
+                    
+                    galleryHTML += '</div>';
+                }
+            }
+            
+            return galleryHTML || '<p>No hay fotos disponibles para este trabajo</p>';
+        }
+        
+        // Cerrar modales
+        closeModalBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                detailModal.classList.remove('active');
+            });
+        });
+        
+        // Generar PDF
+        generatePdfBtn.addEventListener('click', () => {
+            if (currentJobForPdf) {
+                generatePdf(currentJobForPdf);
+            }
+        });
+        
+        // Función para cargar una imagen y convertirla a base64
+        function loadImageAsBase64(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    resolve(canvas.toDataURL('image/jpeg'));
+                };
+                img.onerror = () => {
+                    console.error('Error al cargar la imagen:', url);
+                    resolve(null);
+                };
+                img.src = url;
+            });
+        }
+        
+// Función para generar PDF de reporte
+async function generatePdf(job) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  // Helpers
+  const safeArray = v => Array.isArray(v) ? v : [];
+  const safeText = (v, fallback = '—') => (v ?? '').toString().trim() || fallback;
+  const toDate = (v) => {
+    try { return v?.toDate ? v.toDate() : (v ? new Date(v) : new Date()); }
+    catch { return new Date(); }
+  };
+
+  // Normalizaciones
+  const usedParts = safeArray(job?.workDetails?.usedParts);
+  const outsideParts = safeText(job?.workDetails?.outsideParts, 'No se registraron piezas externas');
+  const diagnosis = safeText(job?.workDetails?.diagnosis, 'No registrado');
+  const createdAt = toDate(job?.createdAt);
+  const photosObj = (job?.photos && typeof job.photos === 'object') ? job.photos : {};
+  const allPhotos = Object.values(photosObj).flat().filter(Boolean);
+
+  // Tamaño de la página
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 20;
+  let y = margin;
+
+  // Logo
+  try {
+    const logoUrl = 'https://firebasestorage.googleapis.com/v0/b/taller-alfoso-mecanico-diesel.firebasestorage.app/o/logo.jpg?alt=media&token=081b7e59-e14f-42cc-a5ff-83a88e6acc2d';
+    const logoDataUrl = await loadImageAsBase64(logoUrl);
+    if (logoDataUrl) doc.addImage(logoDataUrl, 'PNG', margin, y, 50, 15);
+  } catch (e) {
+    console.error('Error al cargar el logo:', e);
+  }
+
+  // Título
+  doc.setFontSize(22);
+  doc.setTextColor(44, 62, 80);
+  doc.setFont('helvetica', 'bold');
+  doc.text('REPORTE DE TRABAJO', margin, y + 25);
+
+  doc.setFontSize(12);
+  doc.setTextColor(100, 100, 100);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, margin, y + 35);
+
+  // Info taller
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  doc.text('PEDRO ALFONSO CAUICH PECH', margin, y + 45);
+  doc.text('Calle 136#1157 por 73 y 75 colonia susula xoclan', margin, y + 50);
+  doc.text('Tel: (999) 163-9673 | Correo electrónico: talleralfonso2@live.com.mx', margin, y + 55);
+
+  // Línea
+  doc.setDrawColor(52, 152, 219);
+  doc.setLineWidth(0.5);
+  doc.line(margin, y + 60, pageWidth - margin, y + 60);
+  y += 70;
+
+  // Cliente
+  doc.setFontSize(12);
+  doc.setTextColor(44, 62, 80);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Cliente:', margin, y);
+
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Nombre: ${safeText(job?.client?.name)}`, margin + 10, y + 5);
+  doc.text(`Empresa: ${safeText(job?.client?.company)}`, margin + 10, y + 10);
+  y += 20;
+
+  // Vehículo
+  doc.setFontSize(12);
+  doc.setTextColor(44, 62, 80);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Vehículo:', margin, y);
+
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Unidad: ${safeText(job?.vehicle?.unit)}`, margin + 10, y + 5);
+  doc.text(`Motor: ${safeText(job?.vehicle?.engineNumber)}`, margin + 10, y + 10);
+  doc.text(`Placas: ${safeText(job?.vehicle?.plates)}`, margin + 10, y + 15);
+  y += 25;
+
+  // Detalles del trabajo
+  doc.setFontSize(12);
+  doc.setTextColor(44, 62, 80);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Detalles del Trabajo:', margin, y);
+
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Estado: ${safeText(job?.status)}`, margin + 10, y + 5);
+  doc.text(`Fecha de creación: ${createdAt.toLocaleDateString('es-ES')}`, margin + 10, y + 10);
+  doc.text(`Mecánico: ${safeText(job?.mechanic, 'Sin asignar')}`, margin + 10, y + 15);
+  doc.text(`Chofer: ${safeText(job?.workDetails?.driverName)}`, margin + 10, y + 20);
+  y += 30;
+
+  // Diagnóstico
+  doc.setFontSize(12);
+  doc.setTextColor(44, 62, 80);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Diagnóstico:', margin, y);
+
+  const diagnosisLines = doc.splitTextToSize(diagnosis, pageWidth - 2 * margin - 10);
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  doc.text(diagnosisLines, margin + 10, y + 5);
+  y += (diagnosisLines.length * 5) + 10;
+
+  // Piezas utilizadas (sin precios)
+  doc.setFontSize(12);
+  doc.setTextColor(44, 62, 80);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Piezas Utilizadas:', margin, y);
+
+  // Encabezados tabla
+  doc.setFillColor(52, 152, 219);
+  doc.setTextColor(255, 255, 255);
+  doc.rect(margin, y + 5, pageWidth - 2 * margin, 8, 'F');
+  doc.text('Pieza', margin + 5, y + 9);
+  doc.text('Serial', margin + 80, y + 9);
+
+  // Filas
+  let tableY = y + 15;
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+
+  if (usedParts.length > 0) {
+    usedParts.forEach(part => {
+      doc.text(safeText(part?.name), margin + 5, tableY);
+      doc.text(safeText(part?.serial), margin + 80, tableY);
+      tableY += 7;
+    });
+  } else {
+    doc.text('No se utilizaron piezas del almacén', margin + 5, tableY);
+    tableY += 7;
+  }
+
+  y = tableY + 10;
+
+  // Piezas externas
+  if (outsideParts && outsideParts !== 'No se registraron piezas externas') {
+    doc.setFontSize(12);
+    doc.setTextColor(44, 62, 80);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Piezas Externas:', margin, y);
+
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+    const outsidePartsLines = doc.splitTextToSize(outsideParts, pageWidth - 2 * margin - 10);
+    doc.text(outsidePartsLines, margin + 10, y + 5);
+    y += (outsidePartsLines.length * 5) + 15;
+  }
+
+  // Página nueva si queda poco espacio
+  if (y > pageHeight - 50) {
+    doc.addPage();
+    y = margin;
+  }
+
+  // Imágenes
+  if (allPhotos.length === 0) {
+    doc.text('No hay imágenes para este trabajo', margin, y);
+  } else {
+    doc.setFontSize(12);
+    doc.setTextColor(44, 62, 80);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Imágenes del Trabajo:', margin, y);
+    y += 10;
+
+    const photosPerPage = 4; // 2x2
+    const imageWidth = (pageWidth - 2 * margin) / 2 - 5;
+    const imageHeight = 60;
+
+    // Cargar todas las imágenes como base64
+    const imagePromises = allPhotos.map(url => loadImageAsBase64(url).catch(() => null));
+    const imageDataUrls = await Promise.all(imagePromises);
+
+    let photoCount = 0;
+    for (let i = 0; i < imageDataUrls.length; i++) {
+      if (photoCount >= photosPerPage) {
+        doc.addPage();
+        y = margin;
+        photoCount = 0;
+      }
+
+      const row = photoCount % 2;
+      const col = Math.floor(photoCount / 2);
+      const x = margin + row * (imageWidth + 10);
+      const yPos = y + col * (imageHeight + 10);
+
+      const img = imageDataUrls[i];
+      if (img) {
+        try {
+          doc.addImage(img, 'JPEG', x, yPos, imageWidth, imageHeight, `photo-${i}`, 'MEDIUM');
+        } catch (error) {
+          console.error('Error al agregar la imagen al PDF:', error);
+          doc.setDrawColor(200, 200, 200);
+          doc.setFillColor(240, 240, 240);
+          doc.rect(x, yPos, imageWidth, imageHeight, 'F');
+          doc.setTextColor(100, 100, 100);
+          doc.setFontSize(8);
+          doc.text('Imagen no disponible', x + imageWidth / 2, yPos + imageHeight / 2, { align: 'center' });
+        }
+      } else {
+        doc.setDrawColor(200, 200, 200);
+        doc.setFillColor(240, 240, 240);
+        doc.rect(x, yPos, imageWidth, imageHeight, 'F');
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(8);
+        doc.text('Imagen no disponible', x + imageWidth / 2, yPos + imageHeight / 2, { align: 'center' });
+      }
+
+      photoCount++;
+    }
+  }
+
+  // Pie de página
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Taller Mecánico Alfoso Diesel - Todos los derechos reservados', pageWidth / 2, pageHeight - 10, { align: 'center' });
+  }
+
+  // Guardar
+  const unitForFile = safeText(job?.vehicle?.unit, 'unidad').replace(/\s+/g, '_');
+  doc.save(`reporte-${unitForFile}.pdf`);
+}
+
+        
+        // Función para crear notificación
+        async function createNotification(type, icon, message) {
+            try {
+                const notification = {
+                    type: type,
+                    message: message,
+                    timestamp: serverTimestamp(),
+                    read: false
+                };
+                
+                // Aquí iría el código para guardar en Firebase si fuera necesario
+                console.log("Notificación creada:", notification);
+                
+            } catch (error) {
+                console.error("Error al crear notificación:", error);
+            }
+        }
+        
+        // Función para escuchar notificaciones en tiempo real
+        function listenForNotifications() {
+            // En una implementación real, aquí se conectaría a Firebase
+            // Para este ejemplo, simulamos algunas notificaciones
+            notifications = [
+                {
+                    id: "1",
+                    type: "info",
+                    icon: "info-circle",
+                    message: "Bienvenido al sistema de gestión de trabajos",
+                    formattedTime: "Ahora"
+                }
+            ];
+            
+            notificationBadge.textContent = '1';
+            renderNotifications();
+        }
+        
+        // Función para renderizar notificaciones
+        function renderNotifications() {
+            notificationList.innerHTML = '';
+            
+            if (notifications.length === 0) {
+                notificationList.innerHTML = '<div class="notification-item"><p class="notification-text">No hay notificaciones</p></div>';
+                return;
+            }
+            
+            notifications.forEach(notification => {
+                const item = document.createElement('div');
+                item.className = `notification-item ${notification.read ? '' : 'unread'}`;
+                
+                let typeClass = '';
+                if (notification.type === 'critical') typeClass = 'notification-critical';
+                else if (notification.type === 'warning') typeClass = 'notification-warning';
+                else if (notification.type === 'success') typeClass = 'notification-success';
+                else typeClass = 'notification-info';
+                
+                item.innerHTML = `
+                    <div class="notification-title ${typeClass}">
+                        <i class="fas fa-${notification.icon}"></i>
+                        <span>${notification.message}</span>
+                    </div>
+                    <div class="notification-time">${notification.formattedTime}</div>
+                `;
+                
+                notificationList.appendChild(item);
+            });
+        }
+        
+        // Función para marcar todas las notificaciones como leídas
+        async function markAllNotificationsAsRead() {
+            try {
+                notifications.forEach(notification => {
+                    notification.read = true;
+                });
+                notificationBadge.textContent = '0';
+                renderNotifications();
+                
+            } catch (error) {
+                console.error("Error al marcar todas las notificaciones como leídas:", error);
+            }
+        }
+        
+        // Event listeners para notificaciones
+        notificationBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationDropdown.classList.toggle('active');
+        });
+        
+        clearNotifications.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            await markAllNotificationsAsRead();
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!notificationBtn.contains(e.target)) {
+                notificationDropdown.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

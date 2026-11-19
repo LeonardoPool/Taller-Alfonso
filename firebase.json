@@ -1,0 +1,18 @@
+{
+  "hosting": [
+    {
+      "target": "admin",
+      "public": "stargate",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [{ "source": "**", "destination": "/index.html" }]
+    },
+    {
+      "target": "empleados",
+      "public": "zafiro",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [  { "source": "/formulariotrabajos.html", "destination": "/formulariotrabajos.html" },
+
+        { "source": "**", "destination": "/index.html" }]
+    }
+  ]
+}

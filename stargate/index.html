@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - FlcTechnologies</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK Versión Compatible -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            padding: 0;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f5f9ff 0%, #e6f0ff 100%);
+        }
+
+        /* Split screen layout */
+        .auth-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+        .form-side {
+            flex: 1 1 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 32px;
+            position: relative;
+            z-index: 2;
+            background: #ffffffcc;
+            -webkit-backdrop-filter: blur(2px);
+            backdrop-filter: blur(2px);
+        }
+        .media-side {
+            flex: 1 1 50%;
+            position: relative;
+            overflow: hidden;
+        }
+        .video-bg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .media-gradient {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(0,0,0,0.0), rgba(0,0,0,0.15));
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(32, 40, 70, 0.15);
+            width: 100%;
+            max-width: 460px;
+            padding: 40px;
+            text-align: left;
+            position: relative;
+            z-index: 2;
+            transition: transform 0.3s ease;
+        }
+        
+        .login-container:hover {
+            transform: translateY(-5px);
+        }
+        
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .brand-mark {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4a6cf7, #3a5ae0);
+            box-shadow: 0 6px 12px rgba(74,108,247,0.35);
+        }
+        .brand-text {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+        .login-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 24px;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .input-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 8px;
+            padding-left: 5px;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: #fafafa;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+        }
+        
+        .input-field:focus {
+            border-color: #4a6cf7;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.15);
+            background: #fff;
+        }
+        
+        .input-field::placeholder {
+            color: #aaa;
+            font-weight: 300;
+        }
+        
+        .forgot-password {
+            display: block;
+            float: right;
+            font-size: 13px;
+            color: #4a6cf7;
+            text-decoration: none;
+            margin-top: -24px;
+            margin-bottom: 24px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .forgot-password:hover {
+            color: #3a5ae0;
+            text-decoration: underline;
+        }
+        
+        .login-button {
+            background: linear-gradient(90deg, #4a6cf7, #3a5ae0);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 10px rgba(74, 108, 247, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(74, 108, 247, 0.4);
+        }
+        
+        .login-button:active {
+            transform: translateY(0);
+        }
+        
+        .login-button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20px;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(25deg);
+            transition: all 0.6s;
+        }
+        
+        .login-button:hover::after {
+            left: 120%;
+        }
+        
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #4a6cf7, transparent);
+            margin-bottom: 30px;
+        }
+        
+        .remember-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 22px;
+            color: #555;
+            font-size: 14px;
+        }
+        .remember-wrap input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        .spanish-login {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4a6cf7;
+            text-decoration: none;
+            margin-top: 8px;
+            margin-bottom: 10px;
+            transition: color 0.3s;
+            text-align: center;
+        }
+        
+        .spanish-login:hover {
+            color: #3a5ae0;
+            text-decoration: underline;
+        }
+        
+        .powered-by {
+            font-size: 12px;
+            color: #888;
+            font-weight: 400;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+            padding-left: 5px;
+            font-weight: 500;
+        }
+        
+        .success-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: 500;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.5s, fadeOut 0.5s 2.5s;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+        
+        /* (Se removieron fondos animados y loader para imitar exactamente el mockup) */
+    </style>
+</head>
+<body>
+    
+    
+    <!-- Success message -->
+    <div class="success-message" id="successMessage">¡Login exitoso! Redirigiendo...</div>
+    
+    <!-- Split Layout -->
+    <div class="auth-layout">
+        <section class="form-side">
+            <div class="login-container">
+                <div class="brand">
+                    <span class="brand-mark" aria-hidden="true"></span>
+                    <span class="brand-text">Taller Alfonso</span>
+                </div>
+                <h1 class="login-title">Iniciar Sesión</h1>
+                
+                <div class="input-group">
+                    <label class="input-label">Correo electrónico</label>
+                    <input type="text" class="input-field" id="email" placeholder="tucorreo@ejemplo.com" autocomplete="off">
+                    <div class="error-message" id="emailError">Por favor ingresa un email válido</div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Contraseña</label>
+                    <a href="#" class="forgot-password">Olvidé mi contraseña</a>
+                    <input type="password" class="input-field" id="password" placeholder="••••••••">
+                    <div class="error-message" id="passwordError">La contraseña debe tener al menos 6 caracteres</div>
+                </div>
+
+                <div class="remember-wrap">
+                    <input type="checkbox" id="rememberCheck" aria-label="Recordarme">
+                    <label for="rememberCheck">Recuérdame</label>
+                </div>
+                
+                <button class="login-button" id="loginButton">Iniciar Sesión</button>
+                
+                <div class="divider"></div>
+                
+                <a href="#" class="spanish-login">¿No tienes una cuenta? Regístrate</a>
+                
+                <p class="powered-by">Powered By FleTechnologies M.R. LLC a Leonardo Linares brand</p>
+            </div>
+        </section>
+        <aside class="media-side" aria-hidden="true">
+            <video class="video-bg" src="source/newlogin.mp4" autoplay loop muted></video>
+            <div class="media-gradient"></div>
+        </aside>
+    </div>
+
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAL7eXIPTl04c17KvkmnNUwjrH93QNBQm8",
+            authDomain: "taller-alfoso-mecanico-diesel.firebaseapp.com",
+            projectId: "taller-alfoso-mecanico-diesel",
+            storageBucket: "taller-alfoso-mecanico-diesel.firebasestorage.app",
+            messagingSenderId: "287486508627",
+            appId: "1:287486508627:web:748d0e7bac0f46573750a6",
+            measurementId: "G-9JYZR2735E"
+        };
+
+        // Función para validar email
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        // Cuando el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', function() {
+            // Referencias a elementos
+            const loginButton = document.getElementById('loginButton');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const emailError = document.getElementById('emailError');
+            const passwordError = document.getElementById('passwordError');
+            const successMessage = document.getElementById('successMessage');
+            
+            // Inicializar Firebase inmediatamente (sin pantalla de carga)
+            firebase.initializeApp(firebaseConfig);
+            const analytics = firebase.analytics();
+            const auth = firebase.auth();
+
+            // Verificar si el usuario ya está autenticado
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // Usuario ya ha iniciado sesión, redirigir al dashboard
+                    window.location.href = 'dashboard.html';
+                }
+            });
+
+            // Validar credenciales con Firebase
+            loginButton.addEventListener('click', function() {
+                    const email = emailInput.value.trim();
+                    const password = passwordInput.value;
+                    
+                    // Resetear errores
+                    emailError.style.display = 'none';
+                    passwordError.style.display = 'none';
+                    
+                    let isValid = true;
+                    
+                    // Validar email
+                    if (!email || !validateEmail(email)) {
+                        emailError.style.display = 'block';
+                        isValid = false;
+                    }
+                    
+                    // Validar contraseña
+                    if (!password || password.length < 6) {
+                        passwordError.style.display = 'block';
+                        isValid = false;
+                    }
+                    
+                    if (!isValid) return;
+                    
+                    // Deshabilitar botón para evitar múltiples clics
+                    loginButton.disabled = true;
+                    loginButton.textContent = 'Validando...';
+                    
+                    // Autenticar con Firebase
+                    auth.signInWithEmailAndPassword(email, password)
+                        .then((userCredential) => {
+                            // Inicio de sesión exitoso
+                            successMessage.style.display = 'block';
+                            
+                            // Guardar sesión en localStorage
+                            localStorage.setItem('isLoggedIn', 'true');
+                            localStorage.setItem('username', userCredential.user.email);
+                            
+                            // Registrar evento en Analytics
+                            analytics.logEvent('login_success');
+                            
+                            // Redirigir al dashboard después de un breve retraso
+                            setTimeout(() => {
+                                window.location.href = 'dashboard.html';
+                            }, 2000);
+                        })
+                        .catch((error) => {
+                            // Habilitar botón de nuevo
+                            loginButton.disabled = false;
+                            loginButton.textContent = 'Iniciar sesión';
+                            
+                            // Manejar errores específicos de Firebase
+                            let errorMessage = "Error al iniciar sesión";
+                            
+                            switch (error.code) {
+                                case 'auth/invalid-email':
+                                    errorMessage = "Formato de email inválido";
+                                    break;
+                                case 'auth/user-disabled':
+                                    errorMessage = "Usuario deshabilitado";
+                                    break;
+                                case 'auth/user-not-found':
+                                    errorMessage = "Usuario no encontrado";
+                                    break;
+                                case 'auth/wrong-password':
+                                    errorMessage = "Contraseña incorrecta";
+                                    break;
+                                case 'auth/too-many-requests':
+                                    errorMessage = "Demasiados intentos fallidos. Inténtalo más tarde";
+                                    break;
+                                case 'auth/network-request-failed':
+                                    errorMessage = "Error de red. Verifica tu conexión";
+                                    break;
+                            }
+                            
+                            emailError.textContent = errorMessage;
+                            emailError.style.display = 'block';
+                            
+                            // Registrar evento de error en Analytics
+                            analytics.logEvent('login_failed', { reason: error.code });
+                        });
+            });
+        });
+    </script>
+</body>
+</html>

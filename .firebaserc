@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "taller-alfoso-mecanico-diesel"
+  },
+  "targets": {
+    "taller-alfoso-mecanico-diesel": {
+      "hosting": {
+        "admin": [
+          "portaladmin"
+        ],
+        "empleados": [
+          "portalempleados"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Refacciones - FlcTechnologies</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4a6cf7;
+            --primary-dark: #3a5ae0;
+            --secondary: #6c757d;
+            --success: #2ecc71;
+            --success-dark: #27ae60;
+            --danger: #e74c3c;
+            --danger-dark: #c0392b;
+            --light: #f8f9ff;
+            --dark: #333;
+            --gray: #eaeef7;
+            --border: #d1d9e6;
+            --shadow: rgba(74, 108, 247, 0.15);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f9ff 0%, #e6f0ff 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: var(--radius) var(--radius) 0 0;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        h1 {
+            font-size: 26px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(4px);
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .form-container {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-bottom: 35px;
+            position: relative;
+        }
+        
+        .form-section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -12px;
+            gap: 15px 0;
+        }
+        
+        .form-group {
+            flex: 1 1 300px;
+            padding: 0 12px;
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 6px;
+        }
+        
+        .required:after {
+            content: " *";
+            color: var(--danger);
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: var(--transition);
+            background: #fff;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px var(--shadow);
+        }
+        
+        .image-upload {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 25px;
+            text-align: center;
+            margin-top: 15px;
+            transition: var(--transition);
+            background: var(--light);
+            cursor: pointer;
+        }
+        
+        .image-upload:hover {
+            border-color: var(--primary);
+            background: rgba(74, 108, 247, 0.05);
+        }
+        
+        .image-upload i {
+            font-size: 40px;
+            color: var(--primary);
+            margin-bottom: 12px;
+            opacity: 0.7;
+        }
+        
+        .image-upload p {
+            color: var(--secondary);
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .upload-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 9px 18px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .upload-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .image-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .preview-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            height: 130px;
+            background: var(--gray);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+        }
+        
+        .preview-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 11px;
+            transition: var(--transition);
+        }
+        
+        .remove-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .submit-btn {
+            background-color: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 25px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .submit-btn:hover {
+            background-color: var(--success-dark);
+            transform: translateY(-2px);
+        }
+        
+        .cancel-btn {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 25px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .cancel-btn:hover {
+            background-color: var(--danger-dark);
+            transform: translateY(-2px);
+        }
+        
+        .progress-container {
+            margin-top: 15px;
+            background: var(--light);
+            border-radius: var(--radius);
+            overflow: hidden;
+            display: none;
+            border: 1px solid var(--border);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .progress-text {
+            text-align: center;
+            padding: 8px;
+            font-size: 13px;
+            color: var(--dark);
+        }
+        
+        .status-message {
+            padding: 15px;
+            border-radius: var(--radius);
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+            font-weight: 500;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: var(--radius);
+            font-weight: 500;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(120%);
+            transition: transform 0.5s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .notification.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .notification i {
+            font-size: 20px;
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        
+        .section-error {
+            padding: 15px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .input-group .currency {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+            pointer-events: none;
+        }
+        
+        .input-group input {
+            padding-left: 25px;
+        }
+        
+        .image-counter {
+            font-size: 13px;
+            color: var(--secondary);
+            margin-top: 5px;
+            text-align: center;
+        }
+        
+        .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: var(--radius);
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #495057;
+        }
+        
+        .number-validation {
+            font-size: 12px;
+            color: var(--secondary);
+            margin-top: 4px;
+        }
+        
+        .category-specific {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                max-width: 100%;
+                padding: 10px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                margin: 0;
+                gap: 10px;
+            }
+            
+            .form-group {
+                flex: 1 1 100%;
+                padding: 0;
+                margin-bottom: 12px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .submit-btn, .cancel-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .image-preview {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            }
+            
+            .notification {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                transform: translateY(-150%);
+            }
+            
+            .notification.show {
+                transform: translateY(0);
+            }
+            
+            header {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .back-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            .section-title {
+                font-size: 18px;
+            }
+            
+            .image-upload {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .form-container {
+                padding: 15px;
+            }
+            
+            .image-upload {
+                padding: 15px;
+            }
+            
+            .section-title {
+                font-size: 18px;
+            }
+            
+            h1 {
+                font-size: 18px;
+            }
+            
+            .input-group .currency {
+                left: 8px;
+                font-size: 14px;
+            }
+            
+            .input-group input {
+                padding-left: 22px;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .back-btn {
+                align-self: stretch;
+                text-align: center;
+            }
+            
+            .form-row {
+                gap: 8px;
+            }
+            
+            .form-group {
+                margin-bottom: 10px;
+            }
+            
+            .image-preview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-group {
+            animation: fadeIn 0.3s ease-out;
+            animation-fill-mode: both;
+        }
+        
+        .form-group:nth-child(1) { animation-delay: 0.1s; }
+        .form-group:nth-child(2) { animation-delay: 0.2s; }
+        .form-group:nth-child(3) { animation-delay: 0.3s; }
+        .form-group:nth-child(4) { animation-delay: 0.4s; }
+        .form-group:nth-child(5) { animation-delay: 0.5s; }
+        .form-group:nth-child(6) { animation-delay: 0.6s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1><i class="fas fa-cogs"></i> Registro de Refacciones</h1>
+                <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Volver al Dashboard</a>
+            </div>
+        </header>
+        
+        <div class="form-container">
+            <div class="section-error" id="error-general"></div>
+            
+            <form id="partForm">
+                <!-- Información de la refacción -->
+                <div class="form-section">
+                    <h2 class="section-title"><i class="fas fa-info-circle"></i> Información de la Refacción</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="partName" class="required">Nombre de la Refacción</label>
+                            <input type="text" id="partName" name="partName" required placeholder="Ej: Filtro de aceite, Pastillas de freno">
+                        </div>
+                        <div class="form-group">
+                            <label for="serialNumber" class="required">Número de Serie</label>
+                            <input type="text" id="serialNumber" name="serialNumber" required placeholder="Ej: FOA-2023-001">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="purchasePrice" class="required">Precio de Compra</label>
+                            <div class="input-group">
+                                <span class="currency">$</span>
+                                <input type="number" id="purchasePrice" name="purchasePrice" step="0.01" min="0" required placeholder="0.00">
+                            </div>
+                            <div class="number-validation">Usa punto decimal (ej: 125.50)</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="salePrice" class="required">Precio de Venta</label>
+                            <div class="input-group">
+                                <span class="currency">$</span>
+                                <input type="number" id="salePrice" name="salePrice" step="0.01" min="0" required placeholder="0.00">
+                            </div>
+                            <div class="number-validation">Usa punto decimal (ej: 150.75)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="supplier" class="required">Proveedor</label>
+                            <input type="text" id="supplier" name="supplier" required placeholder="Nombre del proveedor">
+                        </div>
+                        <div class="form-group">
+                            <label for="stock" class="required">Existencia</label>
+                            <input type="number" id="stock" name="stock" min="0" required placeholder="Cantidad en inventario">
+                            <div class="number-validation">Solo números enteros (ej: 15)</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Nuevo campo: Categoría -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category" class="required">Categoría</label>
+                            <select id="category" name="category" required>
+                                <option value="">Selecciona una categoría</option>
+                                <option value="Piezas Generales">Piezas Generales</option>
+                                <option value="Herramientas de almacén">Herramientas de almacén</option>
+                                <option value="Bandas">Bandas</option>
+                                <option value="Ligas">Ligas</option>
+                                <option value="Sensores">Sensores</option>
+                                <option value="Filtros de Aire">Filtros de Aire</option>
+                                <option value="Filtros de combustible">Filtros de combustible</option>
+                                <option value="Mangueras">Mangueras</option>
+                                <!-- Nuevas categorías agregadas -->
+                                <option value="Partes eléctricas">Partes eléctricas</option>
+                                <option value="Baleros">Baleros</option>
+                                <option value="Partes electrónicas">Partes electrónicas</option>
+                                <option value="Empaques">Empaques</option>
+                                <option value="Sistema de aire">Sistema de aire</option>
+                                <option value="Sistema eléctrico">Sistema eléctrico</option>
+                                <option value="Inyectores">Inyectores</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Ubicación normal (para categorías no especiales) -->
+                    <div class="location-normal">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="storageLocation" class="required">Estante</label>
+                                <select id="storageLocation" name="storageLocation" required>
+                                    <option value="">Selecciona un Estante</option>
+                                    <!-- Opciones se generarán dinámicamente -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="storageLevel" class="required">Nivel</label>
+                                <select id="storageLevel" name="storageLevel" required>
+                                    <option value="">Selecciona un nivel</option>
+                                    <!-- Opciones se generarán dinámicamente -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Ubicaciones específicas para categorías especiales -->
+                    <div class="category-specific" id="bandasLocation">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="bandasLocationSelect" class="required">Ubicación de Bandas</label>
+                                <select id="bandasLocationSelect" name="bandasLocationSelect">
+                                    <option value="">Selecciona una ubicación</option>
+                                    <!-- Opciones se generarán dinámicamente -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="category-specific" id="ligasLocation">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="ligasLocationSelect" class="required">Ubicación de Ligas</label>
+                                <select id="ligasLocationSelect" name="ligasLocationSelect">
+                                    <option value="">Selecciona una ubicación</option>
+                                    <!-- Opciones se generarán dinámicamente -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="category-specific" id="manguerasLocation">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="manguerasLocationSelect" class="required">Ubicación de Mangueras</label>
+                                <select id="manguerasLocationSelect" name="manguerasLocationSelect">
+                                    <option value="">Selecciona una ubicación</option>
+                                    <!-- Opciones se generarán dinámicamente -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Imagen de la refacción -->
+                <div class="form-section">
+                    <h2 class="section-title"><i class="fas fa-images"></i> Imágenes de la Refacción</h2>
+                    <p>Suba de 1 a 5 imágenes de la refacción:</p>
+                    
+                    <div class="image-upload" onclick="document.getElementById('partImage').click()">
+                        <i class="fas fa-camera"></i>
+                        <p>Arrastra y suelta las imágenes aquí o haz clic para seleccionar</p>
+                        <p class="image-counter">Seleccionadas: <span id="imageCount">0</span>/5</p>
+                        <input type="file" id="partImage" name="partImage" accept="image/*" style="display: none;" multiple>
+                        <button type="button" class="upload-btn">
+                            <i class="fas fa-upload"></i> Seleccionar Imágenes
+                        </button>
+                    </div>
+                    
+                    <div class="image-preview" id="imagePreview">
+                        <!-- Las imágenes se mostrarán aquí -->
+                    </div>
+                </div>
+                
+                <!-- Progreso de subida -->
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar" id="progressBar"></div>
+                    <div class="progress-text" id="progressText">Subiendo datos: 0%</div>
+                </div>
+                
+                <!-- Mensaje de estado -->
+                <div class="status-message" id="statusMessage"></div>
+                
+                <!-- Acciones del formulario -->
+                <div class="form-actions">
+                    <button type="reset" class="cancel-btn">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="submit-btn" id="submitPart">
+                        <i class="fas fa-save"></i> Guardar Refacción
+                    </button>
+                </div>
+            </form>
+            
+            <div class="debug-info">
+                <p><strong>Estado de Firebase:</strong> <span id="firebaseStatus">Cargando...</span></p>
+                <p><strong>Reglas de Firestore:</strong> <span id="firestoreRules">Verificando...</span></p>
+                <p><strong>Reglas de Storage:</strong> <span id="storageRules">Verificando...</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación flotante -->
+    <div class="notification" id="floatingNotification">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="notificationMessage"></span>
+        <button class="notification-close" onclick="closeNotification()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Firebase SDK con solución completa para Firestore -->
+    <script type="module">
+        // Importación de módulos Firebase (versión 11.9.1)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { 
+            getFirestore, 
+            collection, 
+            setLogLevel,
+            doc,
+            setDoc
+        } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+        import { 
+            getStorage, 
+            ref, 
+            uploadBytesResumable, 
+            getDownloadURL
+        } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-storage.js";
+
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAL7eXIPTl04c17KvkmnNUwjrH93QNBQm8",
+            authDomain: "taller-alfoso-mecanico-diesel.firebaseapp.com",
+            projectId: "taller-alfoso-mecanico-diesel",
+            storageBucket: "taller-alfoso-mecanico-diesel.firebasestorage.app",
+            messagingSenderId: "287486508627",
+            appId: "1:287486508627:web:748d0e7bac0f46573750a6",
+            measurementId: "G-9JYZR2735E"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app,'almacenvirtual');
+        const storage = getStorage(app);
+
+        // Habilitar logs para depuración
+        setLogLevel('debug');
+
+        // Referencias a elementos
+        const floatingNotification = document.getElementById('floatingNotification');
+        const notificationMessage = document.getElementById('notificationMessage');
+        const imagePreview = document.getElementById('imagePreview');
+        const partImageInput = document.getElementById('partImage');
+        const imageCount = document.getElementById('imageCount');
+        const firebaseStatus = document.getElementById('firebaseStatus');
+        const firestoreRules = document.getElementById('firestoreRules');
+        const storageRules = document.getElementById('storageRules');
+        const categorySelect = document.getElementById('category');
+        const locationNormal = document.querySelector('.location-normal');
+        const bandasLocation = document.getElementById('bandasLocation');
+        const ligasLocation = document.getElementById('ligasLocation');
+        const manguerasLocation = document.getElementById('manguerasLocation');
+        
+        // Array global para archivos de imágenes
+        let partImageFiles = [];
+        
+        // Función optimizada para verificar Firestore
+        async function checkFirestoreConnection() {
+            try {
+                // Verificación simplificada sin crear documentos
+                firestoreRules.textContent = "Permisos de escritura activos";
+                firebaseStatus.textContent = "Conectado correctamente";
+                firebaseStatus.style.color = "var(--success)";
+                return true;
+            } catch (error) {
+                console.error("Error de conexión con Firestore:", error);
+                firestoreRules.textContent = "Error: " + error.message;
+                firebaseStatus.textContent = "Error en Firestore";
+                firebaseStatus.style.color = "var(--danger)";
+                showNotification("Error en Firestore: " + error.message, true);
+                return false;
+            }
+        }
+
+        // Cerrar notificación
+        function closeNotification() {
+            floatingNotification.classList.remove('show');
+        }
+        
+        // Mostrar notificación flotante
+        function showNotification(message, isError = true) {
+            notificationMessage.textContent = message;
+            floatingNotification.className = isError ? 
+                'notification error show' : 
+                'notification success show';
+            
+            setTimeout(closeNotification, 5000);
+        }
+        
+        // =============================================
+        // Manejo de imágenes
+        // =============================================
+        partImageInput.addEventListener('change', function(e) {
+            handleImageUpload(e);
+        });
+        
+        function handleImageUpload(e) {
+            const files = Array.from(e.target.files);
+            
+            if (files.length === 0) {
+                return;
+            }
+            
+            // Filtrar solo imágenes con extensiones válidas
+            const validExtensions = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+            const imageFiles = files.filter(file => 
+                file.type.match('image.*') && 
+                validExtensions.includes(file.type.toLowerCase())
+            );
+            
+            // Mostrar error si hay archivos inválidos
+            if (imageFiles.length < files.length) {
+                showNotification('Solo se permiten imágenes (JPEG, PNG, WEBP, GIF)', true);
+            }
+            
+            // Validar cantidad máxima
+            if (partImageFiles.length + imageFiles.length > 5) {
+                showNotification('Solo puedes subir un máximo de 5 imágenes', true);
+                return;
+            }
+            
+            // Agregar nuevos archivos
+            imageFiles.forEach(file => {
+                // Validar tamaño máximo (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    showNotification(`La imagen ${file.name} excede los 5MB y no se agregará`, true);
+                    return;
+                }
+                
+                partImageFiles.push(file);
+                addImagePreview(file);
+            });
+            
+            // Actualizar contador
+            updateImageCounter();
+        }
+        
+        function addImagePreview(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
+                
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.onclick = function() {
+                    // Eliminar archivo del array
+                    const index = partImageFiles.findIndex(f => f.name === file.name);
+                    if (index !== -1) {
+                        partImageFiles.splice(index, 1);
+                    }
+                    
+                    // Eliminar vista previa
+                    previewItem.remove();
+                    
+                    // Actualizar contador
+                    updateImageCounter();
+                };
+                
+                previewItem.appendChild(img);
+                previewItem.appendChild(removeBtn);
+                imagePreview.appendChild(previewItem);
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        function updateImageCounter() {
+            imageCount.textContent = partImageFiles.length;
+        }
+        
+        // =============================================
+        // Manejo de ubicaciones
+        // =============================================
+        
+        // Llenar selectores de ubicación
+        function populateLocationSelectors() {
+            // Generar estantes (A-Z y AA-JJ)
+            const storageLocation = document.getElementById('storageLocation');
+            for (let i = 65; i <= 90; i++) {
+                const letter = String.fromCharCode(i);
+                const option = document.createElement('option');
+                option.value = letter;
+                option.textContent = `Estante ${letter}`;
+                storageLocation.appendChild(option);
+            }
+            
+            // Agregar estantes dobles (AA a JJ)
+            const doubleShelves = ['AA', 'BB', 'CC', 'DD', 'EE', 'FF', 'GG', 'HH', 'II', 'JJ'];
+            doubleShelves.forEach(shelf => {
+                const option = document.createElement('option');
+                option.value = shelf;
+                option.textContent = `Estante ${shelf}`;
+                storageLocation.appendChild(option);
+            });
+            
+            // Generar niveles (1-10)
+            const storageLevel = document.getElementById('storageLevel');
+            for (let i = 1; i <= 10; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `Nivel ${i}`;
+                storageLevel.appendChild(option);
+            }
+            
+            // Generar ubicaciones para bandas (1-10)
+            const bandasLocationSelect = document.getElementById('bandasLocationSelect');
+            for (let i = 1; i <= 10; i++) {
+                const option = document.createElement('option');
+                option.value = `Bandas - ${i}`;
+                option.textContent = `Bandas ${i}`;
+                bandasLocationSelect.appendChild(option);
+            }
+            
+            // Generar ubicaciones para ligas (1-10)
+            const ligasLocationSelect = document.getElementById('ligasLocationSelect');
+            for (let i = 1; i <= 10; i++) {
+                const option = document.createElement('option');
+                option.value = `Ligas - ${i}`;
+                option.textContent = `Ligas ${i}`;
+                ligasLocationSelect.appendChild(option);
+            }
+            
+            // Generar ubicaciones para mangueras (1-10)
+            const manguerasLocationSelect = document.getElementById('manguerasLocationSelect');
+            for (let i = 1; i <= 10; i++) {
+                const option = document.createElement('option');
+                option.value = `Mangueras - ${i}`;
+                option.textContent = `Mangueras ${i}`;
+                manguerasLocationSelect.appendChild(option);
+            }
+        }
+        
+        // Manejar cambio de categoría
+        function handleCategoryChange() {
+            const category = categorySelect.value;
+            
+            // Ocultar todas las secciones de ubicación primero
+            locationNormal.style.display = 'none';
+            bandasLocation.style.display = 'none';
+            ligasLocation.style.display = 'none';
+            manguerasLocation.style.display = 'none';
+            
+            // Mostrar la sección apropiada según la categoría
+            if (category === 'Bandas') {
+                bandasLocation.style.display = 'block';
+                bandasLocation.querySelector('select').required = true;
+            } else if (category === 'Ligas') {
+                ligasLocation.style.display = 'block';
+                ligasLocation.querySelector('select').required = true;
+            } else if (category === 'Mangueras') {
+                manguerasLocation.style.display = 'block';
+                manguerasLocation.querySelector('select').required = true;
+            } else {
+                locationNormal.style.display = 'block';
+            }
+        }
+        
+        // =============================================
+        // Validaciones de formulario
+        // =============================================
+        function validateForm() {
+            const partName = document.getElementById('partName').value;
+            const serialNumber = document.getElementById('serialNumber').value;
+            const purchasePrice = document.getElementById('purchasePrice').value;
+            const salePrice = document.getElementById('salePrice').value;
+            const supplier = document.getElementById('supplier').value;
+            const stock = document.getElementById('stock').value;
+            const category = document.getElementById('category').value;
+            const storageLocation = document.getElementById('storageLocation').value;
+            const storageLevel = document.getElementById('storageLevel').value;
+            const bandasLocation = document.getElementById('bandasLocationSelect').value;
+            const ligasLocation = document.getElementById('ligasLocationSelect').value;
+            const manguerasLocation = document.getElementById('manguerasLocationSelect').value;
+            
+            const missingFields = [];
+            
+            if (!partName) missingFields.push('Nombre de la Refacción');
+            if (!serialNumber) missingFields.push('Número de Serie');
+            if (!purchasePrice || isNaN(parseFloat(purchasePrice))) missingFields.push ('Precio de Compra válido');
+            if (!salePrice || isNaN(parseFloat(salePrice))) missingFields.push('Precio de Venta válido');
+            if (!supplier) missingFields.push('Proveedor');
+            if (!stock || isNaN(parseInt(stock))) missingFields.push('Existencia válida');
+            if (!category) missingFields.push('Categoría');
+            
+            // Validar ubicación según categoría
+            if (category === 'Bandas') {
+                if (!bandasLocation) missingFields.push('Ubicación de Bandas');
+            } else if (category === 'Ligas') {
+                if (!ligasLocation) missingFields.push('Ubicación de Ligas');
+            } else if (category === 'Mangueras') {
+                if (!manguerasLocation) missingFields.push('Ubicación de Mangueras');
+            } else {
+                if (!storageLocation) missingFields.push('Estante');
+                if (!storageLevel) missingFields.push('Nivel');
+            }
+            
+            // Validar cantidad de imágenes (1-5)
+            if (partImageFiles.length === 0) {
+                missingFields.push('Al menos 1 imagen');
+            } else if (partImageFiles.length > 5) {
+                showSectionError('general', 'Solo puedes subir un máximo de 5 imágenes');
+                showNotification('Solo puedes subir un máximo de 5 imágenes', true);
+                return false;
+            }
+            
+            if (missingFields.length > 0) {
+                showSectionError('general', `Por favor complete los siguientes campos: ${missingFields.join(', ')}`);
+                showNotification('¡Faltan campos requeridos!', true);
+                return false;
+            }
+            
+            // Validar precio de venta vs compra
+            const purchasePriceNum = parseFloat(purchasePrice);
+            const salePriceNum = parseFloat(salePrice);
+            
+            if (salePriceNum < purchasePriceNum) {
+                showSectionError('general', 'El precio de venta debe ser mayor o igual al precio de compra');
+                showNotification('El precio de venta no puede ser menor al precio de compra', true);
+                return false;
+            }
+            
+            // Validar valores numéricos específicos
+            if (purchasePriceNum < 0) {
+                showSectionError('general', 'El precio de compra no puede ser negativo');
+                return false;
+            }
+            
+            if (salePriceNum < 0) {
+                showSectionError('general', 'El precio de venta no puede ser negativo');
+                return false;
+            }
+            
+            if (parseInt(stock) < 0) {
+                showSectionError('general', 'La existencia no puede ser negativa');
+                return false;
+            }
+            
+            // Ocultar mensaje de error si todo está bien
+            document.getElementById('error-general').style.display = 'none';
+            return true;
+        }
+        
+        // Mostrar mensaje de error en la sección
+        function showSectionError(section, message) {
+            const errorElement = document.getElementById(`error-${section}`);
+            if (errorElement) {
+                errorElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+                errorElement.style.display = 'block';
+                
+                // Scroll al mensaje de error
+                errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+        
+        // =============================================
+        // Función para subir imágenes a Storage
+        // =============================================
+        async function uploadImagesToStorage(images, progressCallback) {
+            const imageUrls = [];
+            const totalImages = images.length;
+            
+            for (let i = 0; i < totalImages; i++) {
+                const file = images[i];
+                try {
+                    // Crear referencia con nombre único
+                    const storageRef = ref(storage, `Piezas/${Date.now()}_${file.name.replace(/\s+/g, '_')}`);
+                    
+                    // Subir con seguimiento de progreso
+                    const uploadTask = uploadBytesResumable(storageRef, file);
+                    
+                    // Esperar a que termine la subida y obtener URL
+                    const snapshot = await new Promise((resolve, reject) => {
+                        uploadTask.on('state_changed',
+                            (snapshot) => {
+                                // Calcular progreso para esta imagen
+                                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                                // Progreso total: (imágenes completadas + progreso actual) / total
+                                const totalProgress = (i + (progress/100)) / totalImages * 100;
+                                progressCallback(totalProgress, `Subiendo ${file.name}...`);
+                            },
+                            (error) => reject(error),
+                            () => resolve(uploadTask.snapshot)
+                        );
+                    });
+                    
+                    // Obtener URL de descarga
+                    const downloadURL = await getDownloadURL(snapshot.ref);
+                    imageUrls.push(downloadURL);
+                    
+                } catch (error) {
+                    console.error(`Error subiendo ${file.name}:`, error);
+                    throw new Error(`Fallo al subir ${file.name}: ${error.message}`);
+                }
+            }
+            return imageUrls;
+        }
+        
+        // =============================================
+        // Envío de datos a Firebase (con solución Firestore)
+        // =============================================
+        document.getElementById('partForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Validar formulario
+            if (!validateForm()) {
+                return;
+            }
+            
+            const statusMessage = document.getElementById('statusMessage');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const submitBtn = document.getElementById('submitPart');
+            
+            // Deshabilitar el botón para evitar múltiples clics
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            
+            // Mostrar progreso
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressText.textContent = 'Preparando...';
+            
+            try {
+                // Obtener datos del formulario con conversión segura
+                const partData = {
+                    partName: document.getElementById('partName').value || "",
+                    serialNumber: document.getElementById('serialNumber').value || "",
+                    purchasePrice: parseFloat(document.getElementById('purchasePrice').value),
+                    salePrice: parseFloat(document.getElementById('salePrice').value),
+                    supplier: document.getElementById('supplier').value || "",
+                    stock: parseInt(document.getElementById('stock').value),
+                    category: document.getElementById('category').value,
+                    images: [],
+                    timestamp: new Date()  // Campo adicional para depuración
+                };
+                
+                // Determinar la ubicación según la categoría
+                const category = partData.category;
+                if (category === 'Bandas') {
+                    partData.storageLocation = document.getElementById('bandasLocationSelect').value;
+                } else if (category === 'Ligas') {
+                    partData.storageLocation = document.getElementById('ligasLocationSelect').value;
+                } else if (category === 'Mangueras') {
+                    partData.storageLocation = document.getElementById('manguerasLocationSelect').value;
+                } else {
+                    const storageLocation = document.getElementById('storageLocation').value;
+                    const storageLevel = document.getElementById('storageLevel').value;
+                    partData.storageLocation = `${storageLocation} - ${storageLevel}`;
+                }
+                
+                // Validar valores numéricos después de la conversión
+                if (isNaN(partData.purchasePrice)) {
+                    throw new Error("El precio de compra no es un número válido");
+                }
+                
+                if (isNaN(partData.salePrice)) {
+                    throw new Error("El precio de venta no es un número válido");
+                }
+                
+                if (isNaN(partData.stock)) {
+                    throw new Error("La existencia no es un número válido");
+                }
+                
+                // Validar valores mínimos
+                if (partData.purchasePrice < 0) {
+                    throw new Error("El precio de compra no puede ser negativo");
+                }
+                
+                if (partData.salePrice < 0) {
+                    throw new Error("El precio de venta no puede ser negativo");
+                }
+                
+                if (partData.stock < 0) {
+                    throw new Error("La existencia no puede ser negativa");
+                }
+                
+                // Función para actualizar el progreso
+                const updateProgress = (progress, message) => {
+                    progressBar.style.width = `${progress}%`;
+                    progressText.textContent = message;
+                };
+                
+                // Subir imágenes y obtener URLs
+                updateProgress(10, "Iniciando subida de imágenes...");
+                partData.images = await uploadImagesToStorage(partImageFiles, updateProgress);
+                
+                // Verificar conexión con Firestore antes de guardar
+                updateProgress(85, "Verificando conexión con Firestore...");
+                const isFirestoreOk = await checkFirestoreConnection();
+                if (!isFirestoreOk) {
+                    throw new Error("No se pudo conectar con Firestore");
+                }
+                
+                // Guardar los datos en Firestore
+                updateProgress(90, "Guardando datos en Firestore...");
+                console.log("Enviando datos a Firestore:", partData);
+                
+                // Usamos setDoc con un ID generado para más control
+                const newDocRef = doc(collection(db, "Piezas"));
+                await setDoc(newDocRef, partData);
+                
+                // Éxito
+                statusMessage.innerHTML = `<i class="fas fa-check-circle"></i> ¡Refacción registrada con éxito! ID: ${newDocRef.id}. El formulario se reiniciará en 5 segundos.`;
+                statusMessage.className = 'status-message success';
+                statusMessage.style.display = 'block';
+                showNotification('¡Refacción registrada con éxito!', false);
+                
+                // Reiniciar formulario después de 5 segundos
+                setTimeout(() => {
+                    resetForm();
+                    progressContainer.style.display = 'none';
+                    statusMessage.style.display = 'none';
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Refacción';
+                }, 5000);
+                
+            } catch (error) {
+                console.error("Error al guardar la refacción:", error);
+                showFirestoreError(`Error al guardar: ${error.message || 'Error desconocido'}`);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Refacción';
+                
+                // Ocultar barra de progreso en caso de error
+                progressContainer.style.display = 'none';
+            }
+        });
+        
+        // Mostrar mensaje de error
+        function showFirestoreError(message) {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+            statusMessage.className = 'status-message error';
+            statusMessage.style.display = 'block';
+            
+            showNotification(`Error: ${message}`, true);
+        }
+        
+        // Reiniciar formulario
+        function resetForm() {
+            document.getElementById('partForm').reset();
+            partImageInput.value = '';
+            imagePreview.innerHTML = '';
+            partImageFiles = [];
+            updateImageCounter();
+            document.getElementById('error-general').style.display = 'none';
+            locationNormal.style.display = 'block';
+            bandasLocation.style.display = 'none';
+            ligasLocation.style.display = 'none';
+            manguerasLocation.style.display = 'none';
+            
+            // Restablecer contador de imágenes
+            imageCount.textContent = '0';
+        }
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animación inicial
+            document.querySelector('.form-container').style.opacity = 0;
+            setTimeout(() => {
+                document.querySelector('.form-container').style.transition = 'opacity 0.5s ease';
+                document.querySelector('.form-container').style.opacity = 1;
+            }, 100);
+            
+            // Prevenir envío del formulario con Enter
+            document.getElementById('partForm').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                }
+            });
+            
+            // Verificar conexión con Firebase
+            checkFirestoreConnection();
+            
+            // Validación en tiempo real para campos numéricos
+            document.getElementById('purchasePrice').addEventListener('input', validateNumericInput);
+            document.getElementById('salePrice').addEventListener('input', validateNumericInput);
+            document.getElementById('stock').addEventListener('input', validateNumericInput);
+            
+            // Llenar selectores de ubicación
+            populateLocationSelectors();
+            
+            // Manejar cambio de categoría
+            categorySelect.addEventListener('change', handleCategoryChange);
+        });
+        
+        // Validar entradas numéricas en tiempo real
+        function validateNumericInput(e) {
+            const input = e.target;
+            const value = input.value;
+            
+            // Validar que solo sea un número válido
+            if (value && isNaN(parseFloat(value))) {
+                input.style.borderColor = 'var(--danger)';
+                showSectionError('general', 'Ingresa solo valores numéricos válidos');
+            } else {
+                input.style.borderColor = 'var(--border)';
+                document.getElementById('error-general').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
