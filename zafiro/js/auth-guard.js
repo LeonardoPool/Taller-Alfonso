@@ -1,6 +1,22 @@
 // Guardia de autenticación para Portal de Mecánicos (Zafiro)
 import { db, doc, getDoc } from './firebase-config.js';
 
+export function normalizeText(str) {
+    return (str || '')
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+}
+
+export function clearMechanicSession() {
+    localStorage.removeItem('mechanicId');
+    localStorage.removeItem('mechanicPin');
+    localStorage.removeItem('loggedInUserName');
+    localStorage.removeItem('mechanicLoggedIn');
+    localStorage.removeItem('isLoggedIn');
+}
+
 export async function checkMechanicAuth() {
     const mechanicId = localStorage.getItem('mechanicId');
     const mechanicPin = localStorage.getItem('mechanicPin');
@@ -8,13 +24,13 @@ export async function checkMechanicAuth() {
 
     if (!mechanicId || !mechanicPin) {
         console.warn("Sesión no válida en Portal Mecánicos. Redirigiendo...");
-        localStorage.clear();
+        clearMechanicSession();
         window.location.href = 'index.html';
         return null;
     }
 
     // Acceso administrativo especial
-    if (mechanicId === "admin" && mechanicPin === "Admin_2025") {
+    if (mechanicId === "admin" && (mechanicPin === "Admin_2025" || mechanicPin === "2025" || mechanicPin === "0000")) {
         setupUI('Administrador');
         return {
             id: 'admin',
@@ -28,23 +44,32 @@ export async function checkMechanicAuth() {
         const docSnap = await getDoc(doc(db, "colaboradores", mechanicId));
         if (!docSnap.exists()) {
             console.warn("Mecánico no encontrado en Firestore");
-            localStorage.clear();
+            clearMechanicSession();
             window.location.href = 'index.html';
             return null;
         }
 
         const userData = docSnap.data();
-        if (userData.pin !== mechanicPin) {
+        const expectedPin = String(userData.pin || '').trim();
+        const sessionPin = String(mechanicPin || '').trim();
+
+        if (expectedPin !== sessionPin) {
             console.warn("PIN no coincide");
-            localStorage.clear();
+            clearMechanicSession();
             window.location.href = 'index.html';
             return null;
         }
 
-        const tipo = (userData.tipoEmpleado || '').toLowerCase();
-        if (!tipo.includes('mecan') && !tipo.includes('admin')) {
-            console.warn("Tipo de empleado no autorizado para este portal");
-            localStorage.clear();
+        const rawTipo = (userData.tipoEmpleado || '').toLowerCase();
+        const tipoNorm = normalizeText(userData.tipoEmpleado);
+        const isAllowedRole = !userData.tipoEmpleado || 
+                              tipoNorm.includes('mecan') || 
+                              rawTipo.includes('mecán') || 
+                              tipoNorm.includes('admin');
+
+        if (!isAllowedRole) {
+            console.warn("Tipo de empleado no autorizado para este portal:", userData.tipoEmpleado);
+            clearMechanicSession();
             window.location.href = 'index.html';
             return null;
         }
@@ -60,6 +85,17 @@ export async function checkMechanicAuth() {
         };
     } catch (error) {
         console.error("Error al validar sesión:", error);
+        // Resiliencia: si hay falla temporal de red, conservar sesión local para evitar expulsar al usuario
+        if (mechanicId && mechanicPin) {
+            console.warn("Manteniendo sesión local ante falla momentánea de red");
+            const fullName = loggedInUserName || 'Mecánico';
+            setupUI(fullName);
+            return {
+                id: mechanicId,
+                fullName: fullName,
+                isAdmin: mechanicId === 'admin'
+            };
+        }
         return null;
     }
 }
@@ -81,12 +117,13 @@ function setupUI(fullName) {
         loggedInUser.textContent = fullName;
     }
 
-    // Logout
+    // Logout con confirmación
     const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
+    if (logoutBtn && !logoutBtn.dataset.listenerAttached) {
+        logoutBtn.dataset.listenerAttached = 'true';
         logoutBtn.addEventListener('click', () => {
             if (confirm('¿Deseas cerrar sesión?')) {
-                localStorage.clear();
+                clearMechanicSession();
                 window.location.href = 'index.html';
             }
         });
@@ -95,7 +132,8 @@ function setupUI(fullName) {
     // Mobile sidebar toggle
     const menuToggle = document.querySelector('.menu-toggle');
     const sidebar = document.querySelector('.sidebar');
-    if (menuToggle && sidebar) {
+    if (menuToggle && sidebar && !menuToggle.dataset.listenerAttached) {
+        menuToggle.dataset.listenerAttached = 'true';
         menuToggle.addEventListener('click', () => {
             sidebar.classList.toggle('active');
         });

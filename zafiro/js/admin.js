@@ -1,5 +1,5 @@
 // Panel de Trabajos para Mecánicos - Portal Mecánicos (Zafiro)
-import { checkMechanicAuth } from './auth-guard.js';
+import { checkMechanicAuth, clearMechanicSession } from './auth-guard.js';
 import { generateJobServiceReport } from './pdf-report-generator.js';
 import { 
     db, 
@@ -475,10 +475,13 @@ function setupEventListeners() {
     }
 
     // Cerrar sesión
-    if (logoutBtn) {
+    if (logoutBtn && !logoutBtn.dataset.listenerAttached) {
+        logoutBtn.dataset.listenerAttached = 'true';
         logoutBtn.addEventListener('click', () => {
-            localStorage.clear();
-            window.location.href = 'index.html';
+            if (confirm('¿Deseas cerrar sesión?')) {
+                clearMechanicSession();
+                window.location.href = 'index.html';
+            }
         });
     }
 }

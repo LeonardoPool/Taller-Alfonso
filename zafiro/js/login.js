@@ -10,6 +10,7 @@ import {
     analytics, 
     logEvent 
 } from './firebase-config.js';
+import { normalizeText, clearMechanicSession } from './auth-guard.js';
 
 // Animación de fondo con hexágonos
 function createBackgroundAnimation() {
@@ -60,8 +61,7 @@ onReady(async function () {
 
     // Cargar mecánicos disponibles
     try {
-        const q = query(collection(db, "colaboradores"), where("tipoEmpleado", "==", "Mecánico"));
-        const snapshot = await getDocs(q);
+        const snapshot = await getDocs(collection(db, "colaboradores"));
 
         if (mechanicSelect) {
             mechanicSelect.innerHTML = '<option value="" disabled selected>Selecciona tu nombre</option>';
@@ -75,10 +75,16 @@ onReady(async function () {
             if (!snapshot.empty) {
                 snapshot.forEach(docSnap => {
                     const data = docSnap.data();
-                    const option = document.createElement('option');
-                    option.value = docSnap.id;
-                    option.textContent = data.fullName || "Mecánico sin nombre";
-                    mechanicSelect.appendChild(option);
+                    const rawTipo = (data.tipoEmpleado || '').toLowerCase();
+                    const tipoNorm = normalizeText(data.tipoEmpleado);
+
+                    // Incluir en el select si es mecánico o si no se especificó rol
+                    if (!data.tipoEmpleado || tipoNorm.includes('mecan') || rawTipo.includes('mecán')) {
+                        const option = document.createElement('option');
+                        option.value = docSnap.id;
+                        option.textContent = data.fullName || "Mecánico sin nombre";
+                        mechanicSelect.appendChild(option);
+                    }
                 });
             }
         }
@@ -158,6 +164,7 @@ onReady(async function () {
             if (mechanicId === "admin" && (pin === "2025" || pin === "0000")) {
                 if (successMessage) successMessage.style.display = 'block';
                 localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('mechanicLoggedIn', 'true');
                 localStorage.setItem('loggedInUserName', 'Administrador');
                 localStorage.setItem('mechanicPin', 'Admin_2025');
                 localStorage.setItem('mechanicId', 'admin');
@@ -171,10 +178,13 @@ onReady(async function () {
             const docSnap = await getDoc(doc(db, "colaboradores", mechanicId));
             if (docSnap.exists()) {
                 const mechanicData = docSnap.data();
-                if (mechanicData.pin === pin) {
+                const expectedPin = String(mechanicData.pin || '').trim();
+
+                if (expectedPin === pin) {
                     if (successMessage) successMessage.style.display = 'block';
                     localStorage.setItem('isLoggedIn', 'true');
-                    localStorage.setItem('loggedInUserName', mechanicData.fullName);
+                    localStorage.setItem('mechanicLoggedIn', 'true');
+                    localStorage.setItem('loggedInUserName', mechanicData.fullName || 'Mecánico');
                     localStorage.setItem('mechanicPin', pin);
                     localStorage.setItem('mechanicId', mechanicId);
 
