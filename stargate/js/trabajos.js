@@ -1,6 +1,7 @@
 // Gestión de Trabajos - Portal Administrativo (Stargate)
 import { initAuthGuard } from './auth-guard.js';
 import { initNotificationsManager } from './notifications-manager.js';
+import { generateJobServiceReport } from './pdf-report-generator.js';
 import { 
     db, 
     collection, 
@@ -83,159 +84,160 @@ function loadJobs() {
 
         // Escucha en tiempo real sobre la colección Trabajos
         unsubscribeJobs = onSnapshot(collection(db, "Trabajos"), (snapshot) => {
-            jobsCache = [];
-
-            if (snapshot.empty) {
-                if (emptyState) emptyState.style.display = 'block';
-                if (loader) loader.style.display = 'none';
-                renderJobs([]);
-                return;
-            }
-
-            snapshot.forEach(docSnap => {
-                const data = docSnap.data();
-                const job = {
-                    id: docSnap.id,
-                    ...data,
-                    client: data.client || { name: data.clientName || 'Cliente General', company: data.company || 'Particular' },
-                    vehicle: data.vehicle || { unit: data.unit || 'Unidad', engineNumber: data.engineNumber || 'N/A', plates: data.plates || 'N/A' },
-                    workDetails: data.workDetails || { driverName: data.driverName || 'N/A', diagnosis: data.diagnosis || data.service || 'Servicio mecánico' },
-                    status: data.status || 'Trabajo abierto'
-                };
-                jobsCache.push(job);
-            });
-
-            // Ordenar por fecha descendente en memoria (evita requerir índices compuestos en Firestore)
-            jobsCache.sort((a, b) => {
-                const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt || 0).getTime();
-                const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt || 0).getTime();
-                return timeB - timeA;
-            });
-
             if (loader) loader.style.display = 'none';
+
+            jobsCache = [];
+            snapshot.forEach(docSnap => {
+                jobsCache.push({
+                    id: docSnap.id,
+                    ...docSnap.data()
+                });
+            });
+
+            // Ordenar por fecha de creación (más reciente primero)
+            jobsCache.sort((a, b) => {
+                const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                return dateB - dateA;
+            });
+
             renderJobs(jobsCache);
         }, (error) => {
-            console.error("Error al escuchar Trabajos:", error);
-            if (statusMessage) {
-                statusMessage.textContent = `Error al cargar trabajos: ${error.message}`;
-                statusMessage.className = 'status-message error';
-                statusMessage.style.display = 'block';
-            }
+            console.error("Error al escuchar trabajos en tiempo real:", error);
             if (loader) loader.style.display = 'none';
-            if (emptyState) emptyState.style.display = 'block';
+            showStatus("Error al cargar trabajos: " + error.message, "error");
         });
-
     } catch (error) {
-        console.error("Error inicializando trabajos:", error);
+        console.error("Error en loadJobs:", error);
         if (loader) loader.style.display = 'none';
-        if (emptyState) emptyState.style.display = 'block';
     }
 }
 
 // Renderizar trabajos agrupados por cliente
 function renderJobs(jobs) {
     if (!jobsContainer) return;
-    let filtered = [...jobs];
 
-    // Filtro por estado
-    if (statusFilter && statusFilter.value !== 'all') {
-        const val = statusFilter.value;
-        filtered = filtered.filter(job => {
-            const st = (job.status || '').toLowerCase();
-            if (val === 'open') return st === 'trabajo abierto';
-            if (val === 'in-progress') return st === 'en progreso';
-            if (val === 'completed') return st === 'completado';
-            if (val === 'cancelled') return st === 'cancelado';
-            return true;
-        });
-    }
+    jobsContainer.innerHTML = '';
 
-    // Filtro por fecha (showFilter)
-    if (showFilter && showFilter.value !== 'all') {
-        const now = Date.now();
-        const days = showFilter.value === 'last7' ? 7 : showFilter.value === 'last30' ? 30 : 0;
-        if (days > 0) {
-            const cutoff = now - (days * 24 * 60 * 60 * 1000);
-            filtered = filtered.filter(job => {
-                const jobTime = job.createdAt?.toMillis ? job.createdAt.toMillis() : new Date(job.createdAt || 0).getTime();
-                return jobTime >= cutoff;
-            });
-        }
-    }
+    // Filtrar por estado
+    const statusVal = statusFilter ? statusFilter.value : 'all';
+    let filteredJobs = jobs.filter(job => {
+        if (statusVal === 'all') return true;
+        const s = (job.status || '').toLowerCase();
+        if (statusVal === 'open') return s.includes('abierto');
+        if (statusVal === 'in-progress') return s.includes('progreso');
+        if (statusVal === 'completed') return s.includes('complet') || s.includes('finaliz');
+        if (statusVal === 'cancelled') return s.includes('cancel');
+        return true;
+    });
 
-    // Filtro de búsqueda
-    if (searchInput && searchInput.value.trim() !== '') {
-        const term = searchInput.value.toLowerCase().trim();
-        filtered = filtered.filter(job => {
-            const clientName = (job.client?.name || '').toLowerCase();
-            const clientCompany = (job.client?.company || '').toLowerCase();
+    // Filtrar por término de búsqueda
+    const term = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    if (term) {
+        filteredJobs = filteredJobs.filter(job => {
             const unit = (job.vehicle?.unit || '').toLowerCase();
+            const client = (job.client?.name || '').toLowerCase();
+            const company = (job.client?.company || '').toLowerCase();
             const plates = (job.vehicle?.plates || '').toLowerCase();
             const mechanic = (job.mechanic || '').toLowerCase();
-            const driver = (job.workDetails?.driverName || '').toLowerCase();
-            const diagnosis = (job.workDetails?.diagnosis || '').toLowerCase();
             const id = (job.id || '').toLowerCase();
-
-            return clientName.includes(term) ||
-                   clientCompany.includes(term) ||
-                   unit.includes(term) ||
-                   plates.includes(term) ||
-                   mechanic.includes(term) ||
-                   driver.includes(term) ||
-                   diagnosis.includes(term) ||
-                   id.includes(term);
+            return unit.includes(term) || client.includes(term) || company.includes(term) || 
+                   plates.includes(term) || mechanic.includes(term) || id.includes(term);
         });
     }
 
-    if (filtered.length === 0) {
-        jobsContainer.innerHTML = '';
+    if (filteredJobs.length === 0) {
         if (emptyState) emptyState.style.display = 'block';
         return;
     }
 
     if (emptyState) emptyState.style.display = 'none';
-    jobsContainer.innerHTML = '';
 
-    // Agrupar trabajos por cliente (fiel a la arquitectura original)
-    const clientsMap = {};
-    filtered.forEach(job => {
+    // Agrupar por cliente
+    const showVal = showFilter ? showFilter.value : 'all';
+    const grouped = {};
+
+    filteredJobs.forEach(job => {
         const clientName = job.client?.name || 'Cliente Particular';
-        if (!clientsMap[clientName]) {
-            clientsMap[clientName] = {
-                client: job.client,
+        if (!grouped[clientName]) {
+            grouped[clientName] = {
+                company: job.client?.company || 'Particular',
                 jobs: []
             };
         }
-        clientsMap[clientName].jobs.push(job);
+        grouped[clientName].jobs.push(job);
     });
 
-    Object.keys(clientsMap).forEach((clientName, index) => {
-        const group = clientsMap[clientName];
-        const groupEl = document.createElement('div');
-        groupEl.className = 'client-group';
+    // Crear elementos DOM de grupos de clientes
+    Object.keys(grouped).forEach(clientName => {
+        const group = grouped[clientName];
 
-        groupEl.innerHTML = `
-            <div class="client-header">
-                <div class="client-info">
-                    <h2>${escapeHtml(clientName)}</h2>
-                    <p>${escapeHtml(group.client?.company || 'Particular')}</p>
-                </div>
-                <div class="client-stats">
-                    <span>${group.jobs.length} ${group.jobs.length === 1 ? 'trabajo' : 'trabajos'}</span>
+        const clientGroupEl = document.createElement('div');
+        clientGroupEl.className = 'client-group';
+
+        const clientHeader = document.createElement('div');
+        clientHeader.className = 'client-header';
+        clientHeader.innerHTML = `
+            <div class="client-info">
+                <div class="client-name">${escapeHtml(clientName)}</div>
+                <div class="client-company">${escapeHtml(group.company)}</div>
+            </div>
+            <div class="client-stats">
+                <div class="client-stat">
+                    <span class="client-stat-value">${group.jobs.length}</span>
+                    <span class="client-stat-label">Trabajos</span>
                 </div>
             </div>
-            <div class="jobs-grid" id="jobs-grid-${index}"></div>
         `;
+        clientGroupEl.appendChild(clientHeader);
 
-        jobsContainer.appendChild(groupEl);
+        const jobsGrid = document.createElement('div');
+        jobsGrid.className = 'jobs-grid';
 
-        const gridEl = document.getElementById(`jobs-grid-${index}`);
-        group.jobs.forEach((job, jobIdx) => {
-            const card = createJobCard(job);
-            card.style.animationDelay = `${jobIdx * 0.05}s`;
-            gridEl.appendChild(card);
+        const jobsToShow = showVal === 'recent' ? group.jobs.slice(0, 3) : group.jobs;
+        jobsToShow.forEach(job => {
+            const jobCard = createJobCard(job);
+            jobsGrid.appendChild(jobCard);
         });
+
+        clientGroupEl.appendChild(jobsGrid);
+        jobsContainer.appendChild(clientGroupEl);
     });
+}
+
+// Obtener la imagen más representativa del trabajo de cualquier categoría
+function getMainJobImage(job) {
+    if (!job || !job.photos) return '';
+
+    if (Array.isArray(job.photos) && job.photos.length > 0) {
+        const first = job.photos[0];
+        return typeof first === 'string' ? first : (first?.url || '');
+    }
+
+    if (typeof job.photos === 'object') {
+        const preferredKeys = ['front', 'exterior', 'right', 'left', 'rear', 'engine', 'interior', 'antes'];
+        for (const key of preferredKeys) {
+            const val = job.photos[key];
+            if (Array.isArray(val) && val.length > 0 && typeof val[0] === 'string') {
+                return val[0];
+            } else if (typeof val === 'string' && val.startsWith('http')) {
+                return val;
+            }
+        }
+
+        for (const key in job.photos) {
+            const val = job.photos[key];
+            if (Array.isArray(val) && val.length > 0) {
+                const item = val[0];
+                const url = typeof item === 'string' ? item : item?.url;
+                if (url && url.startsWith('http')) return url;
+            } else if (typeof val === 'string' && val.startsWith('http')) {
+                return val;
+            }
+        }
+    }
+
+    return '';
 }
 
 // Crear tarjeta de trabajo con diseño original
@@ -248,18 +250,13 @@ function createJobCard(job) {
         day: '2-digit', month: '2-digit', year: 'numeric'
     });
 
-    let mainImage = '';
-    if (job.photos && job.photos.interior && job.photos.interior.length > 0) {
-        mainImage = job.photos.interior[0];
-    } else if (job.photos && job.photos.exterior && job.photos.exterior.length > 0) {
-        mainImage = job.photos.exterior[0];
-    }
+    const mainImage = getMainJobImage(job);
 
     let statusClass = 'status-open';
     const st = (job.status || '').toLowerCase();
-    if (st === 'en progreso') statusClass = 'status-in-progress';
-    else if (st === 'completado') statusClass = 'status-completed';
-    else if (st === 'cancelado') statusClass = 'status-cancelled';
+    if (st.includes('progreso')) statusClass = 'status-in-progress';
+    else if (st.includes('complet')) statusClass = 'status-completed';
+    else if (st.includes('cancel')) statusClass = 'status-cancelled';
 
     card.innerHTML = `
         <div class="job-status ${statusClass}">${escapeHtml(job.status || 'Trabajo abierto')}</div>
@@ -372,7 +369,77 @@ function setupEventListeners() {
     });
 }
 
-// Abrir modal de detalles
+// Renderizar la galería de fotos exactamente como en el diseño original
+function renderPhotoGallery(photos) {
+    if (!photos) return '<p style="color:#7f8c8d;margin:10px 0;">No hay fotos disponibles para este trabajo</p>';
+
+    let galleryHTML = '';
+    const categories = {
+        front: 'Frente Delantero',
+        right: 'Lateral Derecho',
+        engine: 'Motor',
+        exterior: 'Exterior',
+        rear: 'Frente Trasero',
+        left: 'Lateral Izquierdo',
+        interior: 'Interior',
+        plate: 'Placas',
+        mirror: 'Espejos',
+        rearview: 'Retrovisores',
+        damage: 'Inspección de Daños',
+        antes: 'Antes',
+        despues: 'Después'
+    };
+
+    if (Array.isArray(photos)) {
+        if (photos.length === 0) return '<p style="color:#7f8c8d;margin:10px 0;">No hay fotos disponibles para este trabajo</p>';
+        galleryHTML += '<div class="gallery-category">Fotos</div><div class="image-gallery">';
+        photos.forEach(photo => {
+            const url = typeof photo === 'string' ? photo : (photo?.url || '');
+            if (url) {
+                galleryHTML += `
+                    <div class="gallery-item">
+                        <img src="${url}" alt="Foto del trabajo" loading="lazy" decoding="async">
+                    </div>
+                `;
+            }
+        });
+        galleryHTML += '</div>';
+        return galleryHTML;
+    }
+
+    if (typeof photos === 'object') {
+        const categoryOrder = ['front', 'right', 'engine', 'exterior', 'rear', 'left', 'interior', 'plate', 'mirror', 'rearview', 'damage', 'antes', 'despues'];
+        const allKeys = Object.keys(photos);
+
+        const sortedKeys = [
+            ...categoryOrder.filter(k => allKeys.includes(k)),
+            ...allKeys.filter(k => !categoryOrder.includes(k))
+        ];
+
+        for (const category of sortedKeys) {
+            const list = photos[category];
+            const urls = Array.isArray(list) ? list : (typeof list === 'string' && list.startsWith('http') ? [list] : []);
+
+            if (urls.length > 0) {
+                const title = categories[category.toLowerCase()] || (category.charAt(0).toUpperCase() + category.slice(1));
+                galleryHTML += `<div class="gallery-category">${title}</div>`;
+                galleryHTML += '<div class="image-gallery">';
+                urls.forEach(photo => {
+                    galleryHTML += `
+                        <div class="gallery-item">
+                            <img src="${photo}" alt="${title}" loading="lazy" decoding="async">
+                        </div>
+                    `;
+                });
+                galleryHTML += '</div>';
+            }
+        }
+    }
+
+    return galleryHTML || '<p style="color:#7f8c8d;margin:10px 0;">No hay fotos disponibles para este trabajo</p>';
+}
+
+// Abrir modal de detalles con el diseño exacto original y las fotos
 function openDetailModal(jobId) {
     const job = jobsCache.find(j => j.id === jobId);
     if (!job || !detailModal || !detailBody) return;
@@ -384,41 +451,117 @@ function openDetailModal(jobId) {
         day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
 
-    const usedParts = Array.isArray(job.workDetails?.usedParts) ? job.workDetails.usedParts : [];
+    let statusClass = 'status-open';
+    const st = (job.status || '').toLowerCase();
+    if (st.includes('progreso')) statusClass = 'status-in-progress';
+    else if (st.includes('complet')) statusClass = 'status-completed';
+    else if (st.includes('cancel')) statusClass = 'status-cancelled';
 
     const modalTitle = document.getElementById('modalTitle');
     if (modalTitle) modalTitle.textContent = `Detalles del Trabajo: ${job.vehicle?.unit || 'Unidad'}`;
 
+    const usedParts = Array.isArray(job.workDetails?.usedParts) ? job.workDetails.usedParts : 
+                     (Array.isArray(job.usedParts) ? job.usedParts : []);
+
     detailBody.innerHTML = `
-        <div class="job-detail-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-            <div class="detail-section" style="background:#f8f9fa;padding:15px;border-radius:8px;">
-                <h4 style="margin:0 0 10px;color:#2c3e50;"><i class="fas fa-user"></i> Cliente</h4>
-                <p style="margin:5px 0;"><strong>Nombre:</strong> ${escapeHtml(job.client?.name || 'N/A')}</p>
-                <p style="margin:5px 0;"><strong>Empresa:</strong> ${escapeHtml(job.client?.company || 'Particular')}</p>
-            </div>
-            <div class="detail-section" style="background:#f8f9fa;padding:15px;border-radius:8px;">
-                <h4 style="margin:0 0 10px;color:#2c3e50;"><i class="fas fa-truck"></i> Vehículo</h4>
-                <p style="margin:5px 0;"><strong>Unidad:</strong> ${escapeHtml(job.vehicle?.unit || 'N/A')}</p>
-                <p style="margin:5px 0;"><strong>Motor:</strong> ${escapeHtml(job.vehicle?.engineNumber || 'N/A')}</p>
-                <p style="margin:5px 0;"><strong>Placas:</strong> ${escapeHtml(job.vehicle?.plates || 'N/A')}</p>
-            </div>
-            <div class="detail-section" style="grid-column: span 2;background:#f8f9fa;padding:15px;border-radius:8px;">
-                <h4 style="margin:0 0 10px;color:#2c3e50;"><i class="fas fa-clipboard-list"></i> Detalles del Servicio</h4>
-                <p style="margin:5px 0;"><strong>Chofer:</strong> ${escapeHtml(job.workDetails?.driverName || 'N/A')}</p>
-                <p style="margin:5px 0;"><strong>Mecánico Asignado:</strong> ${escapeHtml(job.mechanic || 'Sin asignar')}</p>
-                <p style="margin:5px 0;"><strong>Estado:</strong> <span class="status-badge" style="padding:2px 8px;border-radius:12px;background:#3498db;color:#fff;">${escapeHtml(job.status || 'Trabajo abierto')}</span></p>
-                <p style="margin:5px 0;"><strong>Diagnóstico:</strong> ${escapeHtml(job.workDetails?.diagnosis || 'Sin diagnóstico')}</p>
-                <p style="margin:5px 0;"><strong>Fecha de Registro:</strong> ${formattedDate}</p>
-            </div>
-            ${usedParts.length > 0 ? `
-                <div class="detail-section" style="grid-column: span 2;background:#f8f9fa;padding:15px;border-radius:8px;">
-                    <h4 style="margin:0 0 10px;color:#2c3e50;"><i class="fas fa-boxes"></i> Piezas Utilizadas</h4>
-                    <ul style="margin:0;padding-left:20px;">
-                        ${usedParts.map(p => `<li>${escapeHtml(p.partName || p.name || 'Pieza')} - Cantidad: ${p.quantity || 1}</li>`).join('')}
-                    </ul>
+        <div class="job-detail-grid">
+            <div class="detail-section">
+                <h3 class="detail-section-title"><i class="fas fa-user"></i> Información del Cliente</h3>
+                <div class="detail-item">
+                    <span class="detail-label">NOMBRE:</span>
+                    <span class="detail-value">${escapeHtml(job.client?.name || 'N/A')}</span>
                 </div>
-            ` : ''}
+                <div class="detail-item">
+                    <span class="detail-label">EMPRESA:</span>
+                    <span class="detail-value">${escapeHtml(job.client?.company || 'Particular')}</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h3 class="detail-section-title"><i class="fas fa-car"></i> Información del Vehículo</h3>
+                <div class="detail-item">
+                    <span class="detail-label">UNIDAD:</span>
+                    <span class="detail-value">${escapeHtml(job.vehicle?.unit || 'N/A')}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">MOTOR:</span>
+                    <span class="detail-value">${escapeHtml(job.vehicle?.engineNumber || 'Na')}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">PLACAS:</span>
+                    <span class="detail-value">${escapeHtml(job.vehicle?.plates || 'N/A')}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">NIVEL DIESEL:</span>
+                    <span class="detail-value">${escapeHtml(job.vehicle?.dieselLevel || '1/2')}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">ESTADO LLANTAS:</span>
+                    <span class="detail-value">${escapeHtml(job.vehicle?.tireCondition || 'Normal')}</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h3 class="detail-section-title"><i class="fas fa-tools"></i> Detalles del Trabajo</h3>
+                <div class="detail-item">
+                    <span class="detail-label">ESTADO:</span>
+                    <span class="detail-value"><span class="job-status ${statusClass}">${escapeHtml(job.status || 'Trabajo abierto')}</span></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">FECHA DE CREACIÓN:</span>
+                    <span class="detail-value">${formattedDate}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">CHOFER:</span>
+                    <span class="detail-value">${escapeHtml(job.workDetails?.driverName || 'Na')}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">REFACCIÓN:</span>
+                    <span class="detail-value">${job.workDetails?.hasSpare === 'si' ? 'Sí' : 'No'}</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h3 class="detail-section-title"><i class="fas fa-stethoscope"></i> Diagnóstico</h3>
+                <div class="detail-item" style="flex-direction:column;align-items:flex-start;">
+                    <span class="detail-value" style="line-height:1.6;">${escapeHtml(job.workDetails?.diagnosis || 'No registrado')}</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h3 class="detail-section-title"><i class="fas fa-clipboard-list"></i> Piezas Utilizadas</h3>
+                ${usedParts.length > 0 ? `
+                    <table style="width:100%; border-collapse: collapse; margin-top:10px;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;">Pieza</th>
+                                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;">Serial</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${usedParts.map(part => `
+                                <tr>
+                                    <td style="padding:8px; border-bottom:1px solid #eee;font-weight:500;">${escapeHtml(part?.name || part?.partName || 'Pieza')}</td>
+                                    <td style="padding:8px; border-bottom:1px solid #eee;">${escapeHtml(part?.serial || part?.serialNumber || '-')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                ` : `
+                    <div class="detail-item">No se utilizaron piezas del almacén</div>
+                `}
+            </div>
+
+            <div class="detail-section">
+                <h3 class="detail-section-title"><i class="fas fa-box-open"></i> Piezas Externas</h3>
+                <div class="detail-item" style="flex-direction:column;align-items:flex-start;">
+                    <span class="detail-value">${escapeHtml(job.workDetails?.outsideParts || 'No se registraron piezas externas')}</span>
+                </div>
+            </div>
         </div>
+
+        <h3 class="detail-section-title"><i class="fas fa-camera"></i> Fotos del Trabajo</h3>
+        ${renderPhotoGallery(job.photos)}
     `;
 
     detailModal.classList.add('active');
@@ -466,40 +609,21 @@ async function handleSaveJobUpdate() {
     }
 }
 
-// Generador de reporte PDF
+// Generador de reporte PDF oficial con logo y datos originales
 async function handleGeneratePdf() {
     if (!currentJob) return;
 
     try {
         generatePdfBtn.disabled = true;
-        generatePdfBtn.textContent = 'Generando...';
+        generatePdfBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
 
-        const { jsPDF } = window.jspdf || {};
-        if (!jsPDF) {
-            alert("Biblioteca PDF no disponible");
-            return;
-        }
-
-        const docPdf = new jsPDF();
-        docPdf.setFontSize(18);
-        docPdf.text("Reporte de Servicio - DEFCON5", 14, 20);
-
-        docPdf.setFontSize(12);
-        docPdf.text(`Folio ID: ${currentJob.id}`, 14, 30);
-        docPdf.text(`Cliente: ${currentJob.client?.name || 'N/A'} (${currentJob.client?.company || 'Particular'})`, 14, 40);
-        docPdf.text(`Unidad: ${currentJob.vehicle?.unit || 'N/A'} - Placas: ${currentJob.vehicle?.plates || 'N/A'}`, 14, 50);
-        docPdf.text(`Motor: ${currentJob.vehicle?.engineNumber || 'N/A'}`, 14, 60);
-        docPdf.text(`Mecánico: ${currentJob.mechanic || 'Sin asignar'}`, 14, 70);
-        docPdf.text(`Estado: ${currentJob.status || 'N/A'}`, 14, 80);
-        docPdf.text(`Diagnóstico: ${currentJob.workDetails?.diagnosis || 'N/A'}`, 14, 90);
-
-        docPdf.save(`Reporte_Trabajo_${currentJob.vehicle?.unit || currentJob.id}.pdf`);
+        await generateJobServiceReport(currentJob);
     } catch (err) {
         console.error("Error al generar PDF:", err);
-        alert("Ocurrió un error al generar el PDF.");
+        alert("Ocurrió un error al generar el PDF: " + err.message);
     } finally {
         generatePdfBtn.disabled = false;
-        generatePdfBtn.textContent = 'Generar Reporte PDF';
+        generatePdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Generar Reporte PDF';
     }
 }
 

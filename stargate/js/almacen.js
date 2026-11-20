@@ -391,15 +391,16 @@ function setupEventListeners() {
     });
 }
 
-// Modal de detalles
+// Modal de detalles fiel al diseño original
 function openDetailModal(partId) {
     const part = partsCache.find(p => p.id === partId);
     if (!part || !detailModal || !detailBody) return;
 
     const isLowStock = part.stock < (part.minStock || 5);
-    const precioVenta = part.precio ? part.precio.toFixed(2) : '0.00';
-    const precioCompra = part.purchasePrice ? part.purchasePrice.toFixed(2) : '0.00';
+    const precioVenta = part.precio !== undefined && part.precio !== null ? Number(part.precio).toFixed(2) : '0.00';
+    const precioCompra = part.purchasePrice !== undefined && part.purchasePrice !== null ? Number(part.purchasePrice).toFixed(2) : '0.00';
 
+    // Formatear fecha de última actualización
     let fechaActualizacion = 'No disponible';
     if (part.timestamp) {
         try {
@@ -415,59 +416,94 @@ function openDetailModal(partId) {
     const titleEl = document.getElementById('detailModalTitle');
     if (titleEl) titleEl.textContent = `Detalles: ${part.nombre}`;
 
+    // Construir contenido con la estructura vertical exacta (6 tarjetas métricas + historial)
     detailBody.innerHTML = `
+        ${part.fotoURL ? `
         <div class="detail-image-container">
             <div class="detail-image">
-                ${part.fotoURL ? 
-                    `<img src="${part.fotoURL}" alt="${escapeHtml(part.nombre)}" onerror="this.parentElement.innerHTML='<div class=\\'default-part-image\\'><i class=\\'fas fa-cog\\'></i></div>'">` : 
-                    `<div class="default-part-image"><i class="fas fa-cog"></i></div>`
-                }
+                <img src="${part.fotoURL}" alt="${escapeHtml(part.nombre)}" onerror="this.parentElement.innerHTML='<div class=\\'default-detail-image\\'><i class=\\'fas fa-cog\\'></i></div>'">
             </div>
-            <div class="detail-status ${isLowStock ? 'low-stock' : 'normal-stock'}">
-                ${isLowStock ? '<i class="fas fa-exclamation-triangle"></i> Stock Bajo' : '<i class="fas fa-check-circle"></i> Stock Adecuado'}
+        </div>` : ''}
+        
+        <div class="detail-info">
+            <h3 class="detail-title">${escapeHtml(part.nombre)}</h3>
+            <div class="detail-subtitle">
+                <i class="fas fa-barcode"></i>
+                <span>${escapeHtml(part.codigo || 'S/C')}</span>
             </div>
-        </div>
-        <div class="detail-info-list">
-            <div class="detail-item">
-                <span class="detail-label">Nombre</span>
-                <span class="detail-value">${escapeHtml(part.nombre)}</span>
+            
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-box"></i> STOCK
+                    </div>
+                    <div class="detail-value ${isLowStock ? 'detail-low-stock' : 'detail-stock'}">
+                        ${part.stock}
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-tag"></i> PRECIO DE VENTA
+                    </div>
+                    <div class="detail-value detail-price">
+                        $${precioVenta}
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-money-bill-wave"></i> PRECIO DE COMPRA
+                    </div>
+                    <div class="detail-value detail-cost">
+                        $${precioCompra}
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-map-marker-alt"></i> UBICACIÓN
+                    </div>
+                    <div class="detail-value detail-location">
+                        ${escapeHtml(part.estante || 'No asignada')}
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-truck"></i> PROVEEDOR
+                    </div>
+                    <div class="detail-value detail-supplier">
+                        ${escapeHtml(part.supplier || 'N/A')}
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-database"></i> STOCK MÍNIMO
+                    </div>
+                    <div class="detail-value">
+                        ${part.minStock || 5}
+                    </div>
+                </div>
             </div>
-            <div class="detail-item">
-                <span class="detail-label">Código</span>
-                <span class="detail-value">${escapeHtml(part.codigo)}</span>
+            
+            <div class="detail-history">
+                <div class="detail-history-title">
+                    <i class="fas fa-history"></i> Historial
+                </div>
+                <div class="detail-history-item">
+                    <div class="history-label">Última actualización:</div>
+                    <div class="history-value">${fechaActualizacion}</div>
+                </div>
             </div>
-            <div class="detail-item">
-                <span class="detail-label">Estante / Ubicación</span>
-                <span class="detail-value">${escapeHtml(part.estante)}</span>
+            
+            <div class="detail-actions">
+                <button class="btn btn-secondary close-modal" onclick="document.getElementById('detailModal').classList.remove('active')">Cerrar</button>
+                <button class="btn btn-primary edit-btn" id="detailEditBtn" data-id="${part.id}">
+                    <i class="fas fa-edit"></i> Editar Pieza
+                </button>
             </div>
-            <div class="detail-item">
-                <span class="detail-label">Stock Actual</span>
-                <span class="detail-value ${isLowStock ? 'low-stock-text' : ''}">${part.stock} unidades</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">Stock Mínimo</span>
-                <span class="detail-value">${part.minStock} unidades</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">Precio de Venta</span>
-                <span class="detail-value">$${precioVenta}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">Precio de Compra</span>
-                <span class="detail-value">$${precioCompra}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">Proveedor</span>
-                <span class="detail-value">${escapeHtml(part.supplier)}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">Última actualización</span>
-                <span class="detail-value">${fechaActualizacion}</span>
-            </div>
-        </div>
-        <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;">
-            <button class="btn btn-secondary close-modal" onclick="document.getElementById('detailModal').classList.remove('active')">Cerrar</button>
-            <button class="btn btn-primary" id="detailEditBtn"><i class="fas fa-edit"></i> Editar Pieza</button>
         </div>
     `;
 

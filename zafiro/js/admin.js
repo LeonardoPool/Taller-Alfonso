@@ -1,5 +1,6 @@
 // Panel de Trabajos para Mecánicos - Portal Mecánicos (Zafiro)
 import { checkMechanicAuth } from './auth-guard.js';
+import { generateJobServiceReport } from './pdf-report-generator.js';
 import { 
     db, 
     collection, 
@@ -17,6 +18,7 @@ import { enqueueOfflineOperation } from './pwa-manager.js';
 let currentMechanic = null;
 let jobsCache = [];
 let currentJobId = null;
+let currentActiveJob = null;
 let timers = {};
 let unsubscribeJobs = null;
 let modalParts = [];
@@ -453,6 +455,25 @@ function setupEventListeners() {
         });
     });
 
+    // Generar PDF
+    const generatePdfBtn = document.getElementById('generatePdf');
+    if (generatePdfBtn) {
+        generatePdfBtn.addEventListener('click', async () => {
+            if (!currentActiveJob) return;
+            try {
+                generatePdfBtn.disabled = true;
+                generatePdfBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+                await generateJobServiceReport(currentActiveJob);
+            } catch (err) {
+                console.error("Error al generar PDF:", err);
+                alert("Ocurrió un error al generar el PDF: " + err.message);
+            } finally {
+                generatePdfBtn.disabled = false;
+                generatePdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Generar Reporte PDF';
+            }
+        });
+    }
+
     // Cerrar sesión
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
@@ -466,6 +487,8 @@ function setupEventListeners() {
 function openDetailModal(jobId) {
     const job = jobsCache.find(j => j.id === jobId);
     if (!job || !detailModal || !detailBody) return;
+
+    currentActiveJob = job;
 
     const modalTitle = document.getElementById('modalTitle');
     if (modalTitle) modalTitle.textContent = `Detalles del Trabajo: ${job.vehicle?.unit || 'Unidad'}`;

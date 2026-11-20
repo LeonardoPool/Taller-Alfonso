@@ -1048,18 +1048,22 @@
         }
         
         .detail-label {
-            font-size: 14px;
+            font-size: 13px;
             color: #7f8c8d;
             margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 8px;
+            text-transform: uppercase;
+            font-weight: 600;
         }
         
         .detail-value {
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 22px;
+            font-weight: 700;
             color: #2c3e50;
+            text-align: center;
+            padding: 4px 0;
         }
         
         .detail-stock {
@@ -1178,8 +1182,17 @@
             }
             
             .notification-dropdown {
-                width: 300px;
-                right: -30px;
+                position: fixed !important;
+                top: 64px !important;
+                left: 14px !important;
+                right: 14px !important;
+                width: auto !important;
+                max-width: 480px !important;
+                margin: 0 auto !important;
+                max-height: calc(100vh - 84px) !important;
+                border-radius: 16px !important;
+                box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.45), 0 0 0 100vmax rgba(15, 23, 42, 0.5) !important;
+                z-index: 999999 !important;
             }
             
             .detail-grid {
@@ -1251,7 +1264,6 @@
             }
             
             .notification-dropdown {
-                width: 280px;
-                right: -50px;
+                /* Hereda modal centrado fijo */
             }
         }
