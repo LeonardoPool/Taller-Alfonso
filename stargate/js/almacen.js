@@ -19,9 +19,7 @@ import {
 
 let partsCache = [];
 let currentEditPart = null;
-let notifications = [];
 let unsubscribeParts = null;
-let unsubscribeNotifications = null;
 let newPartImageFile = null;
 const storageUrlCache = new Map();
 
@@ -47,12 +45,7 @@ const saveNewPartBtn = document.getElementById('saveNewPartBtn');
 const openNewPartModalBtn = document.getElementById('openNewPartModalBtn');
 const closeModalBtns = document.querySelectorAll('.close-modal');
 
-// Notificaciones en topbar
-const notificationBtn = document.getElementById('notificationBtn');
-const notificationDropdown = document.getElementById('notificationDropdown');
-const notificationBadge = document.getElementById('notificationBadge');
-const notificationList = document.getElementById('notificationList');
-const clearNotifications = document.getElementById('clearNotifications');
+// Notificaciones gestionadas globalmente por notifications-manager.js
 
 function onReady(fn) {
     if (document.readyState === 'loading') {
@@ -734,5 +727,4 @@ function escapeHtml(text) {
 
 window.addEventListener('beforeunload', () => {
     if (unsubscribeParts) unsubscribeParts();
-    if (unsubscribeNotifications) unsubscribeNotifications();
 });

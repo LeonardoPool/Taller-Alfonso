@@ -15,6 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <link rel="stylesheet" href="css/dashboard.css">
+        <link rel="stylesheet" href="css/notifications.css">
 </head>
 <body>
     <!-- Menú toggle para móviles -->
@@ -83,10 +84,11 @@
                     <span class="notification-badge" id="notificationBadge">0</span>
                     <div class="notification-dropdown" id="notificationDropdown">
                         <div class="notification-header">
-                            <h3>Notificaciones</h3>
-                            <div style="display:flex;gap:6px;align-items:center;">
+                            <h3><i class="fas fa-bell"></i> Notificaciones</h3>
+                            <div class="notification-actions-top">
                                 <button class="clear-btn" id="markAllRead" title="Marcar todas como leídas"><i class="fas fa-check-double"></i> Leídas</button>
                                 <button class="clear-btn danger" id="clearAllNotifications" title="Despejar toda la bandeja"><i class="fas fa-trash-alt"></i> Despejar</button>
+                                <button type="button" class="btn-close-notif-mobile" id="closeNotifMobile" title="Cerrar"><i class="fas fa-times"></i></button>
                             </div>
                         </div>
                         <div class="notification-list" id="notificationList">
