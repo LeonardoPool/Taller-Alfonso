@@ -1,6 +1,6 @@
 // Service Worker — DEFCON5 Empleados (Zafiro)
 // Ámbito exclusivo: /empleados/
-const CACHE_VERSION = 'v1.0.0';
+const CACHE_VERSION = 'v2.1.0';
 const CACHE_NAME = `defcon5-empleados-${CACHE_VERSION}`;
 const STATIC_CACHE = `defcon5-empleados-static-${CACHE_VERSION}`;
 
@@ -41,6 +41,7 @@ const SENSITIVE_DOMAINS = [
 
 // Instalación: Precarga de recursos esenciales de empleados
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return Promise.allSettled(
@@ -54,7 +55,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activación: Limpieza exclusiva de cachés antiguas de DEFCON5 Empleados
+// Activación: Limpieza inmediata de todas las cachés antiguas
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -126,10 +127,27 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 5. Estrategia Stale-While-Revalidate para recursos estáticos (CSS, JS, Fuentes, Imágenes, Iconos)
+  // 5. Scripts de lógica y autenticación: Network-First para evitar código obsoleto en sesión
+  if (url.pathname.includes('/js/')) {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(STATIC_CACHE).then((cache) => {
+              cache.put(request, responseClone);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // 6. Estrategia Stale-While-Revalidate para otros recursos estáticos (CSS, Fuentes, Imágenes, Iconos)
   const isStatic =
     url.pathname.includes('/css/') ||
-    url.pathname.includes('/js/') ||
     url.pathname.includes('/icons/') ||
     url.pathname.endsWith('.png') ||
     url.pathname.endsWith('.jpg') ||

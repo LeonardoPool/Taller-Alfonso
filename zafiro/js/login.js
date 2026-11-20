@@ -10,7 +10,7 @@ import {
     analytics, 
     logEvent 
 } from './firebase-config.js';
-import { normalizeText, clearMechanicSession } from './auth-guard.js';
+import { normalizeText, clearMechanicSession, getPortalUrl } from './auth-guard.js';
 
 // Animación de fondo con hexágonos
 function createBackgroundAnimation() {
@@ -170,8 +170,8 @@ onReady(async function () {
                 localStorage.setItem('mechanicId', 'admin');
 
                 setTimeout(() => {
-                    window.location.href = 'admin.html';
-                }, 1000);
+                    window.location.href = getPortalUrl('admin.html');
+                }, 500);
                 return;
             }
 
@@ -187,14 +187,15 @@ onReady(async function () {
                     localStorage.setItem('loggedInUserName', mechanicData.fullName || 'Mecánico');
                     localStorage.setItem('mechanicPin', pin);
                     localStorage.setItem('mechanicId', mechanicId);
+                    localStorage.setItem('tipoEmpleado', mechanicData.tipoEmpleado || 'Mecánico');
 
                     if (analytics) {
                         logEvent(analytics, 'mechanic_login_success');
                     }
 
                     setTimeout(() => {
-                        window.location.href = 'admin.html';
-                    }, 1000);
+                        window.location.href = getPortalUrl('admin.html');
+                    }, 500);
                 } else {
                     if (pinError) {
                         pinError.textContent = "PIN incorrecto. Intenta de nuevo.";
