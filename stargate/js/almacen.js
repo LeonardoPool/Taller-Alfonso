@@ -56,9 +56,9 @@ function onReady(fn) {
 }
 
 onReady(() => {
+    initNotificationsManager();
     initAuthGuard(() => {
         loadParts();
-        initNotificationsManager();
         setupEventListeners();
 
         // Parámetro de URL para abrir modal de nueva pieza

@@ -3,22 +3,11 @@
    Diseño ejecutivo continuo y 100% responsivo para Desktop, Android e iOS
    ============================================================== */
 
-/* Backdrop móvil para Android e iOS */
+/* Backdrop eliminado: el dropdown no debe tener blur ni oscurecer la pantalla */
 .notifications-backdrop {
-    position: fixed !important;
-    inset: 0 !important;
-    background: rgba(15, 23, 42, 0.55) !important;
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important;
-    z-index: 99998 !important;
-    display: none;
-    opacity: 0;
-    transition: opacity 0.25s ease !important;
-}
-
-.notifications-backdrop.active {
-    display: block !important;
-    opacity: 1 !important;
+    display: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 
 /* Contenedor del Botón en Topbar */
@@ -81,7 +70,7 @@
     border-radius: 16px !important;
     box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.06) !important;
     z-index: 99999 !important;
-    display: none;
+    display: none !important;
     overflow: hidden !important;
     border: none !important;
     flex-direction: column !important;
@@ -90,6 +79,8 @@
 
 .notification-dropdown.active {
     display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     animation: notifDropdownFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
 

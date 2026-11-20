@@ -45,10 +45,10 @@ function onReady(fn) {
 }
 
 onReady(() => {
+    initNotificationsManager();
     initAuthGuard(() => {
         loadMechanics();
         loadJobs();
-        initNotificationsManager();
         setupEventListeners();
     });
 });

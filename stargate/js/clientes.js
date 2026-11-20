@@ -42,8 +42,8 @@ function onReady(fn) {
 }
 
 onReady(() => {
+    initNotificationsManager();
     initAuthGuard(() => {
-        initNotificationsManager();
         loadClients();
         setupEventListeners();
     });

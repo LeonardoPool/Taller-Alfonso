@@ -207,24 +207,28 @@
             font-size: 18px;
         }
         
-        /* Panel de notificaciones */
-        .notification-panel {
-            position: absolute;
-            top: 60px;
-            right: 20px;
-            width: 400px;
-            max-height: 500px;
-            overflow-y: auto;
-            background: #fff;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            display: none;
-            padding: 15px;
+        /* Dropdown y panel de notificaciones */
+        .notification-dropdown {
+            position: absolute !important;
+            top: 52px !important;
+            right: 0 !important;
+            width: 380px !important;
+            max-width: 92vw !important;
+            background: #ffffff !important;
+            border-radius: 16px !important;
+            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.06) !important;
+            z-index: 99999 !important;
+            display: none !important;
+            overflow: hidden !important;
+            border: none !important;
+            flex-direction: column !important;
+            box-sizing: border-box !important;
         }
         
-        .notification-panel.active {
-            display: block;
+        .notification-dropdown.active {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
         
         .notification-header {
@@ -963,7 +967,7 @@
                 margin: 0 auto !important;
                 max-height: calc(100vh - 84px) !important;
                 border-radius: 16px !important;
-                box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.45), 0 0 0 100vmax rgba(15, 23, 42, 0.5) !important;
+                box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
                 z-index: 999999 !important;
             }
         }

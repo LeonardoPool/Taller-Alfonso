@@ -39,8 +39,8 @@ function onReady(fn) {
 }
 
 onReady(() => {
+    initNotificationsManager();
     initAuthGuard(() => {
-        initNotificationsManager();
         setupColaboradoresListener();
         setupEventListeners();
     });

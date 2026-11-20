@@ -14,8 +14,8 @@
 <title>Dashboard - Taller Mecánico</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <link rel="stylesheet" href="css/dashboard.css">
-        <link rel="stylesheet" href="css/notifications.css">
+        <link rel="stylesheet" href="css/dashboard.css?v=2.2">
+        <link rel="stylesheet" href="css/notifications.css?v=2.2">
 </head>
 <body>
     <!-- Menú toggle para móviles -->
@@ -125,7 +125,7 @@
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 id="lowStockCount">8</h3>
+                        <h3 id="lowStockCount">0</h3>
                         <p>Piezas por surtir</p>
                     </div>
                 </div>
@@ -185,31 +185,9 @@
                         <ul class="priority-list" id="lowStockList">
                             <li class="priority-item">
                                 <div class="item-info">
-                                    <span class="item-title">Filtro de aceite Toyota Corolla</span>
-                                    <span class="item-detail">Código: F-1234 | Stock: 2</span>
+                                    <span class="item-title">Cargando inventario...</span>
+                                    <span class="item-detail">Consultando existencias en almacén</span>
                                 </div>
-                                <span class="item-value status-badge status-high">Urgente</span>
-                            </li>
-                            <li class="priority-item">
-                                <div class="item-info">
-                                    <span class="item-title">Pastilla de freno Honda Civic</span>
-                                    <span class="item-detail">Código: P-5678 | Stock: 4</span>
-                                </div>
-                                <span class="item-value status-badge status-medium">Moderado</span>
-                            </li>
-                            <li class="priority-item">
-                                <div class="item-info">
-                                    <span class="item-title">Aceite de motor 10W40</span>
-                                    <span class="item-detail">Código: A-9012 | Stock: 5</span>
-                                </div>
-                                <span class="item-value status-badge status-medium">Moderado</span>
-                            </li>
-                            <li class="priority-item">
-                                <div class="item-info">
-                                    <span class="item-title">Bujía NGK</span>
-                                    <span class="item-detail">Código: B-3456 | Stock: 7</span>
-                                </div>
-                                <span class="item-value status-badge status-low">Bajo</span>
                             </li>
                         </ul>
                     </div>
@@ -232,31 +210,10 @@
                         <ul class="priority-list" id="debtClientsList">
                             <li class="priority-item">
                                 <div class="item-info">
-                                    <span class="item-title">Carlos Mendoza</span>
-                                    <span class="item-detail">Reparación motor | Vence: 15/06</span>
+                                    <span class="item-title">Sin deudas pendientes</span>
+                                    <span class="item-detail">Todos los clientes se encuentran al día</span>
                                 </div>
-                                <span class="item-value">$12,450</span>
-                            </li>
-                            <li class="priority-item">
-                                <div class="item-info">
-                                    <span class="item-title">Laura Jiménez</span>
-                                    <span class="item-detail">Cambio transmisión | Vence: 18/06</span>
-                                </div>
-                                <span class="item-value">$8,750</span>
-                            </li>
-                            <li class="priority-item">
-                                <div class="item-info">
-                                    <span class="item-title">Roberto Hernández</span>
-                                    <span class="item-detail">Suspensión completa | Vence: 20/06</span>
-                                </div>
-                                <span class="item-value">$5,320</span>
-                            </li>
-                            <li class="priority-item">
-                                <div class="item-info">
-                                    <span class="item-title">Sofía Ramírez</span>
-                                    <span class="item-detail">Mantenimiento general | Vence: 22/06</span>
-                                </div>
-                                <span class="item-value">$3,150</span>
+                                <span class="item-value">$0.00</span>
                             </li>
                         </ul>
                     </div>
@@ -275,161 +232,13 @@
                 </div>
                 
                 <div class="recent-jobs" id="recentJobsContainer">
-                    <div class="job-card">
-                        <div class="job-header">
-                            <span class="job-id">#TR-02458</span>
-                            <span class="job-date">12 Jun 2025</span>
-                        </div>
-                        <div class="job-info">
-                            <h3 class="job-client">Juan Pérez</h3>
-                            <div class="job-details">
-                                <div class="job-detail">
-                                    <div class="detail-icon">
-                                        <i class="fas fa-car"></i>
-                                    </div>
-                                    <div class="detail-text">
-                                        <div class="detail-title">Vehículo</div>
-                                        <div class="detail-value">Toyota Corolla 2020</div>
-                                    </div>
-                                </div>
-                                <div class="job-detail">
-                                    <div class="detail-icon">
-                                        <i class="fas fa-tools"></i>
-                                    </div>
-                                    <div class="detail-text">
-                                        <div class="detail-title">Servicio</div>
-                                        <div class="detail-value">Cambio de aceite y filtro</div>
-                                    </div>
-                                </div>
-                                <div class="job-detail">
-                                    <div class="detail-icon">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <div class="detail-text">
-                                        <div class="detail-title">Mecánico</div>
-                                        <div class="detail-value">Miguel Ángel</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="job-footer">
-                            <div class="job-amount">$1,250</div>
-                            <div class="job-actions">
-                                <button class="action-btn">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="action-btn">
-                                    <i class="fas fa-print"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="job-card">
-                        <div class="job-header">
-                            <span class="job-id">#TR-02457</span>
-                            <span class="job-date">11 Jun 2025</span>
-                        </div>
-                        <div class="job-info">
-                            <h3 class="job-client">María Rodríguez</h3>
-                            <div class="job-details">
-                                <div class="job-detail">
-                                    <div class="detail-icon">
-                                        <i class="fas fa-car"></i>
-                                    </div>
-                                    <div class="detail-text">
-                                        <div class="detail-title">Vehículo</div>
-                                        <div class="detail-value">Honda Civic 2018</div>
-                                    </div>
-                                </div>
-                                <div class="job-detail">
-                                    <div class="detail-icon">
-                                        <i class="fas fa-tools"></i>
-                                    </div>
-                                    <div class="detail-text">
-                                        <div class="detail-title">Servicio</div>
-                                        <div class="detail-value">Revisión de frenos</div>
-                                    </div>
-                                </div>
-                                <div class="job-detail">
-                                    <div class="detail-icon">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <div class="detail-text">
-                                        <div class="detail-title">Mecánico</div>
-                                        <div class="detail-value">Carlos Fuentes</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="job-footer">
-                            <div class="job-amount">$2,800</div>
-                            <div class="job-actions">
-                                <button class="action-btn">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="action-btn">
-                                    <i class="fas fa-print"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="job-card">
-                        <div class="job-header">
-                            <span class="job-id">#TR-02456</span>
-                            <span class="job-date">10 Jun 2025</span>
-                        </div>
-                        <div class="job-info">
-                            <h3 class="job-client">Roberto Sánchez</h3>
-                            <div class="job-details">
-                                <div class="job-detail">
-                                    <div class="detail-icon">
-                                        <i class="fas fa-car"></i>
-                                    </div>
-                                    <div class="detail-text">
-                                        <div class="detail-title">Vehículo</div>
-                                        <div class="detail-value">Ford F-150 2021</div>
-                                    </div>
-                                </div>
-                                <div class="job-detail">
-                                    <div class="detail-icon">
-                                        <i class="fas fa-tools"></i>
-                                    </div>
-                                    <div class="detail-text">
-                                        <div class="detail-title">Servicio</div>
-                                        <div class="detail-value">Reparación de transmisión</div>
-                                    </div>
-                                </div>
-                                <div class="job-detail">
-                                    <div class="detail-icon">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <div class="detail-text">
-                                        <div class="detail-title">Mecánico</div>
-                                        <div class="detail-value">Javier López</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="job-footer">
-                            <div class="job-amount">$15,500</div>
-                            <div class="job-actions">
-                                <button class="action-btn">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="action-btn">
-                                    <i class="fas fa-print"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <p style="color:#64748b;font-size:14px;padding:20px 0;">Cargando trabajos recientes...</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <script type="module" src="js/dashboard.js"></script>
-    <script type="module" src="js/pwa-manager.js"></script>
+    <script type="module" src="js/dashboard.js?v=2.2"></script>
+    <script type="module" src="js/pwa-manager.js?v=2.2"></script>
 </body>
 </html>

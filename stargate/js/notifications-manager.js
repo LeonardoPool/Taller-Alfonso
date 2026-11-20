@@ -16,34 +16,30 @@ import {
 
 let notifications = [];
 let unsubscribeNotifs = null;
-let unsubscribeStockMonitor = null;
 let isClearing = false;
-let isInitialized = false;
 
 // Inicializador global
 export function initNotificationsManager() {
-    if (isInitialized) return;
-    isInitialized = true;
-
-    ensureBackdrop();
+    // Eliminar cualquier backdrop residual para evitar blur en la pantalla
+    const oldBackdrop = document.getElementById('notificationsBackdrop');
+    if (oldBackdrop) oldBackdrop.remove();
 
     const notificationBtn = document.getElementById('notificationBtn');
     const panel = document.getElementById('notificationDropdown') || document.getElementById('notificationPanel');
     const markAllReadBtn = document.getElementById('markAllRead');
     const clearBtn = document.getElementById('clearAllNotifications') || document.getElementById('clearNotifications');
-    const backdrop = document.getElementById('notificationsBackdrop');
+    const closeMobileBtn = document.getElementById('closeNotifMobile');
 
     if (notificationBtn && panel) {
-        notificationBtn.addEventListener('click', (e) => {
-            // Si el clic provino desde dentro del panel, no alternar
+        notificationBtn.onclick = (e) => {
             if (panel.contains(e.target)) return;
             e.stopPropagation();
             toggleNotificationPanel();
-        });
+        };
 
-        panel.addEventListener('click', (e) => {
+        panel.onclick = (e) => {
             e.stopPropagation();
-        });
+        };
 
         document.addEventListener('click', (e) => {
             if (!panel.contains(e.target) && !notificationBtn.contains(e.target)) {
@@ -52,111 +48,61 @@ export function initNotificationsManager() {
         });
     }
 
-    if (backdrop) {
-        backdrop.addEventListener('click', () => {
-            closeNotificationPanel();
-        });
-    }
-
-    const closeMobileBtn = document.getElementById('closeNotifMobile');
     if (closeMobileBtn) {
-        closeMobileBtn.addEventListener('click', (e) => {
+        closeMobileBtn.onclick = (e) => {
             e.stopPropagation();
             closeNotificationPanel();
-        });
+        };
     }
 
     if (markAllReadBtn) {
-        markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
+        markAllReadBtn.onclick = (e) => {
+            e.stopPropagation();
+            markAllNotificationsAsRead();
+        };
     }
 
     if (clearBtn) {
-        clearBtn.addEventListener('click', clearAllNotifications);
+        clearBtn.onclick = (e) => {
+            e.stopPropagation();
+            clearAllNotifications();
+        };
     }
 
-    // 1. Depurar registros obsoletos de la base de datos (+3 días o registros legacy)
-    autoPurgeStaleNotifications();
+    // 1. Depurar y eliminar todas las notificaciones estáticas y antiguas de Firestore
+    purgeAllStaticNotifications();
 
-    // 2. Iniciar escucha reactiva en tiempo real
+    // 2. Iniciar escucha reactiva en tiempo real de notificaciones globales
     listenToNotifications();
-
-    // 3. Monitor dinámico de inventario para alertas inteligentes de stock crítico
-    setupDynamicInventoryMonitor();
 }
 
-function ensureBackdrop() {
-    let backdrop = document.getElementById('notificationsBackdrop');
-    if (!backdrop) {
-        backdrop = document.createElement('div');
-        backdrop.id = 'notificationsBackdrop';
-        backdrop.className = 'notifications-backdrop';
-        document.body.appendChild(backdrop);
-    }
-    backdrop.onclick = (e) => {
-        e.stopPropagation();
-        closeNotificationPanel();
-    };
-}
-
-function toggleNotificationPanel() {
+export function toggleNotificationPanel() {
     const panel = document.getElementById('notificationDropdown') || document.getElementById('notificationPanel');
-    const backdrop = document.getElementById('notificationsBackdrop');
     if (!panel) return;
 
-    const isActive = panel.classList.contains('active');
-    if (isActive) {
+    if (panel.classList.contains('active')) {
         closeNotificationPanel();
     } else {
         panel.classList.add('active');
-        if (backdrop && window.innerWidth <= 768) {
-            backdrop.classList.add('active');
-        }
     }
 }
 
-function closeNotificationPanel() {
+export function closeNotificationPanel() {
     const panel = document.getElementById('notificationDropdown') || document.getElementById('notificationPanel');
-    const backdrop = document.getElementById('notificationsBackdrop');
     if (panel) panel.classList.remove('active');
-    if (backdrop) backdrop.classList.remove('active');
 }
 
-// Depuración automática de notificaciones antiguas y saneamiento de Firestore
-// Limpia de la base de datos documentos obsoletos de hace cientos de días para mantener la BD fresca y rápida
-async function autoPurgeStaleNotifications() {
+// Eliminación y purga completa de notificaciones estáticas y obsoletas de Firestore
+export async function purgeAllStaticNotifications() {
     try {
         const snap = await getDocs(collection(db, "Notificaciones"));
-        const now = Date.now();
-        const maxAgeMs = 3 * 24 * 60 * 60 * 1000; // 3 días de vigencia
-        const isFirstGlobalPurge = !localStorage.getItem('defcon5_purged_all_legacy_v3');
-        const staleDocs = [];
-
-        snap.forEach(docSnap => {
-            const data = docSnap.data();
-            let timeMs = 0;
-            if (data.timestamp?.toMillis) {
-                timeMs = data.timestamp.toMillis();
-            } else if (data.timestamp?.toDate) {
-                timeMs = data.timestamp.toDate().getTime();
-            } else if (data.timestamp) {
-                timeMs = new Date(data.timestamp).getTime();
-            }
-
-            // Si es la purga inicial global para limpiar todo el registro obsoleto histórico,
-            // o si no tiene fecha válida o supera los 3 días de antigüedad
-            if (isFirstGlobalPurge || !timeMs || isNaN(timeMs) || (now - timeMs) > maxAgeMs) {
-                staleDocs.push(docSnap.id);
-            }
-        });
-
-        if (staleDocs.length > 0) {
-            console.log(`[Notifications] Depurando ${staleDocs.length} notificaciones obsoletas de Firestore...`);
-            await Promise.all(staleDocs.map(id => deleteDoc(doc(db, "Notificaciones", id))));
-            console.log(`[Notifications] Depuración completada con éxito.`);
+        if (!snap.empty) {
+            console.log(`[Notifications] Purgando ${snap.docs.length} notificaciones estáticas/antiguas de Firestore...`);
+            await Promise.all(snap.docs.map(d => deleteDoc(doc(db, "Notificaciones", d.id))));
+            console.log(`[Notifications] Purga completa: Base de datos limpia sin notificaciones estáticas.`);
         }
-        localStorage.setItem('defcon5_purged_all_legacy_v3', 'true');
     } catch (err) {
-        console.warn("[Notifications] Error en depuración automática:", err);
+        console.warn("[Notifications] Error purgando notificaciones:", err);
     }
 }
 
@@ -430,49 +376,6 @@ window._deleteNotification = async function(id, btnElement) {
         console.error("[Notifications] Error eliminando notificación:", e);
     }
 };
-
-// Monitor dinámico inteligente: Genera alertas en tiempo real basadas en inventario crítico
-function setupDynamicInventoryMonitor() {
-    try {
-        if (unsubscribeStockMonitor) unsubscribeStockMonitor();
-
-        unsubscribeStockMonitor = onSnapshot(collection(db, "Piezas"), async (snapshot) => {
-            const lastCleared = parseInt(localStorage.getItem('defcon5_last_cleared_notifs_time') || '0', 10);
-            const now = Date.now();
-
-            // Si el usuario despejó la bandeja hace menos de 10 minutos, respetamos su decisión
-            if (now - lastCleared < 600000) return;
-
-            const existingAlertTitles = new Set(notifications.map(n => n.relatedId || n.title));
-
-            for (const docSnap of snapshot.docs) {
-                const part = docSnap.data();
-                const stock = Number(part.stock) || 0;
-                const minStock = Number(part.minStock) || 5;
-
-                // Si una pieza tiene stock crítico y no ha sido notificada activamente
-                if (stock < minStock && !existingAlertTitles.has(docSnap.id)) {
-                    const name = part.partName || part.nombre || "Pieza";
-                    const loc = part.storageLocation || part.estante || "Almacén General";
-
-                    await createSystemNotification({
-                        title: `Stock Crítico: ${name}`,
-                        message: `Solo quedan ${stock} unidades (Mínimo: ${minStock}) en ${loc}.`,
-                        type: 'stock-out',
-                        icon: 'exclamation-triangle',
-                        targetUrl: 'almacen.html',
-                        relatedId: docSnap.id
-                    });
-                    break;
-                }
-            }
-        }, (err) => {
-            console.warn("[Notifications] Monitor de inventario pausado:", err);
-        });
-    } catch (e) {
-        console.warn("[Notifications] Error en monitor de inventario:", e);
-    }
-}
 
 // Función auxiliar exportada para generar notificaciones desde cualquier parte del sistema
 export async function createSystemNotification({ title, message, type = 'info', icon = 'bell', targetUrl = '', relatedId = '' }) {

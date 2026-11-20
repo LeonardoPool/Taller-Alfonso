@@ -28,9 +28,11 @@ function onReady(fn) {
 }
 
 onReady(() => {
-    // Inicializar Auth Guard y gestor centralizado de notificaciones
+    // Inicializar gestor centralizado de notificaciones de inmediato
+    initNotificationsManager();
+
+    // Inicializar Auth Guard y listeners del dashboard
     initAuthGuard((user) => {
-        initNotificationsManager();
         setupLowStockListener();
         setupStatsSummary();
     });
