@@ -1,5 +1,6 @@
 // Gestión de Trabajos - Portal Administrativo (Stargate)
 import { initAuthGuard } from './auth-guard.js';
+import { initNotificationsManager } from './notifications-manager.js';
 import { 
     db, 
     collection, 
@@ -46,6 +47,7 @@ onReady(() => {
     initAuthGuard(() => {
         loadMechanics();
         loadJobs();
+        initNotificationsManager();
         setupEventListeners();
     });
 });
@@ -263,7 +265,7 @@ function createJobCard(job) {
         <div class="job-status ${statusClass}">${escapeHtml(job.status || 'Trabajo abierto')}</div>
         <div class="job-image">
             ${mainImage ? 
-                `<img src="${mainImage}" alt="${escapeHtml(job.vehicle?.unit || 'Unidad')}" onerror="this.parentElement.innerHTML='<div class=\\'default-job-image\\'><i class=\\'fas fa-car\\'></i></div>'">` : 
+                `<img src="${mainImage}" alt="${escapeHtml(job.vehicle?.unit || 'Unidad')}" loading="lazy" decoding="async" class="job-thumbnail" onerror="this.parentElement.innerHTML='<div class=\\'default-job-image\\'><i class=\\'fas fa-car\\'></i></div>'">` : 
                 `<div class="default-job-image"><i class="fas fa-car"></i></div>`
             }
         </div>

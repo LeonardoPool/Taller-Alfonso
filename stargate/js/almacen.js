@@ -1,5 +1,6 @@
 // Gestión de Almacén e Inventario - Portal Administrativo (Stargate)
 import { initAuthGuard } from './auth-guard.js';
+import { initNotificationsManager } from './notifications-manager.js';
 import { 
     db, 
     collection, 
@@ -64,7 +65,7 @@ function onReady(fn) {
 onReady(() => {
     initAuthGuard(() => {
         loadParts();
-        setupNotifications();
+        initNotificationsManager();
         setupEventListeners();
 
         // Parámetro de URL para abrir modal de nueva pieza
@@ -93,7 +94,8 @@ async function loadParts() {
                 return;
             }
 
-            for (const docRef of snapshot.docs) {
+            // Optimización: Carga en paralelo de URLs de imágenes mediante Promise.all
+            const partsPromises = snapshot.docs.map(async (docRef) => {
                 const data = docRef.data();
                 const part = {
                     id: docRef.id,
@@ -110,8 +112,8 @@ async function loadParts() {
                     images: data.images || []
                 };
 
-                // Procesar imagen si existe (con caché en memoria para no saturar Storage)
-                if (part.images.length > 0) {
+                // Procesar imagen con caché en memoria y resolución no bloqueante
+                if (part.images && part.images.length > 0) {
                     const imageUrl = part.images[0];
                     if (imageUrl && !imageUrl.startsWith('http') && storage) {
                         if (storageUrlCache.has(imageUrl)) {
@@ -132,8 +134,10 @@ async function loadParts() {
                     part.fotoURL = null;
                 }
 
-                partsCache.push(part);
-            }
+                return part;
+            });
+
+            partsCache = await Promise.all(partsPromises);
 
             if (loader) loader.style.display = 'none';
             renderParts(partsCache);
@@ -219,7 +223,7 @@ function createPartCard(part) {
         ${isLowStock ? `<div class="low-stock-indicator">BAJO STOCK</div>` : ''}
         <div class="part-image">
             ${part.fotoURL ? 
-                `<img src="${part.fotoURL}" alt="${escapeHtml(part.nombre)}" onerror="this.parentElement.innerHTML='<div class=\\'default-part-image\\'><i class=\\'fas fa-cog\\'></i></div>'">` : 
+                `<img src="${part.fotoURL}" alt="${escapeHtml(part.nombre)}" loading="lazy" decoding="async" class="part-thumbnail" onerror="this.parentElement.innerHTML='<div class=\\'default-part-image\\'><i class=\\'fas fa-cog\\'></i></div>'">` : 
                 `<div class="default-part-image"><i class="fas fa-cog"></i></div>`
             }
         </div>
@@ -681,30 +685,7 @@ function showStatus(message, type) {
     }, 4000);
 }
 
-// Notificaciones
-function setupNotifications() {
-    if (!notificationBtn || !notificationDropdown) return;
-
-    notificationBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        notificationDropdown.classList.toggle('active');
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!notificationDropdown.contains(e.target) && !notificationBtn.contains(e.target)) {
-            notificationDropdown.classList.remove('active');
-        }
-    });
-
-    if (clearNotifications) {
-        clearNotifications.addEventListener('click', () => {
-            if (notificationBadge) notificationBadge.textContent = '0';
-            if (notificationList) {
-                notificationList.innerHTML = '<div style="padding:15px;text-align:center;color:#888;">No hay notificaciones</div>';
-            }
-        });
-    }
-}
+// Notificaciones gestionadas por notifications-manager.js
 
 function escapeHtml(text) {
     if (!text) return '';

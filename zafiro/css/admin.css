@@ -734,21 +734,60 @@
             border: 1px solid #f5c6cb;
         }
         
-        /* Nuevos estilos para mensajes de carga */
+        /* Animación de carga moderna y de alto rendimiento para el Portal de Empleados (Zafiro) */
         .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
+            position: relative;
+            width: 64px;
+            height: 64px;
+            margin: 45px auto;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 30px auto;
+            border: 3px solid rgba(74, 108, 247, 0.15);
+            border-top: 3px solid #4a6cf7;
+            border-right: 3px solid #10b981;
+            animation: zafiroSpin 0.9s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+            box-shadow: 0 0 25px rgba(74, 108, 247, 0.35);
             display: none;
         }
-        
-        @keyframes spin {
+
+        .loader::before {
+            content: '';
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            right: 6px;
+            bottom: 6px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top: 2px solid #06b6d4;
+            border-left: 2px solid #8b5cf6;
+            animation: zafiroSpinReverse 1.3s linear infinite;
+        }
+
+        .loader::after {
+            content: '';
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            right: 18px;
+            bottom: 18px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #4a6cf7 0%, rgba(16, 185, 129, 0.25) 70%, transparent 100%);
+            animation: zafiroCorePulse 1.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes zafiroSpin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        @keyframes zafiroSpinReverse {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        @keyframes zafiroCorePulse {
+            0% { transform: scale(0.65); opacity: 0.4; }
+            100% { transform: scale(1.15); opacity: 1; }
         }
         
         .empty-state {

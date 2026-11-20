@@ -11,7 +11,8 @@ import {
     getDocs, 
     getCountFromServer,
     doc, 
-    updateDoc 
+    updateDoc,
+    deleteDoc
 } from './firebase-config.js';
 
 let unsubscribeLowStock = null;
@@ -56,6 +57,11 @@ onReady(() => {
 
     if (markAllRead) {
         markAllRead.addEventListener('click', markAllNotificationsAsRead);
+    }
+
+    const clearAllBtn = document.getElementById('clearAllNotifications');
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', clearAllNotifications);
     }
 });
 
@@ -413,6 +419,24 @@ async function markAllNotificationsAsRead() {
         }
     } catch (error) {
         console.error("Error al marcar todas las notificaciones:", error);
+    }
+}
+
+async function clearAllNotifications() {
+    if (!notifications || notifications.length === 0) return;
+    if (!confirm('¿Deseas despejar todas las notificaciones de la bandeja?')) return;
+    try {
+        const toDelete = [...notifications];
+        await Promise.all(toDelete.map(n => deleteDoc(doc(db, "Notificaciones", n.id))));
+        notifications = [];
+        renderNotificationsList();
+        const notificationBadge = document.getElementById('notificationBadge');
+        if (notificationBadge) {
+            notificationBadge.textContent = '0';
+            notificationBadge.style.display = 'none';
+        }
+    } catch (error) {
+        console.error("Error al despejar bandeja de notificaciones:", error);
     }
 }
 

@@ -83,6 +83,7 @@ onReady(() => {
                 const newClientRef = doc(collection(db, "Clientes"));
                 await setDoc(newClientRef, {
                     clientName,
+                    name: clientName,
                     phone: phone || "",
                     email: email || "",
                     company: company || "",

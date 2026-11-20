@@ -87,7 +87,10 @@
                     <div class="notification-dropdown" id="notificationDropdown">
                         <div class="notification-header">
                             <h3>Notificaciones</h3>
-                            <button class="clear-btn" id="clearNotifications">Marcar todas como leídas</button>
+                            <div style="display:flex;gap:6px;align-items:center;">
+                                <button class="clear-btn" id="markAllRead" title="Marcar todas como leídas"><i class="fas fa-check-double"></i> Leídas</button>
+                                <button class="clear-btn danger" id="clearAllNotifications" title="Despejar toda la bandeja"><i class="fas fa-trash-alt"></i> Despejar</button>
+                            </div>
                         </div>
                         <div class="notification-list" id="notificationList">
                             <!-- Las notificaciones se cargarán aquí -->

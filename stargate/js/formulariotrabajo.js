@@ -387,11 +387,17 @@ function setupFormSubmit() {
 
                     uploadedPhotos[cat] = [];
                     for (const file of files) {
-                        const fileTimestamp = Date.now();
-                        const sRef = storageRef(storage, `trabajos/${unit}_${fileTimestamp}_${file.name}`);
-                        const uploadTask = await uploadBytesResumable(sRef, file);
-                        const downloadUrl = await getDownloadURL(uploadTask.ref);
-                        uploadedPhotos[cat].push(downloadUrl);
+                        try {
+                            const cleanUnit = (unit || 'unidad').replace(/[^a-zA-Z0-9_-]/g, '_');
+                            const cleanName = (file.name || 'foto.jpg').replace(/[^a-zA-Z0-9._-]/g, '_');
+                            const fileTimestamp = Date.now();
+                            const sRef = storageRef(storage, `trabajos/${cleanUnit}_${fileTimestamp}_${cleanName}`);
+                            const uploadTask = await uploadBytesResumable(sRef, file);
+                            const downloadUrl = await getDownloadURL(uploadTask.ref);
+                            uploadedPhotos[cat].push(downloadUrl);
+                        } catch (fileErr) {
+                            console.warn(`[Stargate] Error al subir foto ${file.name}:`, fileErr);
+                        }
                     }
                 }
             }
@@ -459,6 +465,7 @@ function setupFormSubmit() {
             renderUsedPartsList();
             Object.keys(imageFiles).forEach(k => imageFiles[k] = []);
             document.querySelectorAll('[id$="Preview"]').forEach(c => c.innerHTML = '');
+            document.querySelectorAll('[id$="Count"]').forEach(c => c.textContent = '0');
 
             setTimeout(() => {
                 window.location.href = 'trabajos.html';

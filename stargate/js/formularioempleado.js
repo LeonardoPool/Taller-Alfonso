@@ -115,6 +115,7 @@ onReady(() => {
 
                 const docRef = await addDoc(collection(db, "colaboradores"), {
                     fullName,
+                    name: fullName,
                     hireDate: hireDate || "",
                     curp: curp || "",
                     rfc: rfc || "",

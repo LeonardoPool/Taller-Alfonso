@@ -271,10 +271,29 @@ function createJobCard(job) {
     }
     diagnosisText = diagnosisText.length > 40 ? diagnosisText.substring(0, 40) + '...' : diagnosisText;
 
+    // Obtener imagen principal para carga optimizada
+    let mainImage = null;
+    if (job.photos) {
+        if (job.photos.interior && job.photos.interior.length > 0) mainImage = job.photos.interior[0];
+        else if (job.photos.exterior && job.photos.exterior.length > 0) mainImage = job.photos.exterior[0];
+        else if (Array.isArray(job.photos) && job.photos.length > 0) mainImage = job.photos[0];
+        else if (typeof job.photos === 'object') {
+            for (let cat in job.photos) {
+                if (Array.isArray(job.photos[cat]) && job.photos[cat].length > 0) {
+                    mainImage = job.photos[cat][0];
+                    break;
+                }
+            }
+        }
+    }
+
     card.innerHTML = `
         <div class="job-status ${statusClass}">${escapeHtml(statusText)}</div>
         <div class="job-image">
-            <div class="default-job-image"><i class="fas fa-car"></i></div>
+            ${mainImage ? 
+                `<img src="${mainImage}" alt="${escapeHtml(job.vehicle?.unit || 'Unidad')}" loading="lazy" decoding="async" class="job-thumbnail" onerror="this.parentElement.innerHTML='<div class=\\'default-job-image\\'><i class=\\'fas fa-car\\'></i></div>'">` : 
+                `<div class="default-job-image"><i class="fas fa-car"></i></div>`
+            }
         </div>
         <div class="job-info">
             <div class="job-title">
@@ -481,6 +500,31 @@ function openDetailModal(jobId) {
                     </ul>
                 </div>
             ` : ''}
+            ${(() => {
+                const allPhotos = [];
+                if (job.photos) {
+                    if (Array.isArray(job.photos)) allPhotos.push(...job.photos);
+                    else if (typeof job.photos === 'object') {
+                        for (let k in job.photos) {
+                            if (Array.isArray(job.photos[k])) allPhotos.push(...job.photos[k]);
+                            else if (typeof job.photos[k] === 'string') allPhotos.push(job.photos[k]);
+                        }
+                    }
+                }
+                if (allPhotos.length === 0) return '';
+                return `
+                    <div style="grid-column:span 2;background:#f8f9fa;padding:15px;border-radius:8px;">
+                        <h4 style="margin:0 0 10px;color:#2c3e50;"><i class="fas fa-camera"></i> Evidencias Fotográficas (${allPhotos.length})</h4>
+                        <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;">
+                            ${allPhotos.map(url => `
+                                <a href="${url}" target="_blank" rel="noopener noreferrer">
+                                    <img src="${url}" alt="Evidencia" loading="lazy" decoding="async" style="width:90px;height:90px;object-fit:cover;border-radius:6px;border:1px solid #ddd;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            })()}
         </div>
     `;
 
