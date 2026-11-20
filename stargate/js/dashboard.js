@@ -1,5 +1,6 @@
 // Dashboard - Portal Administrativo (Stargate)
 import { initAuthGuard } from './auth-guard.js';
+import { initNotificationsManager } from './notifications-manager.js';
 import { 
     db, 
     collection, 
@@ -16,9 +17,7 @@ import {
 } from './firebase-config.js';
 
 let unsubscribeLowStock = null;
-let unsubscribeNotifications = null;
 let unsubscribeJobs = null;
-let notifications = [];
 
 function onReady(fn) {
     if (document.readyState === 'loading') {
@@ -29,40 +28,12 @@ function onReady(fn) {
 }
 
 onReady(() => {
-    // Inicializar Auth Guard
+    // Inicializar Auth Guard y gestor centralizado de notificaciones
     initAuthGuard((user) => {
-        // Cargar datos en tiempo real
+        initNotificationsManager();
         setupLowStockListener();
-        setupNotificationsListener();
         setupStatsSummary();
     });
-
-    // Elementos DOM
-    const notificationBtn = document.getElementById('notificationBtn');
-    const notificationPanel = document.getElementById('notificationPanel');
-    const markAllRead = document.getElementById('markAllRead');
-
-    if (notificationBtn && notificationPanel) {
-        notificationBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            notificationPanel.classList.toggle('active');
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!notificationPanel.contains(e.target) && !notificationBtn.contains(e.target)) {
-                notificationPanel.classList.remove('active');
-            }
-        });
-    }
-
-    if (markAllRead) {
-        markAllRead.addEventListener('click', markAllNotificationsAsRead);
-    }
-
-    const clearAllBtn = document.getElementById('clearAllNotifications');
-    if (clearAllBtn) {
-        clearAllBtn.addEventListener('click', clearAllNotifications);
-    }
 });
 
 // Resumen estadístico dinámico y optimizado (Trabajos, Clientes)
@@ -306,139 +277,7 @@ function setupLowStockListener() {
     });
 }
 
-// Escucha en tiempo real de notificaciones
-function setupNotificationsListener() {
-    const notificationList = document.getElementById('notificationList');
-    const notificationBadge = document.getElementById('notificationBadge');
-
-    if (!notificationList) return;
-
-    try {
-        const notifRef = query(collection(db, "Notificaciones"), limit(15));
-        unsubscribeNotifications = onSnapshot(notifRef, (snapshot) => {
-            notifications = [];
-            let unreadCount = 0;
-
-            snapshot.forEach(docSnap => {
-                const notif = { id: docSnap.id, ...docSnap.data() };
-                notifications.push(notif);
-                if (!notif.read) unreadCount++;
-            });
-
-            // Ordenar por timestamp
-            notifications.sort((a, b) => {
-                const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : new Date(a.timestamp || 0).getTime();
-                const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : new Date(b.timestamp || 0).getTime();
-                return timeB - timeA;
-            });
-
-            if (notificationBadge) {
-                notificationBadge.textContent = unreadCount;
-                notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
-            }
-
-            renderNotificationsList();
-        }, (error) => {
-            console.warn("Fallo al consultar Notificaciones:", error);
-        });
-    } catch (err) {
-        console.warn("Error configurando listener de notificaciones:", err);
-    }
-}
-
-function renderNotificationsList() {
-    const notificationList = document.getElementById('notificationList');
-    if (!notificationList) return;
-
-    notificationList.innerHTML = '';
-
-    if (notifications.length === 0) {
-        notificationList.innerHTML = `
-            <li class="notification-item">
-                <div class="notification-content">
-                    <div class="notification-title">No hay notificaciones</div>
-                </div>
-            </li>
-        `;
-        return;
-    }
-
-    notifications.slice(0, 10).forEach(notif => {
-        const li = document.createElement('li');
-        li.className = `notification-item ${notif.read ? '' : 'unread'}`;
-
-        let iconClass = notif.type || 'info';
-        let iconMarkup = `<i class="fas fa-${notif.icon || 'info-circle'}"></i>`;
-
-        let timeAgo = 'Reciente';
-        if (notif.timestamp) {
-            const date = notif.timestamp.toDate ? notif.timestamp.toDate() : new Date(notif.timestamp);
-            const minutes = Math.floor((new Date() - date) / 60000);
-            if (minutes < 1) timeAgo = 'Hace unos segundos';
-            else if (minutes < 60) timeAgo = `Hace ${minutes} min`;
-            else if (minutes < 1440) timeAgo = `Hace ${Math.floor(minutes/60)} h`;
-            else timeAgo = `Hace ${Math.floor(minutes/1440)} d`;
-        }
-
-        li.innerHTML = `
-            <div class="notification-icon ${iconClass}">
-                ${iconMarkup}
-            </div>
-            <div class="notification-content">
-                <div class="notification-title">${escapeHtml(notif.title || notif.message || 'Notificación')}</div>
-                ${notif.title && notif.message ? `<div class="notification-desc">${escapeHtml(notif.message)}</div>` : ''}
-                <div class="notification-time">${timeAgo}</div>
-            </div>
-        `;
-
-        li.addEventListener('click', () => {
-            if (!notif.read) {
-                markNotificationAsRead(notif.id);
-            }
-        });
-
-        notificationList.appendChild(li);
-    });
-}
-
-async function markNotificationAsRead(notificationId) {
-    try {
-        const notifRef = doc(db, "Notificaciones", notificationId);
-        await updateDoc(notifRef, { read: true });
-    } catch (error) {
-        console.error("Error al marcar notificación:", error);
-    }
-}
-
-async function markAllNotificationsAsRead() {
-    try {
-        const unread = notifications.filter(n => !n.read);
-        for (const n of unread) {
-            const notifRef = doc(db, "Notificaciones", n.id);
-            await updateDoc(notifRef, { read: true });
-        }
-    } catch (error) {
-        console.error("Error al marcar todas las notificaciones:", error);
-    }
-}
-
-async function clearAllNotifications() {
-    if (!notifications || notifications.length === 0) return;
-    if (!confirm('¿Deseas despejar todas las notificaciones de la bandeja?')) return;
-    try {
-        const toDelete = [...notifications];
-        await Promise.all(toDelete.map(n => deleteDoc(doc(db, "Notificaciones", n.id))));
-        notifications = [];
-        renderNotificationsList();
-        const notificationBadge = document.getElementById('notificationBadge');
-        if (notificationBadge) {
-            notificationBadge.textContent = '0';
-            notificationBadge.style.display = 'none';
-        }
-    } catch (error) {
-        console.error("Error al despejar bandeja de notificaciones:", error);
-    }
-}
+// Notificaciones gestionadas globalmente por notifications-manager.js
 
 function escapeHtml(text) {
     if (!text) return '';
@@ -451,6 +290,5 @@ function escapeHtml(text) {
 
 window.addEventListener('beforeunload', () => {
     if (unsubscribeLowStock) unsubscribeLowStock();
-    if (unsubscribeNotifications) unsubscribeNotifications();
     if (unsubscribeJobs) unsubscribeJobs();
 });

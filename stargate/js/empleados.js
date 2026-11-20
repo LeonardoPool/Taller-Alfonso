@@ -1,5 +1,6 @@
 // Gestión de Colaboradores - Portal Administrativo (Stargate)
 import { initAuthGuard } from './auth-guard.js';
+import { initNotificationsManager } from './notifications-manager.js';
 import { 
     db, 
     collection, 
@@ -39,6 +40,7 @@ function onReady(fn) {
 
 onReady(() => {
     initAuthGuard(() => {
+        initNotificationsManager();
         setupColaboradoresListener();
         setupEventListeners();
     });
