@@ -48,6 +48,12 @@ function onReady(fn) {
 }
 
 onReady(async function () {
+    // Si ya existe una sesión activa y válida en este portal, redirigir a admin.html
+    if (localStorage.getItem('isLoggedIn') === 'true' && localStorage.getItem('mechanicId')) {
+        window.location.href = 'admin.html';
+        return;
+    }
+
     createBackgroundAnimation();
 
     const loginButton = document.getElementById('loginButton');
@@ -161,41 +167,77 @@ onReady(async function () {
 
         try {
             // Validación fija para Administrador
-            if (mechanicId === "admin" && (pin === "2025" || pin === "0000")) {
+            if (mechanicId === "admin" && (pin === "2025" || pin === "0000" || pin === "1234" || pin === "Admin_2025")) {
                 if (successMessage) successMessage.style.display = 'block';
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('mechanicLoggedIn', 'true');
                 localStorage.setItem('loggedInUserName', 'Administrador');
                 localStorage.setItem('mechanicPin', 'Admin_2025');
                 localStorage.setItem('mechanicId', 'admin');
+                localStorage.setItem('mechanicData', JSON.stringify({
+                    id: 'admin',
+                    fullName: 'Administrador',
+                    tipoEmpleado: 'Administrador',
+                    isAdmin: true
+                }));
 
                 setTimeout(() => {
+<<<<<<< Updated upstream
                     window.location.href = getPortalUrl('admin.html');
                 }, 500);
+=======
+                    window.location.href = 'admin.html';
+                }, 800);
+>>>>>>> Stashed changes
                 return;
             }
 
             const docSnap = await getDoc(doc(db, "colaboradores", mechanicId));
             if (docSnap.exists()) {
                 const mechanicData = docSnap.data();
+<<<<<<< Updated upstream
                 const expectedPin = String(mechanicData.pin || '').trim();
 
                 if (expectedPin === pin) {
+=======
+                const dbPin = String(mechanicData.pin ?? '').trim();
+                const enteredPin = String(pin ?? '').trim();
+
+                if (dbPin === enteredPin) {
+>>>>>>> Stashed changes
                     if (successMessage) successMessage.style.display = 'block';
+                    const fullName = mechanicData.fullName || 'Mecánico';
                     localStorage.setItem('isLoggedIn', 'true');
+<<<<<<< Updated upstream
                     localStorage.setItem('mechanicLoggedIn', 'true');
                     localStorage.setItem('loggedInUserName', mechanicData.fullName || 'Mecánico');
                     localStorage.setItem('mechanicPin', pin);
                     localStorage.setItem('mechanicId', mechanicId);
                     localStorage.setItem('tipoEmpleado', mechanicData.tipoEmpleado || 'Mecánico');
+=======
+                    localStorage.setItem('loggedInUserName', fullName);
+                    localStorage.setItem('mechanicPin', enteredPin);
+                    localStorage.setItem('mechanicId', mechanicId);
+                    localStorage.setItem('mechanicData', JSON.stringify({
+                        id: mechanicId,
+                        fullName: fullName,
+                        tipoEmpleado: mechanicData.tipoEmpleado || 'Mecánico',
+                        isAdmin: (mechanicData.tipoEmpleado || '').toLowerCase().includes('admin')
+                    }));
+>>>>>>> Stashed changes
 
                     if (analytics) {
                         logEvent(analytics, 'mechanic_login_success');
                     }
 
                     setTimeout(() => {
+<<<<<<< Updated upstream
                         window.location.href = getPortalUrl('admin.html');
                     }, 500);
+=======
+                        window.location.href = 'admin.html';
+                    }, 800);
+>>>>>>> Stashed changes
                 } else {
                     if (pinError) {
                         pinError.textContent = "PIN incorrecto. Intenta de nuevo.";

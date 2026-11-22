@@ -83,9 +83,19 @@ async function loadParts() {
             if (snapshot.empty) {
                 if (emptyState) emptyState.style.display = 'block';
                 if (loader) loader.style.display = 'none';
+                updateRackFilterOptions([]);
                 renderParts([]);
                 return;
             }
+
+            // Actualización inmediata del filtro de estantes leyendo todos los registrados en BD
+            const rawPartsForShelves = snapshot.docs.map(d => {
+                const data = d.data();
+                return {
+                    estante: data.storageLocation || data.estante || data.ubicacion || data.shelf || "General"
+                };
+            });
+            updateRackFilterOptions(rawPartsForShelves);
 
             // Optimización: Carga en paralelo de URLs de imágenes mediante Promise.all
             const partsPromises = snapshot.docs.map(async (docRef) => {
@@ -96,7 +106,7 @@ async function loadParts() {
                     nombre: data.partName || data.nombre || "Sin nombre",
                     codigo: data.serialNumber || data.codigo || "Sin código",
                     precio: Number(data.salePrice || data.precio) || 0,
-                    estante: data.storageLocation || data.estante || "General",
+                    estante: data.storageLocation || data.estante || data.ubicacion || data.shelf || "General",
                     minStock: Number(data.minStock) || 5,
                     stock: Number(data.stock) || 0,
                     supplier: data.supplier || "Sin proveedor",
@@ -133,6 +143,7 @@ async function loadParts() {
             partsCache = await Promise.all(partsPromises);
 
             if (loader) loader.style.display = 'none';
+            updateRackFilterOptions(partsCache);
             renderParts(partsCache);
         }, (error) => {
             console.error("Error al cargar piezas: ", error);
@@ -152,14 +163,100 @@ async function loadParts() {
     }
 }
 
+// Actualizar dinámicamente las opciones del filtro de estantes leyendo los dados de alta en la BD
+async function updateRackFilterOptions(parts) {
+    if (!rackFilter) return;
+    const currentVal = rackFilter.value;
+
+    const shelvesMap = new Map();
+
+    // 1. Leer estantes de las piezas existentes
+    parts.forEach(p => {
+        const raw = (p.estante || p.storageLocation || p.ubicacion || p.shelf || '').trim();
+        if (raw) {
+            shelvesMap.set(raw, raw);
+        }
+    });
+
+    // 2. Intentar leer también de colecciones dedicadas si existen en Firebase
+    try {
+        const [estantesSnap, ubicSnap] = await Promise.allSettled([
+            getDocs(collection(db, "Estantes")),
+            getDocs(collection(db, "Ubicaciones"))
+        ]);
+        if (estantesSnap.status === 'fulfilled' && estantesSnap.value && !estantesSnap.value.empty) {
+            estantesSnap.value.forEach(docSnap => {
+                const data = docSnap.data();
+                const name = (data.nombre || data.name || data.codigo || docSnap.id || '').trim();
+                if (name) shelvesMap.set(name, name);
+            });
+        }
+        if (ubicSnap.status === 'fulfilled' && ubicSnap.value && !ubicSnap.value.empty) {
+            ubicSnap.value.forEach(docSnap => {
+                const data = docSnap.data();
+                const name = (data.nombre || data.name || data.codigo || docSnap.id || '').trim();
+                if (name) shelvesMap.set(name, name);
+            });
+        }
+    } catch (e) {
+        // Silencioso si no existen colecciones complementarias
+    }
+
+    const sortedShelves = Array.from(shelvesMap.keys()).sort((a, b) => {
+        return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+    });
+
+    let optionsHtml = '<option value="all">Todos los estantes</option>';
+    sortedShelves.forEach(shelf => {
+        // Si es una sola letra, mostrar "Estante X"; si ya tiene nombre como "P - 1", "Q - 3", etc., mostrar tal cual
+        const label = (shelf.length === 1 && /^[a-zA-Z]$/.test(shelf)) ? `Estante ${shelf.toUpperCase()}` : shelf;
+        optionsHtml += `<option value="${escapeHtml(shelf)}">${escapeHtml(label)}</option>`;
+    });
+
+    rackFilter.innerHTML = optionsHtml;
+
+    if (currentVal && (currentVal === 'all' || shelvesMap.has(currentVal))) {
+        rackFilter.value = currentVal;
+    } else {
+        rackFilter.value = 'all';
+    }
+
+    // Actualizar también los selects de modales si existen
+    const editLocation = document.getElementById('editLocation');
+    const newPartLocation = document.getElementById('newPartLocation');
+    [editLocation, newPartLocation].forEach(sel => {
+        if (!sel) return;
+        const currentSelVal = sel.value;
+        let selHtml = '';
+        sortedShelves.forEach(shelf => {
+            const label = (shelf.length === 1 && /^[a-zA-Z]$/.test(shelf)) ? `Estante ${shelf.toUpperCase()}` : shelf;
+            selHtml += `<option value="${escapeHtml(shelf)}">${escapeHtml(label)}</option>`;
+        });
+        if (!shelvesMap.has('General')) {
+            selHtml += '<option value="General">General</option>';
+        }
+        sel.innerHTML = selHtml;
+        if (currentSelVal && (shelvesMap.has(currentSelVal) || currentSelVal === 'General')) {
+            sel.value = currentSelVal;
+        }
+    });
+}
+
 // Renderizar tarjetas de piezas
 function renderParts(parts) {
     if (!partsContainer) return;
     let filteredParts = [...parts];
 
-    // Filtro por estante
+    // Filtro por estante (flexible para coincidir con valor exacto o normalizado)
     if (rackFilter && rackFilter.value !== 'all') {
-        filteredParts = filteredParts.filter(part => part.estante === rackFilter.value);
+        const target = rackFilter.value.toLowerCase().trim();
+        const cleanTarget = target.replace(/^estante\s*/, '').replace(/\s+/g, '');
+        filteredParts = filteredParts.filter(part => {
+            const partShelf = (part.estante || '').toLowerCase().trim();
+            if (partShelf === target) return true;
+            const cleanShelf = partShelf.replace(/^estante\s*/, '').replace(/\s+/g, '');
+            return cleanTarget === cleanShelf;
+        });
     }
 
     // Filtro por stock
@@ -523,7 +620,17 @@ function openEditModal(partId) {
     document.getElementById('editPrice').value = part.precio || 0;
     document.getElementById('editStock').value = part.stock;
     document.getElementById('editMinStock').value = part.minStock;
-    document.getElementById('editLocation').value = part.estante;
+    
+    const editLocation = document.getElementById('editLocation');
+    if (editLocation) {
+        if (part.estante && !Array.from(editLocation.options).some(o => o.value === part.estante)) {
+            const opt = document.createElement('option');
+            opt.value = part.estante;
+            opt.textContent = part.estante.length <= 3 && !part.estante.toLowerCase().startsWith('est') ? `Estante ${part.estante}` : part.estante;
+            editLocation.appendChild(opt);
+        }
+        editLocation.value = part.estante || 'General';
+    }
 
     editModal.classList.add('active');
 }

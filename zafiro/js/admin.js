@@ -165,6 +165,296 @@ function loadJobs() {
     });
 }
 
+// Validaciones de estado del cronómetro
+function isJobRunning(job) {
+    if (!job || !job.status) return false;
+    const s = String(job.status).toLowerCase();
+    return s === JOB_STATUS.WORKING || s.includes('trabajando') || s.includes('en progreso') || s.includes('en_progreso');
+}
+
+function isJobPaused(job) {
+    if (!job || !job.status) return false;
+    const s = String(job.status).toLowerCase();
+    return s === JOB_STATUS.PAUSED_PARTS || s === JOB_STATUS.PAUSED_EXIT || s.includes('detenido') || s.includes('paus');
+}
+
+function isJobFinished(job) {
+    if (!job || !job.status) return false;
+    const s = String(job.status).toLowerCase();
+    return s === JOB_STATUS.FINISHED || s.includes('finaliz') || s.includes('complet');
+}
+
+// Desglose completo y auditado de tiempos (Mano de obra, Refacciones, Salida y Lead Time Total)
+function getJobTimeBreakdown(job) {
+    if (!job) {
+        return {
+            activeSeconds: 0,
+            pausedPartsSeconds: 0,
+            pausedExitSeconds: 0,
+            totalTurnaroundSeconds: 0,
+            hasStarted: false
+        };
+    }
+
+    let active = Number(job.activeTimeSeconds || job.totalTimeSeconds || 0);
+    let pausedParts = Number(job.pausedPartsSeconds || 0);
+    let pausedExit = Number(job.pausedExitSeconds || 0);
+
+    const hasStarted = Boolean(job.startTime);
+
+    // Si ha iniciado y no está finalizado, calcular el tiempo transcurrido en el estado actual
+    if (hasStarted && !isJobFinished(job)) {
+        const lastChangeRef = job.lastStatusChange || job.timerStartedAt || job.startTime;
+        if (lastChangeRef) {
+            const lastChangeDate = lastChangeRef.toDate ? lastChangeRef.toDate() : new Date(lastChangeRef);
+            const deltaCurrent = Math.max(0, Math.floor((Date.now() - lastChangeDate.getTime()) / 1000));
+
+            if (isJobRunning(job)) {
+                active += deltaCurrent;
+            } else if (job.status === JOB_STATUS.PAUSED_PARTS || String(job.status).toLowerCase().includes('refacc')) {
+                pausedParts += deltaCurrent;
+            } else if (job.status === JOB_STATUS.PAUSED_EXIT || String(job.status).toLowerCase().includes('salida')) {
+                pausedExit += deltaCurrent;
+            }
+        }
+    }
+
+    // Tiempo total de estancia en taller (Lead Time / Salida)
+    let totalTurnaround = 0;
+    if (job.startTime) {
+        const start = job.startTime.toDate ? job.startTime.toDate() : new Date(job.startTime);
+        const end = isJobFinished(job) && job.endTime
+            ? (job.endTime.toDate ? job.endTime.toDate() : new Date(job.endTime))
+            : new Date();
+        totalTurnaround = Math.max(0, Math.floor((end.getTime() - start.getTime()) / 1000));
+    }
+
+    return {
+        activeSeconds: active,
+        pausedPartsSeconds: pausedParts,
+        pausedExitSeconds: pausedExit,
+        totalTurnaroundSeconds: totalTurnaround,
+        hasStarted
+    };
+}
+
+// Formateo inteligente en Años, Meses, Semanas, Días, Horas, Minutos, Segundos
+function formatSmartDuration(totalSeconds, isLiveTicking = false) {
+    if (!totalSeconds || totalSeconds < 0) totalSeconds = 0;
+
+    const SECONDS_IN_MINUTE = 60;
+    const SECONDS_IN_HOUR = 3600;
+    const SECONDS_IN_DAY = 86400;
+    const SECONDS_IN_WEEK = 604800; // 7 días
+    const SECONDS_IN_MONTH = 2592000; // 30 días aprox.
+    const SECONDS_IN_YEAR = 31536000; // 365 días
+
+    let rem = Math.floor(totalSeconds);
+
+    const years = Math.floor(rem / SECONDS_IN_YEAR);
+    rem %= SECONDS_IN_YEAR;
+
+    const months = Math.floor(rem / SECONDS_IN_MONTH);
+    rem %= SECONDS_IN_MONTH;
+
+    const weeks = Math.floor(rem / SECONDS_IN_WEEK);
+    rem %= SECONDS_IN_WEEK;
+
+    const days = Math.floor(rem / SECONDS_IN_DAY);
+    rem %= SECONDS_IN_DAY;
+
+    const hours = Math.floor(rem / SECONDS_IN_HOUR);
+    rem %= SECONDS_IN_HOUR;
+
+    const minutes = Math.floor(rem / SECONDS_IN_MINUTE);
+    const seconds = rem % SECONDS_IN_MINUTE;
+
+    if (isLiveTicking) {
+        const timePart = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        const prefixParts = [];
+        if (years > 0) prefixParts.push(`${years}a`);
+        if (months > 0) prefixParts.push(`${months}m`);
+        if (weeks > 0) prefixParts.push(`${weeks}sem`);
+        if (days > 0) prefixParts.push(`${days}d`);
+
+        if (prefixParts.length > 0) {
+            return `${prefixParts.join(' ')} ${timePart}`;
+        }
+        return timePart; // Menos de 1 día: HH:MM:SS
+    }
+
+    // Modo descriptivo legible
+    const parts = [];
+    if (years > 0) parts.push(`${years} ${years === 1 ? 'año' : 'años'}`);
+    if (months > 0) parts.push(`${months} ${months === 1 ? 'mes' : 'meses'}`);
+    if (weeks > 0) parts.push(`${weeks} ${weeks === 1 ? 'sem' : 'sem'}`);
+    if (days > 0) parts.push(`${days} ${days === 1 ? 'día' : 'días'}`);
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0 && years === 0 && months === 0) parts.push(`${minutes}m`);
+
+    if (parts.length === 0) {
+        return `${seconds}s`;
+    }
+
+    return parts.slice(0, 3).join(' ');
+}
+
+// Obtiene el tiempo principal a desplegar según el estado del trabajo
+function formatElapsedTime(job) {
+    const b = getJobTimeBreakdown(job);
+    if (!b.hasStarted) return '00:00:00';
+
+    if (isJobRunning(job)) {
+        return formatSmartDuration(b.activeSeconds, true);
+    }
+    if (job.status === JOB_STATUS.PAUSED_PARTS || String(job.status).toLowerCase().includes('refacc')) {
+        return formatSmartDuration(b.pausedPartsSeconds, true);
+    }
+    if (job.status === JOB_STATUS.PAUSED_EXIT || String(job.status).toLowerCase().includes('salida')) {
+        return formatSmartDuration(b.pausedExitSeconds, true);
+    }
+    if (isJobFinished(job)) {
+        return formatSmartDuration(b.activeSeconds, false);
+    }
+    return formatSmartDuration(b.activeSeconds, false);
+}
+
+// Iniciar timer en vivo para un trabajo
+function startTimer(jobId) {
+    if (timers[jobId]) clearInterval(timers[jobId]);
+
+    timers[jobId] = setInterval(() => {
+        const j = jobsCache.find(x => x.id === jobId);
+        if (j && (isJobRunning(j) || isJobPaused(j))) {
+            const el = document.querySelector(`#timer-${jobId} .timer-digits`);
+            if (el) el.textContent = formatElapsedTime(j);
+
+            // Actualizar en el modal de detalle si está abierto para este trabajo
+            if (currentJobId === jobId) {
+                const b = getJobTimeBreakdown(j);
+                const turnEl = document.getElementById('modal-turnaround-time');
+                const actEl = document.getElementById('modal-active-time');
+                const partEl = document.getElementById('modal-parts-time');
+                const exitEl = document.getElementById('modal-exit-time');
+                if (turnEl) turnEl.textContent = formatSmartDuration(b.totalTurnaroundSeconds, false);
+                if (actEl) actEl.textContent = formatSmartDuration(b.activeSeconds, isJobRunning(j));
+                if (partEl) partEl.textContent = formatSmartDuration(b.pausedPartsSeconds, j.status === JOB_STATUS.PAUSED_PARTS);
+                if (exitEl) exitEl.textContent = formatSmartDuration(b.pausedExitSeconds, j.status === JOB_STATUS.PAUSED_EXIT);
+            }
+        } else {
+            clearInterval(timers[jobId]);
+            delete timers[jobId];
+        }
+    }, 1000);
+}
+
+// Iniciar trabajo con 1 tap
+async function startJobTimer(jobId) {
+    const job = jobsCache.find(j => j.id === jobId);
+    if (!job) return;
+
+    const now = serverTimestamp();
+    const updateData = {
+        status: JOB_STATUS.WORKING,
+        lastStatusChange: now,
+        activeTimeSeconds: 0,
+        pausedPartsSeconds: 0,
+        pausedExitSeconds: 0,
+        totalTimeSeconds: 0
+    };
+    if (!job.startTime) {
+        updateData.startTime = now;
+    }
+
+    // Actualización visual inmediata
+    job.status = JOB_STATUS.WORKING;
+    job.lastStatusChange = new Date();
+    if (!job.startTime) job.startTime = new Date();
+    job.activeTimeSeconds = 0;
+    job.pausedPartsSeconds = 0;
+    job.pausedExitSeconds = 0;
+    job.totalTimeSeconds = 0;
+    renderJobs(jobsCache);
+
+    if (!navigator.onLine) {
+        try {
+            await enqueueOfflineOperation('UPDATE_JOB_STATUS', {
+                jobId: jobId,
+                status: JOB_STATUS.WORKING,
+                activeTimeSeconds: 0,
+                pausedPartsSeconds: 0,
+                pausedExitSeconds: 0,
+                totalTimeSeconds: 0
+            });
+            showStatus('Trabajo iniciado localmente (Offline).', 'info');
+        } catch (e) {
+            alert('Error offline: ' + e.message);
+        }
+        return;
+    }
+
+    try {
+        const jobRef = doc(db, "Trabajos", jobId);
+        await updateDoc(jobRef, updateData);
+        showStatus('Trabajo iniciado. Cronómetro en marcha.', 'success');
+    } catch (err) {
+        console.error('Error al iniciar trabajo:', err);
+        alert('Error al iniciar trabajo: ' + err.message);
+    }
+}
+
+// Reanudar trabajo con 1 tap
+async function resumeJobTimer(jobId) {
+    const job = jobsCache.find(j => j.id === jobId);
+    if (!job) return;
+
+    const now = serverTimestamp();
+    const b = getJobTimeBreakdown(job);
+    const updateData = {
+        status: JOB_STATUS.WORKING,
+        lastStatusChange: now,
+        activeTimeSeconds: b.activeSeconds,
+        pausedPartsSeconds: b.pausedPartsSeconds,
+        pausedExitSeconds: b.pausedExitSeconds,
+        totalTimeSeconds: b.activeSeconds
+    };
+
+    // Actualización visual inmediata
+    job.status = JOB_STATUS.WORKING;
+    job.lastStatusChange = new Date();
+    job.activeTimeSeconds = b.activeSeconds;
+    job.pausedPartsSeconds = b.pausedPartsSeconds;
+    job.pausedExitSeconds = b.pausedExitSeconds;
+    job.totalTimeSeconds = b.activeSeconds;
+    renderJobs(jobsCache);
+
+    if (!navigator.onLine) {
+        try {
+            await enqueueOfflineOperation('UPDATE_JOB_STATUS', {
+                jobId: jobId,
+                status: JOB_STATUS.WORKING,
+                activeTimeSeconds: b.activeSeconds,
+                pausedPartsSeconds: b.pausedPartsSeconds,
+                pausedExitSeconds: b.pausedExitSeconds,
+                totalTimeSeconds: b.activeSeconds
+            });
+            showStatus('Trabajo reanudado localmente (Offline).', 'info');
+        } catch (e) {
+            alert('Error offline: ' + e.message);
+        }
+        return;
+    }
+
+    try {
+        const jobRef = doc(db, "Trabajos", jobId);
+        await updateDoc(jobRef, updateData);
+        showStatus('Trabajo reanudado. Cronómetro en marcha.', 'success');
+    } catch (err) {
+        console.error('Error al reanudar trabajo:', err);
+        alert('Error al reanudar trabajo: ' + err.message);
+    }
+}
+
 // Renderizar lista de trabajos
 function renderJobs(jobs) {
     if (!jobsContainer) return;
@@ -174,10 +464,11 @@ function renderJobs(jobs) {
     if (statusFilter && statusFilter.value !== 'all') {
         const val = statusFilter.value;
         filtered = filtered.filter(job => {
-            if (val === 'trabajando') return job.status === JOB_STATUS.WORKING;
-            if (val === 'detenido_refaccion') return job.status === JOB_STATUS.PAUSED_PARTS;
-            if (val === 'detenido_salida') return job.status === JOB_STATUS.PAUSED_EXIT;
-            if (val === 'finalizado') return job.status === JOB_STATUS.FINISHED;
+            if (val === 'trabajando') return isJobRunning(job);
+            if (val === 'detenido_refaccion') return job.status === JOB_STATUS.PAUSED_PARTS || String(job.status).toLowerCase().includes('refacc');
+            if (val === 'detenido_salida') return job.status === JOB_STATUS.PAUSED_EXIT || String(job.status).toLowerCase().includes('salida');
+            if (val === 'finalizado') return isJobFinished(job);
+            if (val === 'abierto') return !isJobRunning(job) && !isJobPaused(job) && !isJobFinished(job);
             return true;
         });
     }
@@ -211,6 +502,12 @@ function renderJobs(jobs) {
         });
     }
 
+    // Limpiar timers activos existentes antes de re-renderizar
+    for (let timerId in timers) {
+        clearInterval(timers[timerId]);
+    }
+    timers = {};
+
     jobsContainer.innerHTML = '';
 
     if (filtered.length === 0) {
@@ -228,8 +525,8 @@ function renderJobs(jobs) {
         const card = createJobCard(job);
         jobsGrid.appendChild(card);
 
-        if (job.status === JOB_STATUS.WORKING) {
-            startTimer(job.id, job);
+        if (isJobRunning(job) || isJobPaused(job)) {
+            startTimer(job.id);
         }
     });
 }
@@ -244,27 +541,20 @@ function createJobCard(job) {
         day: '2-digit', month: '2-digit', year: 'numeric'
     });
 
-    let statusClass, statusText;
-    switch (job.status) {
-        case JOB_STATUS.WORKING:
-            statusClass = 'status-in-progress';
-            statusText = 'Trabajando';
-            break;
-        case JOB_STATUS.PAUSED_PARTS:
-            statusClass = 'status-paused';
-            statusText = 'Detenido (refacción)';
-            break;
-        case JOB_STATUS.PAUSED_EXIT:
-            statusClass = 'status-stopped';
-            statusText = 'Detenido (salida)';
-            break;
-        case JOB_STATUS.FINISHED:
-            statusClass = 'status-completed';
-            statusText = 'Finalizado';
-            break;
-        default:
-            statusClass = 'status-open';
-            statusText = job.status || 'Abierto';
+    let statusClass = 'status-open';
+    let statusText = job.status || 'Trabajo abierto';
+    if (isJobRunning(job)) {
+        statusClass = 'status-in-progress';
+        statusText = 'Trabajando';
+    } else if (job.status === JOB_STATUS.PAUSED_PARTS || String(job.status).toLowerCase().includes('refacc')) {
+        statusClass = 'status-paused';
+        statusText = 'Detenido (refacción)';
+    } else if (job.status === JOB_STATUS.PAUSED_EXIT || String(job.status).toLowerCase().includes('salida')) {
+        statusClass = 'status-stopped';
+        statusText = 'Detenido (salida)';
+    } else if (isJobFinished(job)) {
+        statusClass = 'status-completed';
+        statusText = 'Finalizado';
     }
 
     let diagnosisText = job.workDetails?.diagnosis || 'Sin diagnóstico';
@@ -272,6 +562,46 @@ function createJobCard(job) {
         diagnosisText = diagnosisText.text || JSON.stringify(diagnosisText);
     }
     diagnosisText = diagnosisText.length > 40 ? diagnosisText.substring(0, 40) + '...' : diagnosisText;
+
+    const b = getJobTimeBreakdown(job);
+
+    // Configuración visual inteligente del cronómetro
+    let timerStateClass = 'timer-idle';
+    let timerIcon = 'fa-clock';
+    let timerBadgeText = 'Sin iniciar';
+    let timerSubtext = 'Listo para arrancar';
+    let refaccionPillHtml = '';
+    let timerActionHtml = `<button class="timer-btn btn-start-quick" data-id="${job.id}" title="Iniciar trabajo"><i class="fas fa-play"></i> Iniciar</button>`;
+
+    if (isJobRunning(job)) {
+        timerStateClass = 'timer-running';
+        timerIcon = 'fa-stopwatch';
+        timerBadgeText = 'Trabajando';
+        timerSubtext = 'Mano de obra activa';
+        if (b.pausedPartsSeconds > 0) {
+            refaccionPillHtml = `<span class="timer-refaccion-pill" title="Tiempo justificado en espera de refacciones"><i class="fas fa-tools"></i> Refacciones: ${formatSmartDuration(b.pausedPartsSeconds, false)}</span>`;
+        }
+        timerActionHtml = `<button class="timer-btn btn-pause-quick" data-id="${job.id}" title="Pausar trabajo"><i class="fas fa-pause"></i> Pausar</button>`;
+    } else if (isJobPaused(job)) {
+        timerStateClass = 'timer-paused';
+        timerIcon = 'fa-pause-circle';
+        const isRefacc = (job.status === JOB_STATUS.PAUSED_PARTS || String(job.status).toLowerCase().includes('refacc'));
+        timerBadgeText = isRefacc ? 'Detenido por Refacción' : 'Detenido por Salida';
+        timerSubtext = isRefacc ? 'En espera de piezas' : 'Fuera de jornada';
+        if (b.activeSeconds > 0) {
+            refaccionPillHtml = `<span class="timer-work-pill" title="Mano de obra acumulada"><i class="fas fa-wrench"></i> Trabajado: ${formatSmartDuration(b.activeSeconds, false)}</span>`;
+        }
+        timerActionHtml = `<button class="timer-btn btn-resume-quick" data-id="${job.id}" title="Reanudar trabajo"><i class="fas fa-play"></i> Reanudar</button>`;
+    } else if (isJobFinished(job)) {
+        timerStateClass = 'timer-finished';
+        timerIcon = 'fa-check-circle';
+        timerBadgeText = 'Finalizado';
+        timerSubtext = `Mano de obra: ${formatSmartDuration(b.activeSeconds, false)}`;
+        if (b.totalTurnaroundSeconds > 0) {
+            refaccionPillHtml = `<span class="timer-total-pill" title="Tiempo total de estancia en taller"><i class="fas fa-truck-ramp-box"></i> Salida: ${formatSmartDuration(b.totalTurnaroundSeconds, false)}</span>`;
+        }
+        timerActionHtml = '';
+    }
 
     // Obtener imagen principal para carga optimizada
     let mainImage = null;
@@ -305,7 +635,7 @@ function createJobCard(job) {
             <div class="job-details">
                 <div class="detail-item">
                     <div class="detail-label">Motor</div>
-                    <div class="detail-value"><i class="fas fa-cogs"></i> ${escapeHtml(job.vehicle?.engineNumber || 'N/A')}</div>
+                    <div class="detail-value"><i class="fas fa-cog"></i> ${escapeHtml(job.vehicle?.engineNumber || 'N/A')}</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Placas</div>
@@ -320,9 +650,21 @@ function createJobCard(job) {
                     <div class="detail-value"><i class="fas fa-stethoscope"></i> ${escapeHtml(diagnosisText)}</div>
                 </div>
             </div>
-            <div class="job-timer" id="timer-${job.id}">
-                <i class="fas fa-stopwatch"></i>
-                <span>${formatElapsedTime(job)}</span>
+            <div class="job-timer ${timerStateClass}" id="timer-${job.id}" data-id="${job.id}">
+                <div class="timer-main">
+                    <div class="timer-top-row">
+                        <i class="fas ${timerIcon}"></i>
+                        <span class="timer-digits">${formatElapsedTime(job)}</span>
+                        <span class="timer-badge">${timerBadgeText}</span>
+                    </div>
+                    <div class="timer-sub-row">
+                        <span class="timer-subtext">${timerSubtext}</span>
+                        ${refaccionPillHtml}
+                    </div>
+                </div>
+                <div class="timer-action">
+                    ${timerActionHtml}
+                </div>
             </div>
         </div>
         <div class="job-footer">
@@ -338,39 +680,6 @@ function createJobCard(job) {
     return card;
 }
 
-// Formatear tiempo transcurrido
-function formatElapsedTime(job) {
-    if (!job.startTime) return '00:00:00';
-
-    const start = job.startTime.toDate ? job.startTime.toDate() : new Date(job.startTime);
-    const now = new Date();
-    let elapsed = Math.floor((now - start) / 1000);
-
-    const paused = job.totalPausedDuration || 0;
-    elapsed = Math.max(0, elapsed - paused);
-
-    const hours = Math.floor(elapsed / 3600);
-    const minutes = Math.floor((elapsed % 3600) / 60);
-    const seconds = elapsed % 60;
-
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
-
-// Iniciar timer en vivo
-function startTimer(jobId, job) {
-    if (timers[jobId]) clearInterval(timers[jobId]);
-
-    timers[jobId] = setInterval(() => {
-        const j = jobsCache.find(x => x.id === jobId);
-        if (j && j.status === JOB_STATUS.WORKING) {
-            const el = document.querySelector(`#timer-${jobId} span`);
-            if (el) el.textContent = formatElapsedTime(j);
-        } else {
-            clearInterval(timers[jobId]);
-        }
-    }, 1000);
-}
-
 // Configurar escuchas de eventos
 function setupEventListeners() {
     if (statusFilter) statusFilter.addEventListener('change', () => renderJobs(jobsCache));
@@ -379,6 +688,48 @@ function setupEventListeners() {
 
     // Delegación de eventos en botones de tarjetas
     document.addEventListener('click', (e) => {
+        // Botones rápidos del cronómetro
+        const startBtn = e.target.closest('.btn-start-quick');
+        if (startBtn) {
+            e.stopPropagation();
+            const jobId = startBtn.dataset.id;
+            startJobTimer(jobId);
+            return;
+        }
+
+        const resumeBtn = e.target.closest('.btn-resume-quick');
+        if (resumeBtn) {
+            e.stopPropagation();
+            const jobId = resumeBtn.dataset.id;
+            resumeJobTimer(jobId);
+            return;
+        }
+
+        const pauseBtn = e.target.closest('.btn-pause-quick');
+        if (pauseBtn) {
+            e.stopPropagation();
+            const jobId = pauseBtn.dataset.id;
+            openStatusModal(jobId);
+            return;
+        }
+
+        // Clic en la barra del temporizador
+        const timerBar = e.target.closest('.job-timer');
+        if (timerBar && !e.target.closest('.timer-btn')) {
+            const jobId = timerBar.dataset.id;
+            const j = jobsCache.find(x => x.id === jobId);
+            if (j) {
+                if (isJobRunning(j)) {
+                    openStatusModal(jobId);
+                } else if (isJobPaused(j)) {
+                    resumeJobTimer(jobId);
+                } else if (!isJobFinished(j)) {
+                    startJobTimer(jobId);
+                }
+            }
+            return;
+        }
+
         const detailBtn = e.target.closest('.detail-btn');
         if (detailBtn) {
             const jobId = detailBtn.dataset.id;
@@ -404,8 +755,12 @@ function setupEventListeners() {
     // Opciones de estado en statusModal
     statusOptions.forEach(opt => {
         opt.addEventListener('click', () => {
-            statusOptions.forEach(o => o.classList.remove('active'));
+            statusOptions.forEach(o => {
+                o.classList.remove('active');
+                o.classList.remove('selected');
+            });
             opt.classList.add('active');
+            opt.classList.add('selected');
             selectedStatus = opt.dataset.status;
         });
     });
@@ -512,11 +867,58 @@ function openDetailModal(jobId) {
                 <p><strong>Empresa:</strong> ${escapeHtml(job.workDetails?.driverCompany || job.client?.company || 'N/A')}</p>
                 <p><strong>Teléfono:</strong> ${escapeHtml(job.workDetails?.driverPhone || 'N/A')}</p>
             </div>
-            <div style="grid-column:span 2;background:#f8f9fa;padding:15px;border-radius:8px;">
-                <h4 style="margin:0 0 10px;color:#2c3e50;"><i class="fas fa-tools"></i> Servicio y Diagnóstico</h4>
-                <p><strong>Estado:</strong> ${escapeHtml(job.status || 'N/A')}</p>
-                <p><strong>Diagnóstico:</strong> ${escapeHtml(job.workDetails?.diagnosis || 'N/A')}</p>
-                <p><strong>Tiempo trabajado:</strong> ${formatElapsedTime(job)}</p>
+            <div style="grid-column:span 2;background:#f8f9fa;padding:16px;border-radius:10px;border:1px solid #e2e8f0;">
+                <h4 style="margin:0 0 12px;color:#0f172a;display:flex;align-items:center;justify-content:space-between;">
+                    <span><i class="fas fa-stopwatch" style="color:var(--primary);"></i> Control y Justificación de Tiempos</span>
+                    <span style="font-size:0.75rem;padding:3px 8px;border-radius:4px;background:#e2e8f0;color:#334155;font-weight:700;">${escapeHtml(job.status || 'N/A')}</span>
+                </h4>
+                <p style="margin:0 0 12px;font-size:0.85rem;color:#475569;"><strong>Diagnóstico:</strong> ${escapeHtml(job.workDetails?.diagnosis || 'N/A')}</p>
+                ${(() => {
+                    const b = getJobTimeBreakdown(job);
+                    const formatDt = (ts) => {
+                        if (!ts) return 'No registrado';
+                        const d = ts.toDate ? ts.toDate() : new Date(ts);
+                        return isNaN(d) ? 'No registrado' : d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    };
+                    return `
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;">
+                            <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid #cbd5e1;">
+                                <div style="font-size:0.68rem;color:#64748b;font-weight:700;text-transform:uppercase;">Tiempo Total en Taller</div>
+                                <div style="font-size:1.05rem;font-weight:800;color:#0f172a;font-family:var(--font-mono);margin-top:3px;" id="modal-turnaround-time">
+                                    ${formatSmartDuration(b.totalTurnaroundSeconds, false)}
+                                </div>
+                                <div style="font-size:0.65rem;color:#94a3b8;margin-top:2px;">Lead time desde ingreso/inicio</div>
+                            </div>
+                            <div style="background:#f0f9ff;padding:10px;border-radius:8px;border:1px solid #38bdf8;">
+                                <div style="font-size:0.68rem;color:#0284c7;font-weight:700;text-transform:uppercase;">Mano de Obra Activa</div>
+                                <div style="font-size:1.05rem;font-weight:800;color:#0284c7;font-family:var(--font-mono);margin-top:3px;" id="modal-active-time">
+                                    ${formatSmartDuration(b.activeSeconds, isJobRunning(job))}
+                                </div>
+                                <div style="font-size:0.65rem;color:#0369a1;margin-top:2px;">Tiempo efectivo de trabajo</div>
+                            </div>
+                            <div style="background:#fffbeb;padding:10px;border-radius:8px;border:1px solid #f59e0b;">
+                                <div style="font-size:0.68rem;color:#d97706;font-weight:700;text-transform:uppercase;">Pausa por Refacción</div>
+                                <div style="font-size:1.05rem;font-weight:800;color:#d97706;font-family:var(--font-mono);margin-top:3px;" id="modal-parts-time">
+                                    ${formatSmartDuration(b.pausedPartsSeconds, job.status === JOB_STATUS.PAUSED_PARTS)}
+                                </div>
+                                <div style="font-size:0.65rem;color:#b45309;margin-top:2px;">Justificación de espera de piezas</div>
+                            </div>
+                            <div style="background:#f8fafc;padding:10px;border-radius:8px;border:1px solid #94a3b8;">
+                                <div style="font-size:0.68rem;color:#475569;font-weight:700;text-transform:uppercase;">Pausa por Salida</div>
+                                <div style="font-size:1.05rem;font-weight:800;color:#475569;font-family:var(--font-mono);margin-top:3px;" id="modal-exit-time">
+                                    ${formatSmartDuration(b.pausedExitSeconds, job.status === JOB_STATUS.PAUSED_EXIT)}
+                                </div>
+                                <div style="font-size:0.65rem;color:#64748b;margin-top:2px;">Fuera de horario laboral</div>
+                            </div>
+                        </div>
+                        ${job.startTime ? `
+                            <div style="margin-top:10px;font-size:0.75rem;color:#64748b;display:flex;flex-wrap:wrap;gap:15px;border-top:1px dashed #cbd5e1;padding-top:8px;">
+                                <span><i class="fas fa-calendar-check" style="color:var(--primary);"></i> <strong>Iniciado:</strong> ${formatDt(job.startTime)}</span>
+                                ${job.endTime ? `<span><i class="fas fa-flag-checkered" style="color:#10b981;"></i> <strong>Salida/Fin:</strong> ${formatDt(job.endTime)}</span>` : ''}
+                            </div>
+                        ` : ''}
+                    `;
+                })()}
             </div>
             ${usedPartsList.length > 0 ? `
                 <div style="grid-column:span 2;background:#f8f9fa;padding:15px;border-radius:8px;">
@@ -563,13 +965,15 @@ function openStatusModal(jobId) {
     if (!job || !statusModal) return;
 
     currentJobId = jobId;
-    selectedStatus = job.status || 'trabajando';
+    selectedStatus = isJobRunning(job) ? JOB_STATUS.WORKING : (job.status || JOB_STATUS.WORKING);
 
     if (statusModalTitle) statusModalTitle.textContent = `Actualizar Estado: ${job.vehicle?.unit || 'Unidad'}`;
     if (statusModalSubtitle) statusModalSubtitle.textContent = `Estado actual: ${job.status || 'Abierto'}`;
 
     statusOptions.forEach(opt => {
-        opt.classList.toggle('active', opt.dataset.status === selectedStatus);
+        const isMatch = opt.dataset.status === selectedStatus || (isJobRunning(job) && opt.dataset.status === JOB_STATUS.WORKING);
+        opt.classList.toggle('active', isMatch);
+        opt.classList.toggle('selected', isMatch);
     });
 
     statusModal.classList.add('active');
@@ -581,17 +985,54 @@ async function handleConfirmStatusUpdate() {
     const job = jobsCache.find(j => j.id === currentJobId);
     if (!job) return;
 
+    const now = serverTimestamp();
+    const b = getJobTimeBreakdown(job);
+
+    const updateData = {
+        status: selectedStatus,
+        lastStatusChange: now,
+        activeTimeSeconds: b.activeSeconds,
+        pausedPartsSeconds: b.pausedPartsSeconds,
+        pausedExitSeconds: b.pausedExitSeconds,
+        totalTimeSeconds: b.activeSeconds
+    };
+
+    if (selectedStatus === JOB_STATUS.WORKING && !job.startTime) {
+        updateData.startTime = now;
+    }
+
+    if (selectedStatus === JOB_STATUS.FINISHED) {
+        updateData.endTime = now;
+    }
+
+    // Actualización local inmediata
+    job.status = selectedStatus;
+    job.lastStatusChange = new Date();
+    job.activeTimeSeconds = b.activeSeconds;
+    job.pausedPartsSeconds = b.pausedPartsSeconds;
+    job.pausedExitSeconds = b.pausedExitSeconds;
+    job.totalTimeSeconds = b.activeSeconds;
+    if (selectedStatus === JOB_STATUS.WORKING && !job.startTime) {
+        job.startTime = new Date();
+    }
+    if (selectedStatus === JOB_STATUS.FINISHED) {
+        job.endTime = new Date();
+    }
+    renderJobs(jobsCache);
+
     // Modo offline
     if (!navigator.onLine) {
         try {
             await enqueueOfflineOperation('UPDATE_JOB_STATUS', {
                 jobId: currentJobId,
-                status: selectedStatus
+                status: selectedStatus,
+                activeTimeSeconds: b.activeSeconds,
+                pausedPartsSeconds: b.pausedPartsSeconds,
+                pausedExitSeconds: b.pausedExitSeconds,
+                totalTimeSeconds: b.activeSeconds
             });
-            job.status = selectedStatus;
-            renderJobs(jobsCache);
             statusModal.classList.remove('active');
-            showStatus('Estado guardado localmente (Offline). Se sincronizará al conectar a internet.', 'info');
+            showStatus('Estado guardado localmente (Offline). Se sincronizará al conectar.', 'info');
         } catch (e) {
             alert("Error guardando estado offline: " + e.message);
         }
@@ -602,24 +1043,11 @@ async function handleConfirmStatusUpdate() {
         confirmStatusUpdate.disabled = true;
         confirmStatusUpdate.textContent = 'Actualizando...';
 
-        const updateData = {
-            status: selectedStatus,
-            lastStatusChange: serverTimestamp()
-        };
-
-        if (selectedStatus === JOB_STATUS.WORKING && !job.startTime) {
-            updateData.startTime = serverTimestamp();
-        }
-
-        if (selectedStatus === JOB_STATUS.FINISHED) {
-            updateData.endTime = serverTimestamp();
-        }
-
         const jobRef = doc(db, "Trabajos", currentJobId);
         await updateDoc(jobRef, updateData);
 
         statusModal.classList.remove('active');
-        showStatus('Estado actualizado correctamente', 'success');
+        showStatus('Estado y control de tiempo actualizados', 'success');
     } catch (err) {
         console.error("Error al actualizar estado:", err);
         alert(`Error al actualizar estado: ${err.message}`);

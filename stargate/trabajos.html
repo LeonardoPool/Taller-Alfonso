@@ -14,16 +14,38 @@
 <title>Gestión de Trabajos - Taller Mecánico</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Navegación inferior fija en móvil (<= 768px) -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-inner">
+            <a href="dashboard.html" class="bottom-nav-item">
+                <i class="fas fa-home"></i>
+                <span>Inicio</span>
+            </a>
+            <a href="almacen.html" class="bottom-nav-item ">
+                <i class="fas fa-boxes"></i>
+                <span>Almacén</span>
+            </a>
+            <a href="clientes.html" class="bottom-nav-item ">
+                <i class="fas fa-users"></i>
+                <span>Clientes</span>
+            </a>
+            <a href="trabajos.html" class="bottom-nav-item active">
+                <i class="fas fa-wrench"></i>
+                <span>Trabajos</span>
+            </a>
+        </div>
+    </nav>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-        <link rel="stylesheet" href="css/trabajos.css">
-        <link rel="stylesheet" href="css/notifications.css?v=2.2">
+        <link rel="stylesheet" href="css/design-tokens.css?v=2.5">
+    <link rel="stylesheet" href="css/layout-shell.css?v=2.5">
+    <link rel="stylesheet" href="css/trabajos.css?v=2.5">
+    <link rel="stylesheet" href="css/notifications.css?v=2.5">
 </head>
 <body>
-    <!-- Menú toggle para móviles -->
-    <div class="menu-toggle">
-        <i class="fas fa-bars"></i>
-    </div>
+    <!-- Backdrop para sidebar en móvil -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
     <!-- Barra lateral / Navbar -->
     <div class="sidebar">
@@ -75,6 +97,16 @@
     <!-- Contenido principal -->
     <div class="main-content">
         <div class="topbar">
+            <div class="topbar-left">
+                <button type="button" class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="topbar-brand">
+                    <i class="fas fa-tools"></i>
+                    <span>Taller Alfonso</span>
+                </div>
+            </div>
+            
             <div class="search-container">
                 <i class="fas fa-search"></i>
                 <input type="text" id="searchInput" placeholder="Buscar trabajos...">
@@ -94,7 +126,7 @@
                             </div>
                         </div>
                         <div class="notification-list" id="notificationList">
-                            <!-- Las notificaciones se cargarán aquí -->
+                            <!-- Las notificaciones se cargarán dinámicamente -->
                         </div>
                     </div>
                 </div>

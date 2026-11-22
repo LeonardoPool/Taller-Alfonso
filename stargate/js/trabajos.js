@@ -439,6 +439,68 @@ function renderPhotoGallery(photos) {
     return galleryHTML || '<p style="color:#7f8c8d;margin:10px 0;">No hay fotos disponibles para este trabajo</p>';
 }
 
+// Formateo inteligente de tiempos en Años, Meses, Semanas, Días, Horas, Minutos, Segundos
+function formatSmartDuration(totalSeconds) {
+    if (!totalSeconds || totalSeconds < 0) totalSeconds = 0;
+    const SECONDS_IN_MINUTE = 60;
+    const SECONDS_IN_HOUR = 3600;
+    const SECONDS_IN_DAY = 86400;
+    const SECONDS_IN_WEEK = 604800;
+    const SECONDS_IN_MONTH = 2592000;
+    const SECONDS_IN_YEAR = 31536000;
+
+    let rem = Math.floor(totalSeconds);
+    const years = Math.floor(rem / SECONDS_IN_YEAR); rem %= SECONDS_IN_YEAR;
+    const months = Math.floor(rem / SECONDS_IN_MONTH); rem %= SECONDS_IN_MONTH;
+    const weeks = Math.floor(rem / SECONDS_IN_WEEK); rem %= SECONDS_IN_WEEK;
+    const days = Math.floor(rem / SECONDS_IN_DAY); rem %= SECONDS_IN_DAY;
+    const hours = Math.floor(rem / SECONDS_IN_HOUR); rem %= SECONDS_IN_HOUR;
+    const minutes = Math.floor(rem / SECONDS_IN_MINUTE);
+    const seconds = rem % SECONDS_IN_MINUTE;
+
+    const parts = [];
+    if (years > 0) parts.push(`${years} ${years === 1 ? 'año' : 'años'}`);
+    if (months > 0) parts.push(`${months} ${months === 1 ? 'mes' : 'meses'}`);
+    if (weeks > 0) parts.push(`${weeks} ${weeks === 1 ? 'sem' : 'sem'}`);
+    if (days > 0) parts.push(`${days} ${days === 1 ? 'día' : 'días'}`);
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0 && years === 0 && months === 0) parts.push(`${minutes}m`);
+
+    if (parts.length === 0) return `${seconds}s`;
+    return parts.slice(0, 3).join(' ');
+}
+
+function getJobTimeBreakdown(job) {
+    if (!job) return { activeSeconds: 0, pausedPartsSeconds: 0, pausedExitSeconds: 0, totalTurnaroundSeconds: 0 };
+    let active = Number(job.activeTimeSeconds || job.totalTimeSeconds || 0);
+    let pausedParts = Number(job.pausedPartsSeconds || 0);
+    let pausedExit = Number(job.pausedExitSeconds || 0);
+
+    const s = String(job.status || '').toLowerCase();
+    const isWorking = s === 'trabajando' || s.includes('progreso');
+    const isPausedParts = s.includes('refacc');
+    const isPausedExit = s.includes('salida');
+    const isFinished = s.includes('complet') || s.includes('finaliz');
+
+    if (job.startTime && !isFinished) {
+        const lastRef = job.lastStatusChange || job.startTime;
+        const lastDate = lastRef?.toDate ? lastRef.toDate() : new Date(lastRef);
+        const delta = Math.max(0, Math.floor((Date.now() - lastDate.getTime()) / 1000));
+        if (isWorking) active += delta;
+        else if (isPausedParts) pausedParts += delta;
+        else if (isPausedExit) pausedExit += delta;
+    }
+
+    let totalTurnaround = 0;
+    if (job.startTime) {
+        const start = job.startTime?.toDate ? job.startTime.toDate() : new Date(job.startTime);
+        const end = isFinished && job.endTime ? (job.endTime?.toDate ? job.endTime.toDate() : new Date(job.endTime)) : new Date();
+        totalTurnaround = Math.max(0, Math.floor((end.getTime() - start.getTime()) / 1000));
+    }
+
+    return { activeSeconds: active, pausedPartsSeconds: pausedParts, pausedExitSeconds: pausedExit, totalTurnaroundSeconds: totalTurnaround };
+}
+
 // Abrir modal de detalles con el diseño exacto original y las fotos
 function openDetailModal(jobId) {
     const job = jobsCache.find(j => j.id === jobId);
@@ -520,6 +582,37 @@ function openDetailModal(jobId) {
                     <span class="detail-value">${job.workDetails?.hasSpare === 'si' ? 'Sí' : 'No'}</span>
                 </div>
             </div>
+
+            ${(() => {
+                const tb = getJobTimeBreakdown(job);
+                return `
+                    <div class="detail-section" style="grid-column: span 2;">
+                        <h3 class="detail-section-title"><i class="fas fa-stopwatch"></i> Control y Justificación de Tiempos</h3>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;margin-top:10px;">
+                            <div style="background:#f8fafc;padding:10px;border-radius:8px;border:1px solid #cbd5e1;">
+                                <div style="font-size:0.68rem;color:#64748b;font-weight:700;text-transform:uppercase;">Tiempo Total en Taller</div>
+                                <div style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-top:2px;">${formatSmartDuration(tb.totalTurnaroundSeconds)}</div>
+                                <div style="font-size:0.65rem;color:#94a3b8;">Lead time hasta salida</div>
+                            </div>
+                            <div style="background:#f0f9ff;padding:10px;border-radius:8px;border:1px solid #38bdf8;">
+                                <div style="font-size:0.68rem;color:#0284c7;font-weight:700;text-transform:uppercase;">Mano de Obra Activa</div>
+                                <div style="font-size:1.05rem;font-weight:800;color:#0284c7;margin-top:2px;">${formatSmartDuration(tb.activeSeconds)}</div>
+                                <div style="font-size:0.65rem;color:#0369a1;">Tiempo efectivo trabajado</div>
+                            </div>
+                            <div style="background:#fffbeb;padding:10px;border-radius:8px;border:1px solid #f59e0b;">
+                                <div style="font-size:0.68rem;color:#d97706;font-weight:700;text-transform:uppercase;">Pausa por Refacción</div>
+                                <div style="font-size:1.05rem;font-weight:800;color:#d97706;margin-top:2px;">${formatSmartDuration(tb.pausedPartsSeconds)}</div>
+                                <div style="font-size:0.65rem;color:#b45309;">Justificación de espera de piezas</div>
+                            </div>
+                            <div style="background:#f8fafc;padding:10px;border-radius:8px;border:1px solid #94a3b8;">
+                                <div style="font-size:0.68rem;color:#475569;font-weight:700;text-transform:uppercase;">Pausa por Salida</div>
+                                <div style="font-size:1.05rem;font-weight:800;color:#475569;margin-top:2px;">${formatSmartDuration(tb.pausedExitSeconds)}</div>
+                                <div style="font-size:0.65rem;color:#64748b;">Fuera de horario laboral</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            })()}
 
             <div class="detail-section">
                 <h3 class="detail-section-title"><i class="fas fa-stethoscope"></i> Diagnóstico</h3>

@@ -74,14 +74,34 @@ export function initAuthGuard(onUserAuthenticated) {
         });
     }
 
-    // Configurar toggle para sidebar en dispositivos móviles
-    const menuToggle = document.querySelector('.menu-toggle');
-    const sidebar = document.querySelector('.sidebar');
-    if (menuToggle && sidebar) {
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-        });
+    // Configurar toggle para sidebar en dispositivos móviles con backdrop (delegación de eventos robusta)
+    function closeSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        if (sidebar) sidebar.classList.remove('active');
+        if (sidebarOverlay) sidebarOverlay.classList.remove('active');
     }
+
+    document.addEventListener('click', (e) => {
+        const toggle = e.target.closest('.menu-toggle');
+        if (toggle) {
+            e.stopPropagation();
+            const sidebar = document.querySelector('.sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            if (sidebar) sidebar.classList.toggle('active');
+            if (sidebarOverlay) sidebarOverlay.classList.toggle('active');
+            return;
+        }
+
+        if (e.target.closest('#sidebarOverlay')) {
+            closeSidebar();
+            return;
+        }
+
+        if (e.target.closest('.nav-link') && window.innerWidth <= 768) {
+            closeSidebar();
+        }
+    });
 
     // Cerrar notificaciones flotantes globalmente
     document.addEventListener('click', (e) => {

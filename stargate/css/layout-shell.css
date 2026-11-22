@@ -1,0 +1,500 @@
+/* ==============================================================
+   DEFCON 5 — LAYOUT SHELL (Stargate Admin Portal)
+   Estilo Minimalista, Limpio y Simple a la Vista | Versión 2.2
+   ============================================================== */
+
+@import url('design-tokens.css');
+
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body, input, button, select, textarea {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Proteger Font Awesome para que los íconos siempre se vean correctamente */
+.fa, .fas, .fa-solid {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+}
+.far, .fa-regular {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 400 !important;
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+}
+.fab, .fa-brands {
+    font-family: "Font Awesome 6 Brands" !important;
+    font-weight: 400 !important;
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+}
+
+html {
+    font-size: 15px;
+    background-color: var(--canvas-bg);
+    color: var(--text-primary);
+}
+
+body {
+    background-color: var(--canvas-bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    display: flex;
+    overflow-x: hidden;
+    position: relative;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+/* Seguridad: si menu-toggle estuviese en la raíz de body, que no actúe como columna flex */
+body > .menu-toggle {
+    display: none !important;
+}
+
+/* Números tabulares legibles */
+.stat-info h3,
+.item-value,
+.job-amount,
+.part-price,
+.part-stock,
+.job-id,
+.badge-number {
+    font-feature-settings: 'tnum' on, 'lnum' on;
+}
+
+/* ==============================================================
+   SIDEBAR MINIMALISTA (Desktop)
+   ============================================================== */
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    border-right: 1px solid var(--sidebar-border);
+    transition: transform var(--transition-base), left var(--transition-base);
+    padding-top: var(--sat);
+    padding-bottom: var(--sab);
+}
+
+.logo-container {
+    padding: 20px 20px 18px;
+    border-bottom: 1px solid var(--sidebar-border);
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text-inverse);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+}
+
+.logo i {
+    font-size: 1.15rem;
+    color: #60A5FA;
+    background: rgba(96, 165, 250, 0.12);
+    padding: 8px;
+    border-radius: var(--radius-sm);
+}
+
+.nav-links {
+    padding: 16px 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow-y: auto;
+}
+
+.nav-top {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.nav-link i {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+    color: var(--sidebar-text);
+    transition: color var(--transition-fast);
+}
+
+.nav-link:hover {
+    color: var(--sidebar-text-hover);
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.nav-link:hover i {
+    color: var(--sidebar-text-hover);
+}
+
+.nav-link.active {
+    color: var(--sidebar-text-active);
+    background-color: var(--sidebar-active);
+    font-weight: 600;
+}
+
+.nav-link.active i {
+    color: #38BDF8;
+}
+
+.nav-bottom {
+    padding-top: 12px;
+    border-top: 1px solid var(--sidebar-border);
+    margin-top: auto;
+}
+
+#logoutBtn.nav-link {
+    color: #F87171 !important;
+    background: transparent !important;
+}
+
+#logoutBtn.nav-link i {
+    color: #F87171 !important;
+}
+
+#logoutBtn.nav-link:hover {
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: #FCA5A5 !important;
+}
+
+/* ==============================================================
+   CONTENIDO PRINCIPAL & TOPBAR
+   ============================================================== */
+.main-content {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--canvas-bg);
+    width: calc(100% - var(--sidebar-width));
+    padding-bottom: calc(var(--space-6) + var(--sab));
+}
+
+.topbar {
+    height: var(--topbar-height);
+    background: var(--surface-card);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+    padding-top: var(--sat);
+}
+
+.topbar-left {
+    display: none;
+    align-items: center;
+    gap: 12px;
+}
+
+.topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+}
+
+.topbar-brand i {
+    color: var(--primary);
+    font-size: 1rem;
+}
+
+.search-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 7px 14px;
+    width: 320px;
+    max-width: 100%;
+    transition: all var(--transition-fast);
+}
+
+.search-container i {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.search-container input {
+    border: none;
+    background: transparent;
+    outline: none;
+    color: var(--text-primary);
+    font-size: 0.88rem;
+    width: 100%;
+    font-weight: 400;
+}
+
+.search-container input::placeholder {
+    color: var(--text-light);
+}
+
+.search-container:focus-within {
+    background: var(--surface-card);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.user-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-profile {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #0F172A;
+    color: #FFFFFF;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-xs);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    flex-shrink: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.user-profile:hover {
+    opacity: 0.9;
+}
+
+/* Botón Hamburguesa integrado en Topbar */
+.menu-toggle {
+    display: none;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-subtle);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.menu-toggle:hover {
+    background: var(--surface-hover);
+}
+
+/* Backdrop para Móvil */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 95;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+    pointer-events: none;
+}
+
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ==============================================================
+   BOTTOM NAVIGATION BAR MINIMALISTA (Móvil <= 768px)
+   ============================================================== */
+.bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: calc(var(--bottom-nav-height) + var(--sab));
+    background: var(--surface-card);
+    border-top: 1px solid var(--border);
+    z-index: 99;
+    padding-bottom: var(--sab);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.bottom-nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    height: 100%;
+    padding: 0 4px;
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    flex: 1;
+    min-height: 44px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.72rem;
+    font-weight: 500;
+    transition: color var(--transition-fast);
+    border-radius: var(--radius-sm);
+    padding: 4px 0;
+}
+
+.bottom-nav-item i {
+    font-size: 1.15rem;
+    color: var(--text-muted);
+    transition: color var(--transition-fast);
+}
+
+.bottom-nav-item.active {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.bottom-nav-item.active i {
+    color: var(--primary);
+}
+
+/* ==============================================================
+   RESPONSIVE DESIGN (TOPBAR & MOBILE LAYOUT)
+   ============================================================== */
+@media (max-width: 1023px) and (min-width: 769px) {
+    :root {
+        --sidebar-width: 220px;
+    }
+    .topbar {
+        padding: 0 20px;
+    }
+}
+
+/* Móvil (<= 768px): Topbar armónico de 2 filas */
+@media (max-width: 768px) {
+    body {
+        display: block !important;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding-bottom: calc(var(--bottom-nav-height) + var(--sab) + 16px);
+    }
+
+    .sidebar {
+        transform: translateX(-100%);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+    }
+
+    /* Topbar fluido de 2 filas perfectamente alineadas */
+    .topbar {
+        height: auto !important;
+        padding: 10px 14px 10px !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px 10px !important;
+    }
+
+    .topbar-left {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        order: 1 !important;
+    }
+
+    .topbar-left .menu-toggle {
+        display: flex !important;
+    }
+
+    .topbar-brand {
+        display: flex !important;
+        font-size: 0.95rem !important;
+    }
+
+    .user-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        order: 2 !important;
+    }
+
+    .search-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        order: 3 !important;
+        margin-top: 2px !important;
+        padding: 8px 12px !important;
+        border-radius: var(--radius-sm) !important;
+    }
+
+    .bottom-nav {
+        display: block !important;
+    }
+}

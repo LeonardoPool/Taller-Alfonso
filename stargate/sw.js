@@ -1,6 +1,6 @@
 // Service Worker — DEFCON5 Admin (Stargate)
 // Ámbito exclusivo: /admin/
-const CACHE_VERSION = 'v1.0.0';
+const CACHE_VERSION = 'v2.8.0';
 const CACHE_NAME = `defcon5-admin-${CACHE_VERSION}`;
 const STATIC_CACHE = `defcon5-admin-static-${CACHE_VERSION}`;
 
@@ -22,6 +22,8 @@ const PRECACHE_ASSETS = [
   '/admin/icons/icon-maskable-512.png',
   '/admin/icons/apple-touch-icon.png',
   '/admin/icons/favicon.png',
+  '/admin/css/design-tokens.css',
+  '/admin/css/layout-shell.css',
   '/admin/css/login.css',
   '/admin/css/dashboard.css',
   '/admin/css/almacen.css',

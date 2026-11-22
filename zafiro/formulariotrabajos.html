@@ -14,8 +14,7 @@
 <title>Registro de Trabajos - Taller Alfonso</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <link rel="stylesheet" href="css/formulariotrabajos.css">
-</head>
+    <link rel="stylesheet" href="css/formulariotrabajos.css?v=2.8">
 </head>
 <body>
     <!-- Pantalla de verificación de acceso -->
@@ -369,7 +368,7 @@
                 
                 <!-- Acciones del formulario -->
                 <div class="form-actions">
-                    <button type="reset" class="cancel-btn">
+                    <button type="button" class="cancel-btn" id="cancelJobBtn" onclick="window.location.href='admin.html'">
                         <i class="fas fa-times"></i> Cancelar
                     </button>
                     <button type="submit" class="submit-btn" id="submitJob">
@@ -377,12 +376,6 @@
                     </button>
                 </div>
             </form>
-            
-            <div class="debug-info">
-                <p><strong>Estado de Firebase:</strong> <span id="firebaseStatus">Cargando...</span></p>
-                <p><strong>Reglas de Firestore:</strong> <span id="firestoreRules">Verificando...</span></p>
-                <p><strong>Reglas de Storage:</strong> <span id="storageRules">Verificando...</span></p>
-            </div>
         </div>
     </div>
 

@@ -1,289 +1,42 @@
-* {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #1a2a3a, #2c3e50);
-            color: #fff;
-            display: flex;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        
-        /* Barra lateral / Navbar */
-        .sidebar {
-            width: 250px;
-            background: rgba(44, 62, 80, 0.95);
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            transition: all 0.3s;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-            z-index: 100;
-            position: fixed;
-        }
-        
-        .logo-container {
-            padding: 25px 20px;
-            text-align: center;
-            border-bottom: 1px solid rgba(52, 73, 94, 0.7);
-        }
-        
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: #fff;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        
-        .logo i {
-            font-size: 28px;
-            color: #3498db;
-        }
-        
-        .nav-links {
-            padding: 20px 0;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        
-        .nav-top {
-            flex: 1;
-        }
-        
-        .nav-bottom {
-            padding: 15px 0;
-            border-top: 1px solid rgba(52, 73, 94, 0.7);
-            margin-top: auto;
-        }
-        
-        .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 18px 25px;
-            color: #bdc3c7;
-            text-decoration: none;
-            transition: all 0.3s;
-            position: relative;
-            margin-bottom: 8px;
-            cursor: pointer;
-            border-radius: 0 30px 30px 0;
-        }
-        
-        .nav-link:hover {
-            color: #fff;
-            background: rgba(52, 152, 219, 0.2);
-        }
-        
-        .nav-link.active {
-            color: #fff;
-            background: linear-gradient(90deg, rgba(52, 152, 219, 0.4), transparent);
-            border-left: 4px solid #3498db;
-        }
-        
-        .nav-link i {
-            font-size: 20px;
-            margin-right: 15px;
-            width: 24px;
-            text-align: center;
-        }
-        
-        /* Contenido principal */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: rgba(245, 247, 250, 0.98);
-            margin-left: 250px;
-        }
-        
-        .topbar {
-            background: rgba(255, 255, 255, 0.97);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-            z-index: 10;
-        }
-        
-        .search-container {
-            position: relative;
-            width: 300px;
-        }
-        
-        .search-container input {
-            width: 100%;
-            padding: 12px 20px 12px 45px;
-            border: 1px solid #ddd;
-            border-radius: 30px;
-            font-size: 14px;
-            background: rgba(245, 247, 250, 0.8);
-            transition: all 0.3s;
-        }
-        
-        .search-container input:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-        }
-        
-        .search-container i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #777;
-        }
-        
-        .user-actions {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            position: relative;
-        }
-        
-        .notification-btn {
-            position: relative;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: rgba(245, 247, 250, 0.8);
-            color: #555;
-        }
-        
-        .notification-btn:hover {
-            background: #3498db;
-            color: #fff;
-        }
-        
-        .notification-badge {
-            position: absolute;
-            top: -3px;
-            right: -3px;
-            background: #e74c3c;
-            color: #fff;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .notification-dropdown {
-            position: absolute;
-            top: 55px;
-            right: 0;
-            width: 350px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            display: none;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .notification-dropdown.active {
-            display: block;
-        }
-        
-        .notification-header {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .notification-header h3 {
-            color: #2c3e50;
-            font-size: 16px;
-            font-weight: 600;
-        }
-        
-        .clear-btn {
-            background: none;
-            border: none;
-            color: #3498db;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        
-        .notification-list {
-            padding: 0;
-        }
-        
-        .notification-item {
-            padding: 15px;
-            border-bottom: 1px solid #f5f5f5;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .notification-item:hover {
-            background: #f8f9fa;
-        }
-        
-        .notification-title {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .notification-title i {
-            font-size: 14px;
-        }
-        
-        .notification-text {
-            font-size: 14px;
-            color: #7f8c8d;
-            margin-bottom: 8px;
-        }
-        
-        .notification-time {
-            font-size: 12px;
-            color: #95a5a6;
-            text-align: right;
-        }
-        
-        .notification-critical i { color: #e74c3c; }
-        .notification-warning i { color: #f39c12; }
-        .notification-info i { color: #3498db; }
-        .notification-success i { color: #27ae60; }
-        
-        .user-profile {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: #fff;
-            font-weight: 600;
-            font-size: 18px;
-        }
+/* ==============================================================
+   ADMIN.CSS - PORTAL DE MECÁNICOS (ZAFIRO)
+   ============================================================== */
+@import url('layout-shell.css');
+
+/* Tipografía global Poppins / Manrope para mecánicos */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    font-family: 'Poppins', 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    background-color: #F8FAFC !important;
+    color: #1E293B !important;
+}
+
+input, button, select, textarea {
+    font-family: inherit;
+}
+
+/* Protección de iconos Font Awesome 6 & 5 */
+i.fas, i.far, i.fab, i.fa, .fa, .fas, .fa-solid {
+    font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free', 'FontAwesome' !important;
+    font-weight: 900 !important;
+    display: inline-block;
+    font-style: normal !important;
+    font-variant: normal !important;
+    text-rendering: auto !important;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased !important;
+}
+i.far, .far, .fa-regular {
+    font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free', 'FontAwesome' !important;
+    font-weight: 400 !important;
+}
+i.fab, .fab, .fa-brands {
+    font-family: 'Font Awesome 6 Brands', 'Font Awesome 5 Brands', 'FontAwesome' !important;
+    font-weight: 400 !important;
+}
         
         .dashboard-container {
             padding: 30px;
@@ -1233,8 +986,17 @@
             }
             
             .notification-dropdown {
-                width: 300px;
-                right: -30px;
+                position: fixed !important;
+                top: max(60px, calc(env(safe-area-inset-top, 0px) + 56px)) !important;
+                left: 50% !important;
+                right: auto !important;
+                transform: translateX(-50%) !important;
+                width: calc(100vw - 24px) !important;
+                max-width: 380px !important;
+                margin: 0 !important;
+                border-radius: 16px !important;
+                box-shadow: 0 16px 40px -10px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
+                z-index: 999999 !important;
             }
             
             .job-detail-grid {
@@ -1313,8 +1075,16 @@
             }
             
             .notification-dropdown {
-                width: 280px;
-                right: -50px;
+                position: fixed !important;
+                top: max(60px, calc(env(safe-area-inset-top, 0px) + 56px)) !important;
+                left: 50% !important;
+                right: auto !important;
+                transform: translateX(-50%) !important;
+                width: calc(100vw - 24px) !important;
+                max-width: 380px !important;
+                margin: 0 !important;
+                border-radius: 16px !important;
+                z-index: 999999 !important;
             }
             
             .jobs-grid {
@@ -1545,3 +1315,241 @@
         .parts-modal.active {
     display: flex; /* o block, según quieras */
 }
+
+
+/* ==============================================================
+   DEFCON 5 — CRONÓMETRO INTELIGENTE Y TÁCTIL (Portal Mecánicos)
+   ============================================================== */
+.job-timer {
+    background: #0F172A !important;
+    color: #38BDF8 !important;
+    padding: 10px 14px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    margin-top: auto !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+    letter-spacing: 0.05em !important;
+    transition: all 0.25s ease !important;
+    border: 1px solid #334155 !important;
+}
+
+.job-timer .timer-main {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+}
+
+.job-timer .timer-top-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+}
+
+.job-timer .timer-digits {
+    font-size: 1.25rem !important;
+    font-weight: 800 !important;
+    font-family: 'SF Mono', Monaco, Inconsolata, 'Fira Mono', monospace !important;
+    color: #38BDF8 !important;
+    letter-spacing: 0.05em !important;
+}
+
+.job-timer .timer-badge {
+    font-size: 0.65rem !important;
+    text-transform: uppercase !important;
+    font-weight: 700 !important;
+    padding: 3px 7px !important;
+    border-radius: 4px !important;
+    letter-spacing: 0.05em !important;
+    display: inline-block !important;
+}
+
+.job-timer .timer-sub-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 0.72rem !important;
+    color: #94A3B8 !important;
+    margin-top: 4px !important;
+    flex-wrap: wrap !important;
+    line-height: 1.3 !important;
+}
+
+.timer-subtext {
+    font-weight: 600 !important;
+}
+
+.timer-refaccion-pill {
+    background: rgba(245, 158, 11, 0.18) !important;
+    color: #FBBF24 !important;
+    border: 1px solid rgba(245, 158, 11, 0.35) !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    font-weight: 700 !important;
+    font-size: 0.68rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.timer-work-pill {
+    background: rgba(56, 189, 248, 0.15) !important;
+    color: #38BDF8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    font-weight: 700 !important;
+    font-size: 0.68rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.timer-total-pill {
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: #34D399 !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    font-weight: 700 !important;
+    font-size: 0.68rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+/* Modificadores de estado del cronómetro */
+.job-timer.timer-running {
+    background: #092635 !important;
+    border-color: #0284C7 !important;
+}
+.job-timer.timer-running .timer-digits {
+    color: #38BDF8 !important;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.4) !important;
+}
+.job-timer.timer-running .timer-main i {
+    color: #38BDF8 !important;
+    animation: timerPulse 1.5s infinite !important;
+}
+.job-timer.timer-running .timer-badge {
+    background: rgba(56, 189, 248, 0.2) !important;
+    color: #38BDF8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.4) !important;
+}
+
+.job-timer.timer-paused {
+    background: #2D1A04 !important;
+    border-color: #B45309 !important;
+}
+.job-timer.timer-paused .timer-digits {
+    color: #FBBF24 !important;
+}
+.job-timer.timer-paused .timer-main i {
+    color: #F59E0B !important;
+}
+.job-timer.timer-paused .timer-badge {
+    background: rgba(245, 158, 11, 0.2) !important;
+    color: #FBBF24 !important;
+    border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+
+.job-timer.timer-idle {
+    background: #0F172A !important;
+    border-color: #334155 !important;
+}
+.job-timer.timer-idle .timer-digits {
+    color: #94A3B8 !important;
+}
+.job-timer.timer-idle .timer-main i {
+    color: #64748B !important;
+}
+.job-timer.timer-idle .timer-badge {
+    background: rgba(148, 163, 184, 0.15) !important;
+    color: #94A3B8 !important;
+    border: 1px solid rgba(148, 163, 184, 0.25) !important;
+}
+
+.job-timer.timer-finished {
+    background: #06231A !important;
+    border-color: #059669 !important;
+}
+.job-timer.timer-finished .timer-digits {
+    color: #34D399 !important;
+}
+.job-timer.timer-finished .timer-main i {
+    color: #10B981 !important;
+}
+.job-timer.timer-finished .timer-badge {
+    background: rgba(16, 185, 129, 0.2) !important;
+    color: #34D399 !important;
+    border: 1px solid rgba(16, 185, 129, 0.4) !important;
+}
+
+@keyframes timerPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.12); }
+}
+
+/* Botones rápidos en el temporizador */
+.timer-action {
+    display: flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+}
+
+.timer-btn {
+    border: none !important;
+    border-radius: 6px !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    padding: 6px 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+}
+
+.timer-btn:active {
+    transform: scale(0.96) !important;
+}
+
+.btn-start-quick {
+    background: #16A34A !important;
+    color: #FFFFFF !important;
+}
+.btn-start-quick:hover {
+    background: #15803D !important;
+}
+
+.btn-resume-quick {
+    background: #2563EB !important;
+    color: #FFFFFF !important;
+}
+.btn-resume-quick:hover {
+    background: #1D4ED8 !important;
+}
+
+.btn-pause-quick {
+    background: rgba(245, 158, 11, 0.2) !important;
+    color: #FBBF24 !important;
+    border: 1px solid rgba(245, 158, 11, 0.5) !important;
+}
+.btn-pause-quick:hover {
+    background: #F59E0B !important;
+    color: #0F172A !important;
+}
+
+/* Sincronización de clases activas en status modal */
+.status-option.selected,
+.status-option.active {
+    border-color: #2563eb !important;
+    background: #eff6ff !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15) !important;
+}
+

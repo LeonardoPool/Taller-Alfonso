@@ -1,6 +1,10 @@
 // Service Worker — DEFCON5 Empleados (Zafiro)
 // Ámbito exclusivo: /empleados/
+<<<<<<< Updated upstream
 const CACHE_VERSION = 'v2.1.0';
+=======
+const CACHE_VERSION = 'v2.8.0';
+>>>>>>> Stashed changes
 const CACHE_NAME = `defcon5-empleados-${CACHE_VERSION}`;
 const STATIC_CACHE = `defcon5-empleados-static-${CACHE_VERSION}`;
 
@@ -16,6 +20,8 @@ const PRECACHE_ASSETS = [
   '/empleados/icons/icon-maskable-512.png',
   '/empleados/icons/apple-touch-icon.png',
   '/empleados/icons/favicon.png',
+  '/empleados/css/design-tokens.css',
+  '/empleados/css/layout-shell.css',
   '/empleados/css/login.css',
   '/empleados/css/admin.css',
   '/empleados/css/formulariotrabajos.css',

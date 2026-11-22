@@ -407,6 +407,7 @@ function setupFormSubmit() {
                     },
                     mechanic: currentMechanic?.fullName || "Mecánico",
                     status: "trabajando",
+                    totalTimeSeconds: 0,
                     createdAt: new Date().toISOString()
                 };
 
@@ -491,6 +492,7 @@ function setupFormSubmit() {
                 usedParts: usedParts.map(p => ({ id: p.id, name: p.name, serial: p.serial })),
                 mechanic: currentMechanic.fullName,
                 status: "Trabajo abierto",
+                totalTimeSeconds: 0,
                 photos: uploadedPhotos,
                 createdAt: serverTimestamp()
             };
@@ -528,6 +530,15 @@ function setupFormSubmit() {
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Trabajo';
         }
+    });
+}
+
+// Botón cancelar
+const cancelBtn = document.querySelector('.cancel-btn');
+if (cancelBtn) {
+    cancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = 'admin.html';
     });
 }
 

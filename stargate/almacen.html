@@ -14,14 +14,14 @@
 <title>Almacén - Taller Mecánico</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <link rel="stylesheet" href="css/almacen.css">
-        <link rel="stylesheet" href="css/notifications.css?v=2.2">
+        <link rel="stylesheet" href="css/design-tokens.css?v=2.8">
+    <link rel="stylesheet" href="css/layout-shell.css?v=2.8">
+    <link rel="stylesheet" href="css/almacen.css?v=2.8">
+    <link rel="stylesheet" href="css/notifications.css?v=2.8">
 </head>
 <body>
-    <!-- Menú toggle para móviles -->
-    <div class="menu-toggle">
-        <i class="fas fa-bars"></i>
-    </div>
+    <!-- Backdrop para sidebar en móvil -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
     <!-- Barra lateral / Navbar -->
     <div class="sidebar">
@@ -73,6 +73,16 @@
     <!-- Contenido principal -->
     <div class="main-content">
         <div class="topbar">
+            <div class="topbar-left">
+                <button type="button" class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="topbar-brand">
+                    <i class="fas fa-tools"></i>
+                    <span>Taller Alfonso</span>
+                </div>
+            </div>
+            
             <div class="search-container">
                 <i class="fas fa-search"></i>
                 <input type="text" id="searchInput" placeholder="Buscar piezas...">
@@ -92,7 +102,7 @@
                             </div>
                         </div>
                         <div class="notification-list" id="notificationList">
-                            <!-- Las notificaciones se cargarán aquí -->
+                            <!-- Las notificaciones se cargarán dinámicamente -->
                         </div>
                     </div>
                 </div>
@@ -122,10 +132,6 @@
                     <label class="filter-label">Filtrar por estante:</label>
                     <select class="filter-select" id="rackFilter">
                         <option value="all">Todos los estantes</option>
-                        <option value="A">Estante A</option>
-                        <option value="B">Estante B</option>
-                        <option value="C">Estante C</option>
-                        <option value="D">Estante D</option>
                     </select>
                 </div>
                 
@@ -326,6 +332,28 @@
             </div>
         </div>
     </div>
+    <!-- Navegación inferior fija en móvil (<= 768px) -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-inner">
+            <a href="dashboard.html" class="bottom-nav-item">
+                <i class="fas fa-home"></i>
+                <span>Inicio</span>
+            </a>
+            <a href="almacen.html" class="bottom-nav-item active">
+                <i class="fas fa-boxes"></i>
+                <span>Almacén</span>
+            </a>
+            <a href="clientes.html" class="bottom-nav-item ">
+                <i class="fas fa-users"></i>
+                <span>Clientes</span>
+            </a>
+            <a href="trabajos.html" class="bottom-nav-item ">
+                <i class="fas fa-wrench"></i>
+                <span>Trabajos</span>
+            </a>
+        </div>
+    </nav>
+
 
 
     <script src="js/photo-picker.js"></script>

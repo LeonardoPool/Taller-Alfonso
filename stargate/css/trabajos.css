@@ -1,412 +1,19 @@
-* {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #1a2a3a, #2c3e50);
-            color: #fff;
-            display: flex;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        
-        /* Barra lateral / Navbar */
-        .sidebar {
-            width: 250px;
-            background: rgba(44, 62, 80, 0.95);
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            transition: all 0.3s;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-            z-index: 100;
-            position: fixed;
-        }
-        
-        .logo-container {
-            padding: 25px 20px;
-            text-align: center;
-            border-bottom: 1px solid rgba(52, 73, 94, 0.7);
-        }
-        
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: #fff;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        
-        .logo i {
-            font-size: 28px;
-            color: #3498db;
-        }
-        
-        .nav-links {
-            padding: 20px 0;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        
-        .nav-top {
-            flex: 1;
-        }
-        
-        .nav-bottom {
-            padding: 15px 0;
-            border-top: 1px solid rgba(52, 73, 94, 0.7);
-            margin-top: auto;
-        }
-        
-        .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 18px 25px;
-            color: #bdc3c7;
-            text-decoration: none;
-            transition: all 0.3s;
-            position: relative;
-            margin-bottom: 8px;
-            cursor: pointer;
-            border-radius: 0 30px 30px 0;
-        }
-        
-        .nav-link:hover {
-            color: #fff;
-            background: rgba(52, 152, 219, 0.2);
-        }
-        
-        .nav-link.active {
-            color: #fff;
-            background: linear-gradient(90deg, rgba(52, 152, 219, 0.4), transparent);
-            border-left: 4px solid #3498db;
-        }
-        
-        .nav-link i {
-            font-size: 20px;
-            margin-right: 15px;
-            width: 24px;
-            text-align: center;
-        }
-        
-        /* Contenido principal */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: rgba(245, 247, 250, 0.98);
-            margin-left: 250px;
-        }
-        
-        .topbar {
-            background: rgba(255, 255, 255, 0.97);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-            z-index: 10;
-        }
-        
-        .search-container {
-            position: relative;
-            width: 300px;
-        }
-        
-        .search-container input {
-            width: 100%;
-            padding: 12px 20px 12px 45px;
-            border: 1px solid #ddd;
-            border-radius: 30px;
-            font-size: 14px;
-            background: rgba(245, 247, 250, 0.8);
-            transition: all 0.3s;
-        }
-        
-        .search-container input:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-        }
-        
-        .search-container i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #777;
-        }
-        
-        .user-actions {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            position: relative;
-        }
-        
-        .notification-btn {
-            position: relative;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: rgba(245, 247, 250, 0.8);
-            color: #555;
-        }
-        
-        .notification-btn:hover {
-            background: #3498db;
-            color: #fff;
-        }
-        
-        .notification-badge {
-            position: absolute;
-            top: -3px;
-            right: -3px;
-            background: #e74c3c;
-            color: #fff;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .notification-dropdown {
-            position: absolute;
-            top: 55px;
-            right: 0;
-            width: 350px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            display: none;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .notification-dropdown.active {
-            display: block;
-        }
-        
-        .notification-header {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .notification-header h3 {
-            color: #2c3e50;
-            font-size: 16px;
-            font-weight: 600;
-        }
-        
-        .clear-btn {
-            background: none;
-            border: none;
-            color: #3498db;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 12px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-        }
+/* ==============================================================
+   TRABAJOS.CSS - PORTAL ADMINISTRATIVO (STARGATE)
+   Diseño visual original blindado con shell ejecutivo moderno
+   ============================================================== */
+@import url('layout-shell.css');
+@import url('notifications.css');
 
-        .clear-btn:hover {
-            background: rgba(52, 152, 219, 0.1);
-        }
+/* Protección de iconos Font Awesome 6 */
+i.fas, i.far, i.fab, i.fa {
+    font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free', 'FontAwesome' !important;
+    font-style: normal !important;
+    font-variant: normal !important;
+    text-rendering: auto !important;
+    -webkit-font-smoothing: antialiased !important;
+}
 
-        .clear-btn.danger {
-            color: #e74c3c;
-        }
-
-        .clear-btn.danger:hover {
-            background: rgba(231, 76, 60, 0.12);
-        }
-        
-        .notification-list {
-            padding: 0;
-        }
-        
-        .notification-item {
-            padding: 15px;
-            border-bottom: 1px solid #f5f5f5;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .notification-item:hover {
-            background: #f8f9fa;
-        }
-        
-        .notification-title {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .notification-title i {
-            font-size: 14px;
-        }
-        
-        .notification-text {
-            font-size: 14px;
-            color: #7f8c8d;
-            margin-bottom: 8px;
-        }
-        
-        .notification-time {
-            font-size: 12px;
-            color: #95a5a6;
-            text-align: right;
-        }
-
-        /* Animaciones inteligentes para notificaciones */
-        @keyframes notifCascadeSlideOut {
-            0% {
-                opacity: 1;
-                transform: translateX(0) scale(1);
-                max-height: 120px;
-                padding-top: 15px;
-                padding-bottom: 15px;
-                margin-bottom: 0px;
-            }
-            30% {
-                opacity: 0.85;
-                transform: translateX(-6px) scale(0.99);
-            }
-            100% {
-                opacity: 0;
-                transform: translateX(115%) scale(0.92);
-                max-height: 0px;
-                padding-top: 0px;
-                padding-bottom: 0px;
-                margin-top: 0px;
-                margin-bottom: 0px;
-                border-width: 0px;
-            }
-        }
-
-        @keyframes notifSingleSlideOut {
-            0% {
-                opacity: 1;
-                transform: translateX(0) scale(1);
-                max-height: 120px;
-                padding-top: 15px;
-                padding-bottom: 15px;
-            }
-            100% {
-                opacity: 0;
-                transform: translateX(110%) scale(0.9);
-                max-height: 0px;
-                padding-top: 0px;
-                padding-bottom: 0px;
-                margin: 0px;
-                border-width: 0px;
-            }
-        }
-
-        @keyframes notifEmptyPopIn {
-            0% {
-                opacity: 0;
-                transform: scale(0.85) translateY(12px);
-            }
-            60% {
-                transform: scale(1.03) translateY(-2px);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        @keyframes notifCheckGlow {
-            0% {
-                transform: scale(0) rotate(-45deg);
-                box-shadow: 0 0 0 rgba(16, 185, 129, 0);
-            }
-            60% {
-                transform: scale(1.2) rotate(10deg);
-                box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
-            }
-            100% {
-                transform: scale(1) rotate(0deg);
-                box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
-            }
-        }
-
-        .notification-item.notif-clearing {
-            pointer-events: none !important;
-            animation: notifCascadeSlideOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-
-        .notification-item.notif-removing {
-            pointer-events: none !important;
-            animation: notifSingleSlideOut 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-
-        .notification-empty-state {
-            padding: 30px 16px;
-            text-align: center;
-            color: #64748b;
-            list-style: none;
-            animation: notifEmptyPopIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        .notification-empty-icon {
-            width: 48px;
-            height: 48px;
-            margin: 0 auto 12px;
-            border-radius: 50%;
-            background: rgba(16, 185, 129, 0.12);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            color: #10b981;
-            animation: notifCheckGlow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-        
-        .notification-critical i { color: #e74c3c; }
-        .notification-warning i { color: #f39c12; }
-        .notification-info i { color: #3498db; }
-        .notification-success i { color: #27ae60; }
-        
-        .user-profile {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: #fff;
-            font-weight: 600;
-            font-size: 18px;
-        }
-        
         .dashboard-container {
             padding: 30px;
             flex: 1;
@@ -1107,12 +714,13 @@
             
             .notification-dropdown {
                 position: fixed !important;
-                top: 64px !important;
-                left: 14px !important;
-                right: 14px !important;
-                width: auto !important;
-                max-width: 480px !important;
-                margin: 0 auto !important;
+                top: max(60px, calc(env(safe-area-inset-top, 0px) + 56px)) !important;
+                left: 50% !important;
+                right: auto !important;
+                transform: translateX(-50%) !important;
+                width: calc(100vw - 24px) !important;
+                max-width: 380px !important;
+                margin: 0 !important;
                 max-height: calc(100vh - 84px) !important;
                 border-radius: 16px !important;
                 box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
@@ -1202,3 +810,179 @@
                 grid-template-columns: 1fr;
             }
         }
+
+/* ==============================================================
+   MEDIDOR DE TIEMPO INTELIGENTE - TRABAJOS
+   ============================================================== */
+.job-timer {
+    margin: 12px 0 8px 0;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.25s ease;
+}
+
+.job-timer.timer-running {
+    background: #f0fdf4;
+    border-color: #86efac;
+}
+
+.job-timer.timer-paused {
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+
+.job-timer.timer-idle {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.job-timer.timer-finished {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.timer-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.timer-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.timer-running .timer-status-badge {
+    background: rgba(22, 163, 74, 0.12);
+    color: #16a34a;
+}
+
+.timer-paused .timer-status-badge {
+    background: rgba(217, 119, 6, 0.12);
+    color: #d97706;
+}
+
+.timer-idle .timer-status-badge {
+    background: rgba(100, 116, 139, 0.12);
+    color: #64748b;
+}
+
+.timer-finished .timer-status-badge {
+    background: rgba(37, 99, 235, 0.12);
+    color: #2563eb;
+}
+
+.timer-pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.timer-running .timer-pulse-dot {
+    animation: timerPulse 1.4s infinite ease-in-out;
+}
+
+@keyframes timerPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(0.8); }
+}
+
+.timer-live-counter {
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+}
+
+.timer-sub-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.timer-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+}
+
+.timer-work-pill {
+    border-color: #bbf7d0;
+    color: #15803d;
+    background: #f0fdf4;
+}
+
+.timer-refaccion-pill {
+    border-color: #fde68a;
+    color: #b45309;
+    background: #fffbeb;
+}
+
+.timer-total-pill {
+    border-color: #cbd5e1;
+    color: #334155;
+    background: #f8fafc;
+}
+
+.timer-btn {
+    border: none;
+    cursor: pointer;
+    font-size: 0.76rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+}
+
+.btn-start-quick {
+    background: #16a34a;
+    color: #ffffff;
+}
+
+.btn-start-quick:hover {
+    background: #15803d;
+}
+
+.btn-resume-quick {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.btn-resume-quick:hover {
+    background: #1d4ed8;
+}
+
+.btn-pause-quick {
+    background: #d97706;
+    color: #ffffff;
+}
+
+.btn-pause-quick:hover {
+    background: #b45309;
+}

@@ -1,0 +1,103 @@
+/* ==============================================================
+   DEFCON 5 — DESIGN TOKENS (Minimalista & Simple)
+   Taller Alfonso ERP | Versión 2.1
+   ============================================================== */
+
+:root {
+    /* Paleta Minimalista & Neutra */
+    --canvas-bg: #F8FAFC;
+    --surface-card: #FFFFFF;
+    --surface-subtle: #F8FAFC;
+    --surface-hover: #F1F5F9;
+
+    /* Sidebar Sleek Slate */
+    --sidebar-bg: #0F172A;
+    --sidebar-surface: #1E293B;
+    --sidebar-active: #1E293B;
+    --sidebar-text: #94A3B8;
+    --sidebar-text-hover: #F1F5F9;
+    --sidebar-text-active: #FFFFFF;
+    --sidebar-border: rgba(255, 255, 255, 0.06);
+
+    /* Acento Azul Minimalista */
+    --primary: #2563EB;
+    --primary-hover: #1D4ED8;
+    --primary-light: #EFF6FF;
+    --primary-border: #DBEAFE;
+    --primary-focus: rgba(37, 99, 235, 0.15);
+
+    /* Texto Suave y Legible (No tosco) */
+    --text-primary: #1E293B;
+    --text-secondary: #475569;
+    --text-muted: #64748B;
+    --text-light: #94A3B8;
+    --text-inverse: #FFFFFF;
+
+    /* Bordes Finos / Hairline */
+    --border: #E2E8F0;
+    --border-light: #F1F5F9;
+    --border-dark: #CBD5E1;
+
+    /* Estados Semánticos Sutiles */
+    --success: #10B981;
+    --success-bg: #ECFDF5;
+    --success-border: #A7F3D0;
+    --success-text: #065F46;
+
+    --warning: #F59E0B;
+    --warning-bg: #FFFBEB;
+    --warning-border: #FDE68A;
+    --warning-text: #92400E;
+
+    --danger: #EF4444;
+    --danger-bg: #FEF2F2;
+    --danger-border: #FECACA;
+    --danger-text: #991B1B;
+
+    --info: #0EA5E9;
+    --info-bg: #F0F9FF;
+    --info-border: #BAE6FD;
+    --info-text: #075985;
+
+    /* Tipografía */
+    --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    /* Espaciado */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+
+    /* Radios Geométricos Limpios (8-12px, sin redondeos toscos) */
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 12px;
+    --radius-xl: 14px;
+    --radius-full: 9999px;
+
+    /* Sombras Mínimas y Transparentes */
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+    --shadow-dropdown: 0 12px 30px -4px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.05);
+
+    /* Safe Areas */
+    --sat: env(safe-area-inset-top, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+
+    /* Dimensiones */
+    --sidebar-width: 250px;
+    --topbar-height: 64px;
+    --bottom-nav-height: 60px;
+    
+    --transition-fast: 0.15s ease;
+    --transition-base: 0.2s ease;
+}

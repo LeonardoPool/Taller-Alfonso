@@ -2,27 +2,29 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2c3e50">
+    <meta name="theme-color" content="#0F172A">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="DEFCON5 Admin">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon.png">
-<title>Dashboard - Taller Mecánico</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Dashboard - Taller Mecánico</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <link rel="stylesheet" href="css/dashboard.css?v=2.2">
-        <link rel="stylesheet" href="css/notifications.css?v=2.2">
+    <link rel="stylesheet" href="css/design-tokens.css?v=2.8">
+    <link rel="stylesheet" href="css/layout-shell.css?v=2.8">
+    <link rel="stylesheet" href="css/dashboard.css?v=2.8">
+    <link rel="stylesheet" href="css/notifications.css?v=2.8">
 </head>
 <body>
-    <!-- Menú toggle para móviles -->
-    <div class="menu-toggle">
-        <i class="fas fa-bars"></i>
-    </div>
-    
+    <!-- Backdrop para sidebar en móvil -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- Barra lateral / Navbar -->
     <div class="sidebar">
         <div class="logo-container">
@@ -62,7 +64,7 @@
             
             <!-- Botón de cerrar sesión -->
             <div class="nav-bottom">
-                <div class="nav-link" id="logoutBtn" style="background: rgba(231, 76, 60, 0.2);">
+                <div class="nav-link" id="logoutBtn">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Cerrar Sesión</span>
                 </div>
@@ -73,9 +75,19 @@
     <!-- Contenido principal -->
     <div class="main-content">
         <div class="topbar">
+            <div class="topbar-left">
+                <button type="button" class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="topbar-brand">
+                    <i class="fas fa-tools"></i>
+                    <span>Taller Alfonso</span>
+                </div>
+            </div>
+            
             <div class="search-container">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Buscar en el sistema...">
+                <input type="text" id="searchInput" placeholder="Buscar en el sistema...">
             </div>
             
             <div class="user-actions">
@@ -238,7 +250,29 @@
         </div>
     </div>
 
-    <script type="module" src="js/dashboard.js?v=2.2"></script>
-    <script type="module" src="js/pwa-manager.js?v=2.2"></script>
+    <!-- Navegación inferior fija en móvil (<= 768px) -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-inner">
+            <a href="dashboard.html" class="bottom-nav-item active">
+                <i class="fas fa-home"></i>
+                <span>Inicio</span>
+            </a>
+            <a href="almacen.html" class="bottom-nav-item">
+                <i class="fas fa-boxes"></i>
+                <span>Almacén</span>
+            </a>
+            <a href="clientes.html" class="bottom-nav-item">
+                <i class="fas fa-users"></i>
+                <span>Clientes</span>
+            </a>
+            <a href="trabajos.html" class="bottom-nav-item">
+                <i class="fas fa-wrench"></i>
+                <span>Trabajos</span>
+            </a>
+        </div>
+    </nav>
+
+    <script type="module" src="js/dashboard.js?v=2.5"></script>
+    <script type="module" src="js/pwa-manager.js?v=2.5"></script>
 </body>
 </html>
