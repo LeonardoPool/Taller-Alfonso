@@ -50,7 +50,7 @@ function onReady(fn) {
 onReady(async function () {
     // Si ya existe una sesión activa y válida en este portal, redirigir a admin.html
     if (localStorage.getItem('isLoggedIn') === 'true' && localStorage.getItem('mechanicId')) {
-        window.location.href = 'admin.html';
+        window.location.href = getPortalUrl('admin.html');
         return;
     }
 
@@ -65,9 +65,18 @@ onReady(async function () {
     const loadingScreen = document.getElementById('firebaseLoading');
     const togglePin = document.getElementById('togglePin');
 
+    // Timeout de seguridad para que la pantalla de carga nunca se quede congelada
+    const hideLoadingSafety = setTimeout(() => {
+        if (loadingScreen && loadingScreen.style.display !== 'none') {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => { loadingScreen.style.display = 'none'; }, 400);
+        }
+    }, 4500);
+
     // Cargar mecánicos disponibles
     try {
         const snapshot = await getDocs(collection(db, "colaboradores"));
+        clearTimeout(hideLoadingSafety);
 
         if (mechanicSelect) {
             mechanicSelect.innerHTML = '<option value="" disabled selected>Selecciona tu nombre</option>';
@@ -97,16 +106,17 @@ onReady(async function () {
 
         if (loadingScreen) {
             loadingScreen.style.opacity = '0';
-            setTimeout(() => loadingScreen.style.display = 'none', 400);
+            setTimeout(() => { loadingScreen.style.display = 'none'; }, 400);
         }
     } catch (error) {
+        clearTimeout(hideLoadingSafety);
         console.error("Error cargando mecánicos:", error);
         if (mechanicSelect) {
             mechanicSelect.innerHTML = '<option disabled selected>Error cargando mecánicos</option>';
         }
         if (loadingScreen) {
             loadingScreen.style.opacity = '0';
-            setTimeout(() => loadingScreen.style.display = 'none', 400);
+            setTimeout(() => { loadingScreen.style.display = 'none'; }, 400);
         }
     }
 
@@ -182,62 +192,40 @@ onReady(async function () {
                 }));
 
                 setTimeout(() => {
-<<<<<<< Updated upstream
                     window.location.href = getPortalUrl('admin.html');
                 }, 500);
-=======
-                    window.location.href = 'admin.html';
-                }, 800);
->>>>>>> Stashed changes
                 return;
             }
 
             const docSnap = await getDoc(doc(db, "colaboradores", mechanicId));
             if (docSnap.exists()) {
                 const mechanicData = docSnap.data();
-<<<<<<< Updated upstream
-                const expectedPin = String(mechanicData.pin || '').trim();
-
-                if (expectedPin === pin) {
-=======
-                const dbPin = String(mechanicData.pin ?? '').trim();
+                const expectedPin = String(mechanicData.pin ?? '').trim();
                 const enteredPin = String(pin ?? '').trim();
 
-                if (dbPin === enteredPin) {
->>>>>>> Stashed changes
+                if (expectedPin === enteredPin) {
                     if (successMessage) successMessage.style.display = 'block';
                     const fullName = mechanicData.fullName || 'Mecánico';
                     localStorage.setItem('isLoggedIn', 'true');
-<<<<<<< Updated upstream
                     localStorage.setItem('mechanicLoggedIn', 'true');
-                    localStorage.setItem('loggedInUserName', mechanicData.fullName || 'Mecánico');
-                    localStorage.setItem('mechanicPin', pin);
-                    localStorage.setItem('mechanicId', mechanicId);
-                    localStorage.setItem('tipoEmpleado', mechanicData.tipoEmpleado || 'Mecánico');
-=======
                     localStorage.setItem('loggedInUserName', fullName);
                     localStorage.setItem('mechanicPin', enteredPin);
                     localStorage.setItem('mechanicId', mechanicId);
+                    localStorage.setItem('tipoEmpleado', mechanicData.tipoEmpleado || 'Mecánico');
                     localStorage.setItem('mechanicData', JSON.stringify({
                         id: mechanicId,
                         fullName: fullName,
                         tipoEmpleado: mechanicData.tipoEmpleado || 'Mecánico',
                         isAdmin: (mechanicData.tipoEmpleado || '').toLowerCase().includes('admin')
                     }));
->>>>>>> Stashed changes
 
                     if (analytics) {
                         logEvent(analytics, 'mechanic_login_success');
                     }
 
                     setTimeout(() => {
-<<<<<<< Updated upstream
                         window.location.href = getPortalUrl('admin.html');
                     }, 500);
-=======
-                        window.location.href = 'admin.html';
-                    }, 800);
->>>>>>> Stashed changes
                 } else {
                     if (pinError) {
                         pinError.textContent = "PIN incorrecto. Intenta de nuevo.";

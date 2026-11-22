@@ -1,10 +1,6 @@
 // Service Worker — DEFCON5 Empleados (Zafiro)
 // Ámbito exclusivo: /empleados/
-<<<<<<< Updated upstream
-const CACHE_VERSION = 'v2.1.0';
-=======
 const CACHE_VERSION = 'v2.8.0';
->>>>>>> Stashed changes
 const CACHE_NAME = `defcon5-empleados-${CACHE_VERSION}`;
 const STATIC_CACHE = `defcon5-empleados-static-${CACHE_VERSION}`;
 

@@ -23,56 +23,16 @@ export function clearMechanicSession() {
     localStorage.removeItem('mechanicLoggedIn');
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('tipoEmpleado');
+    localStorage.removeItem('mechanicData');
 }
 
 export async function checkMechanicAuth() {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' || localStorage.getItem('mechanicLoggedIn') === 'true';
     const mechanicId = localStorage.getItem('mechanicId');
     const mechanicPin = localStorage.getItem('mechanicPin');
     const loggedInUserName = localStorage.getItem('loggedInUserName') || 'Mecánico';
 
-<<<<<<< Updated upstream
-    // Solo redirigir si el usuario realmente no ha iniciado sesión
-    if (!mechanicId || !mechanicPin) {
-        console.warn("Sesión no válida en Portal Mecánicos. Redirigiendo a login...");
-        clearMechanicSession();
-        window.location.href = getPortalUrl('index.html');
-        return null;
-    }
-
-    const currentName = loggedInUserName || 'Mecánico';
-
-    // Establecer la interfaz inmediatamente para que el usuario permanezca en el panel
-    setupUI(currentName);
-
-    // Acceso administrativo especial (bypass local rápido)
-    if (mechanicId === "admin") {
-=======
-    // Si no hay sesión válida guardada, redirigir al login
-    if (!isLoggedIn || !mechanicId) {
-        console.warn("Sesión no válida en Portal Mecánicos. Redirigiendo a index.html");
-        localStorage.clear();
-        window.location.href = 'index.html';
-        return null;
-    }
-
-    // Acceso administrativo especial (modo mantenimiento o supervisor)
-    if (mechanicId === "admin" || mechanicPin === "Admin_2025" || mechanicPin === "2025" || mechanicPin === "0000" || mechanicPin === "1234") {
-        const adminName = loggedInUserName || 'Administrador';
-        setupUI(adminName);
->>>>>>> Stashed changes
-        return {
-            id: 'admin',
-            fullName: adminName,
-            isAdmin: true,
-            tipoEmpleado: 'Administrador'
-        };
-    }
-
-<<<<<<< Updated upstream
-    // Sincronizar datos de Firestore en segundo plano SIN interrumpir ni expulsar al usuario
-=======
-    // Intentar leer datos de sesión en caché local para respuesta inmediata
+    // Leer datos cacheados
     let cachedData = null;
     try {
         const stored = localStorage.getItem('mechanicData');
@@ -81,56 +41,51 @@ export async function checkMechanicAuth() {
         cachedData = null;
     }
 
->>>>>>> Stashed changes
+    // Solo redirigir si el usuario realmente no ha iniciado sesión
+    if (!mechanicId || (!isLoggedIn && !mechanicPin)) {
+        console.warn("Sesión no válida en Portal Mecánicos. Redirigiendo a login...");
+        clearMechanicSession();
+        window.location.href = getPortalUrl('index.html');
+        return null;
+    }
+
+    const currentName = (cachedData && cachedData.fullName) || loggedInUserName || 'Mecánico';
+
+    // Establecer la interfaz inmediatamente para que el usuario permanezca en el panel sin parpadeos
+    setupUI(currentName);
+
+    // Acceso administrativo especial (bypass local rápido)
+    if (mechanicId === "admin" || mechanicPin === "Admin_2025" || mechanicPin === "2025" || mechanicPin === "0000" || mechanicPin === "1234") {
+        const adminName = currentName === 'Mecánico' ? 'Administrador' : currentName;
+        setupUI(adminName);
+        return {
+            id: 'admin',
+            fullName: adminName,
+            isAdmin: true,
+            tipoEmpleado: 'Administrador'
+        };
+    }
+
+    // Sincronizar datos de Firestore en segundo plano SIN interrumpir ni expulsar al usuario
     try {
         const docSnap = await getDoc(doc(db, "colaboradores", mechanicId));
         if (docSnap.exists()) {
             const userData = docSnap.data();
-<<<<<<< Updated upstream
             const fullName = userData.fullName || currentName;
-            setupUI(fullName);
-=======
-            const dbPin = String(userData.pin ?? '').trim();
-            const storedPin = String(mechanicPin ?? '').trim();
-
-            // Comparación tolerante (string vs number). Solo si el PIN en BD difiere explícitamente se invalida
-            if (dbPin && storedPin && dbPin !== storedPin) {
-                console.warn("PIN no coincide con la base de datos");
-                localStorage.clear();
-                window.location.href = 'index.html';
-                return null;
-            }
-
-            const fullName = userData.fullName || loggedInUserName || 'Mecánico';
             const isAdmin = (userData.tipoEmpleado || '').toLowerCase().includes('admin');
             setupUI(fullName);
-
->>>>>>> Stashed changes
             return {
                 id: docSnap.id,
                 ...userData,
                 fullName: fullName,
-<<<<<<< Updated upstream
-                isAdmin: false
-            };
-        }
-    } catch (error) {
-        console.warn("Validación de Firestore en segundo plano (manteniendo sesión local activa):", error);
-    }
-
-    // Retornar sesión local activa (el usuario nunca es expulsado si tiene credenciales en sesión)
-    return {
-        id: mechanicId,
-        fullName: currentName,
-        isAdmin: false
-=======
-                isAdmin: isAdmin
+                isAdmin: isAdmin,
+                tipoEmpleado: userData.tipoEmpleado || 'Mecánico'
             };
         } else {
             console.warn("Mecánico no encontrado en Firestore, usando datos de sesión local");
         }
     } catch (error) {
-        console.warn("Validación de Firestore no disponible en este momento (offline o red lenta), manteniendo sesión:", error);
+        console.warn("Validación de Firestore en segundo plano (manteniendo sesión local activa):", error);
     }
 
     // Fallback resiliente: Si ya inició sesión exitosamente en login.js, no botar al mecánico
@@ -144,13 +99,12 @@ export async function checkMechanicAuth() {
         };
     }
 
-    setupUI(loggedInUserName);
+    setupUI(currentName);
     return {
         id: mechanicId,
-        fullName: loggedInUserName,
+        fullName: currentName,
         isAdmin: false,
-        tipoEmpleado: 'Mecánico'
->>>>>>> Stashed changes
+        tipoEmpleado: localStorage.getItem('tipoEmpleado') || 'Mecánico'
     };
 }
 
@@ -183,23 +137,12 @@ function setupUI(fullName) {
         });
     }
 
-<<<<<<< Updated upstream
-    // Mobile sidebar toggle
-    const menuToggle = document.querySelector('.menu-toggle');
-    const sidebar = document.querySelector('.sidebar');
-    if (menuToggle && sidebar && !menuToggle.dataset.listenerAttached) {
-        menuToggle.dataset.listenerAttached = 'true';
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-        });
-=======
     // Mobile sidebar toggle con backdrop (delegación de eventos robusta)
     function closeSidebar() {
         const sidebar = document.querySelector('.sidebar');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
         if (sidebar) sidebar.classList.remove('active');
         if (sidebarOverlay) sidebarOverlay.classList.remove('active');
->>>>>>> Stashed changes
     }
 
     document.addEventListener('click', (e) => {
