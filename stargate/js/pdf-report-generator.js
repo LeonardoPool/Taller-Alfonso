@@ -1,4 +1,4 @@
-// Generador de Reporte PDF Oficial - Taller Mecánico Alfonso Diésel
+// Generador de Reporte PDF Oficial - Taller Mecánico Alfonso Diésel (Portal Empleados / Zafiro)
 // Formato ejecutivo oficial DEFCON 5 / Taller Alfonso
 // Conserva el 100% de los datos del negocio, logo corporativo, evidencias fotográficas y registros operativos
 
@@ -96,22 +96,22 @@ export async function generateJobServiceReport(job) {
     folioStr = folioStr.replace(/^[#\s]+/, '').replace(/^DEF[-_]?/i, '').trim();
     if (!folioStr) folioStr = 'SRV-01';
 
-    // Dimensiones y Paleta Oficial (DEFCON 5 / Taller Alfonso)
+    // Dimensiones y Paleta Oficial (Taller Alfonso - Rojo Vino / Borgoña Corporativo)
     const pageWidth = doc.internal.pageSize.getWidth();   // 210 mm
     const pageHeight = doc.internal.pageSize.getHeight(); // 297 mm
     const margin = 14;
     const contentWidth = pageWidth - (margin * 2);        // 182 mm
 
     const Palette = {
-        navyBg: [23, 35, 55],         // Azul oscuro principal (#172337)
-        navyBanner: [21, 32, 51],     // Fondo barra superior (#152033)
-        accentBlue: [37, 99, 235],    // Azul brillante (#2563eb)
+        navyBg: [50, 16, 20],         // Borgoña oscuro (#321014)
+        navyBanner: [139, 30, 30],    // Rojo vino corporativo oficial (#8B1E1E)
+        accentBlue: [185, 28, 28],    // Rojo carmesí (#B91C1C)
         accentGreen: [16, 185, 129],  // Verde esmeralda (#10b981)
-        lightBg: [248, 250, 252],     // Fondo de cajas (#f8fafc)
-        border: [226, 232, 240],      // Borde claro (#e2e8f0)
-        borderDark: [203, 213, 225],  // Borde intermedio (#cbd5e1)
-        textDark: [15, 23, 42],       // Texto casi negro (#0f172a)
-        textMuted: [100, 116, 139],   // Texto gris/etiquetas (#64748b)
+        lightBg: [254, 248, 248],     // Fondo de cajas suave (#fef8f8)
+        border: [238, 215, 218],      // Borde claro (#eed7da)
+        borderDark: [205, 168, 172],  // Borde intermedio (#cda8ac)
+        textDark: [24, 24, 27],       // Texto casi negro (#18181b)
+        textMuted: [113, 113, 122],   // Texto gris/etiquetas (#71717a)
         white: [255, 255, 255]
     };
 
@@ -162,33 +162,33 @@ export async function generateJobServiceReport(job) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(13);
     doc.setTextColor(...Palette.white);
-    doc.text('DEFCON 5', textStartX, 10.5);
+    doc.text('TALLER ALFONSO', textStartX, 10.5);
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7.2);
-    doc.setTextColor(220, 230, 245);
+    doc.setTextColor(255, 230, 230);
     doc.text('CENTRO INTEGRAL DE SERVICIO AUTOMOTRIZ & DIÉSEL PESADO', textStartX, 15.2);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6.5);
-    doc.setTextColor(180, 195, 215);
+    doc.setTextColor(245, 205, 205);
     doc.text('PEDRO ALFONSO CAUICH PECH  •  Calle 136 #1157 x 73 y 75 col. Susulá Xoclán', textStartX, 19.5);
-    doc.text('Tel: (999) 163-9673  •  Correo: talleralfonso2@live.com.mx  •  Mérida, Yucatán', textStartX, 23.5);
+    doc.text('Tel: (999) 163-9673  •  Correo: talleralfonso@hotmail.com  •  Mérida, Yucatán', textStartX, 23.5);
 
-    // Tarjeta del Folio a la derecha del banner (sin '#' y sin 'DEF')
+    // Tarjeta del Folio a la derecha del banner
     const folioBoxW = 46;
     const folioBoxH = 18;
     const folioBoxX = pageWidth - margin - folioBoxW;
     const folioBoxY = (bannerHeight - folioBoxH) / 2;
 
-    doc.setFillColor(30, 48, 76);
-    doc.setDrawColor(55, 85, 130);
+    doc.setFillColor(74, 14, 16);
+    doc.setDrawColor(185, 28, 28);
     doc.setLineWidth(0.4);
     doc.roundedRect(folioBoxX, folioBoxY, folioBoxW, folioBoxH, 2.5, 2.5, 'FD');
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7);
-    doc.setTextColor(147, 197, 253);
+    doc.setTextColor(254, 202, 202);
     doc.text('FOLIO DE SERVICIO', folioBoxX + (folioBoxW / 2), folioBoxY + 5.5, { align: 'center' });
 
     doc.setFont('helvetica', 'bold');
@@ -196,7 +196,7 @@ export async function generateJobServiceReport(job) {
     doc.setTextColor(...Palette.white);
     doc.text(folioStr, folioBoxX + (folioBoxW / 2), folioBoxY + 12.5, { align: 'center' });
 
-    // Franja azul brillante de separación
+    // Franja roja de separación
     doc.setFillColor(...Palette.accentBlue);
     doc.rect(0, bannerHeight, pageWidth, 2, 'F');
 
@@ -728,4 +728,399 @@ async function loadImageAsDataUrl(url, timeoutMs = 4500) {
 
         img.src = url;
     });
+}
+
+// ==============================================================
+// GENERADOR OFICIAL: REPORTE DE ENTRADA Y SALIDA DE UNIDADES
+// Formato, estructura y colores 100% idénticos al documento físico
+// ==============================================================
+export async function generateEntryExitReport(job) {
+    if (!job) {
+        alert("No se especificaron datos del trabajo.");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf || {};
+    if (!jsPDF) {
+        alert("La biblioteca jsPDF no está disponible. Por favor recarga la página.");
+        return;
+    }
+
+    const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();   // 210 mm
+    const pageHeight = doc.internal.pageSize.getHeight(); // 297 mm
+    const margin = 18;
+    const contentWidth = pageWidth - (margin * 2);        // 174 mm
+
+    const safeText = (v, fallback = '—') => {
+        if (v === null || v === undefined) return fallback;
+        const s = String(v).trim();
+        return s === '' ? fallback : s;
+    };
+
+    const toDate = (v) => {
+        try {
+            if (!v) return null;
+            if (typeof v.toDate === 'function') return v.toDate();
+            const d = new Date(v);
+            return isNaN(d.getTime()) ? null : d;
+        } catch {
+            return null;
+        }
+    };
+
+    const formatSpanishDate = (d) => {
+        if (!d) return '—';
+        try {
+            const day = d.toLocaleDateString('es-ES', { day: '2-digit' });
+            const month = d.toLocaleDateString('es-ES', { month: 'long' });
+            const year = d.getFullYear();
+            return `${day} de ${month} de ${year}`;
+        } catch {
+            return d.toLocaleDateString('es-ES');
+        }
+    };
+
+    // Extraer datos de Entrada
+    const entryDate = toDate(job.entryDriver?.capturedAt || job.createdAt) || new Date();
+    const entryDateStr = formatSpanishDate(entryDate);
+    const plates = safeText(job.vehicle?.plates, 'N/A');
+    const model = safeText(job.vehicle?.model || job.vehicle?.unit, 'N/A');
+    const entryDriverName = safeText(job.entryDriver?.driverName || job.workDetails?.driverName, 'N/A');
+    const entryCompany = safeText(job.entryDriver?.company || job.client?.company, 'N/A');
+    const entryIneNumber = 'SE ANEXA IDENTIFICACIÓN (INE)';
+    const entryReporter = safeText(job.mechanic || 'PEDRO ALFONSO CAUICH PECH');
+
+    // Extraer datos de Salida
+    const exitDriverData = job.exitDriver || {};
+    const isSameDriver = Boolean(exitDriverData.isSameDriver);
+    const exitDate = toDate(exitDriverData.exitDate || exitDriverData.completedAt || job.endTime);
+    const exitDateStr = exitDate ? formatSpanishDate(exitDate) : 'Pendiente de entrega';
+    const exitPlates = safeText(exitDriverData.plates || job.vehicle?.plates, plates);
+    const exitModel = safeText(exitDriverData.model || job.vehicle?.model || job.vehicle?.unit, model);
+    const exitCompany = safeText(exitDriverData.company || job.client?.company, entryCompany);
+    const exitDriverName = isSameDriver ? entryDriverName : safeText(exitDriverData.driverName, 'Pendiente');
+    const exitIneNumber = 'SE ANEXA IDENTIFICACIÓN (INE)';
+    const exitReporter = safeText(exitDriverData.reportedBy || job.mechanic || 'PEDRO ALFONSO CAUICH PECH');
+
+    // Paleta oficial Taller Alfonso
+    const redWine = [139, 30, 30];     // #8B1E1E
+    const darkWine = [92, 20, 20];     // #5C1414
+    const textDark = [20, 20, 24];
+    const textMuted = [80, 80, 90];
+    const lineGray = [160, 160, 170];
+
+    // ==========================================
+    // 1. LOGO Y ENCABEZADO
+    // ==========================================
+    const logoUrl = 'https://firebasestorage.googleapis.com/v0/b/taller-alfoso-mecanico-diesel.firebasestorage.app/o/logo.jpg?alt=media&token=081b7e59-e14f-42cc-a5ff-83a88e6acc2d';
+    let logoData = null;
+    try {
+        logoData = await loadImageAsDataUrl(logoUrl, 3000);
+    } catch (e) {
+        console.warn('No se pudo cargar logo:', e);
+    }
+
+    if (logoData) {
+        doc.addImage(logoData.dataUrl, 'JPEG', pageWidth - margin - 38, 12, 38, 26, undefined, 'FAST');
+    }
+
+    // Título centrado idéntico al documento original
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14.5);
+    doc.setTextColor(...textDark);
+    doc.text('ENTRADA Y SALIDA DE UNIDADES', pageWidth / 2, 28, { align: 'center' });
+
+    // ==========================================
+    // 2. SECCIÓN: ENTRADA DE UNIDAD (Recepción)
+    // ==========================================
+    let y = 46;
+
+    const drawFieldLine = (label, value, xStart, currentY, fieldWidth) => {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...textDark);
+        doc.text(label, xStart, currentY);
+
+        const labelW = doc.getTextWidth(label) + 2;
+        const lineX = xStart + labelW;
+        const lineW = Math.max(20, fieldWidth - labelW);
+
+        doc.setDrawColor(...lineGray);
+        doc.setLineWidth(0.3);
+        doc.line(lineX, currentY + 0.8, lineX + lineW, currentY + 0.8);
+
+        if (value && value !== '—') {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8.5);
+            doc.setTextColor(...redWine);
+            doc.text(String(value), lineX + 2, currentY - 0.2);
+        }
+        return lineX + lineW;
+    };
+
+    // Fila 1: EL DÍA _____ SE RECIBE LA UNIDAD CON PLACAS _____
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...textDark);
+
+    const f1Part1 = 'EL DIA ';
+    doc.text(f1Part1, margin, y);
+    let curX = margin + doc.getTextWidth(f1Part1) + 1;
+    doc.line(curX, y + 0.8, curX + 46, y + 0.8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...redWine);
+    doc.text(entryDateStr, curX + 2, y - 0.2);
+
+    curX += 48;
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...textDark);
+    const f1Part2 = 'SE RECIBE LA UNIDAD CON PLACAS ';
+    doc.text(f1Part2, curX, y);
+    curX += doc.getTextWidth(f1Part2) + 1;
+    const placasW = (margin + contentWidth) - curX;
+    doc.line(curX, y + 0.8, curX + placasW, y + 0.8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...redWine);
+    doc.text(plates, curX + 2, y - 0.2);
+
+    // Fila 2: MODELO _____
+    y += 9.5;
+    drawFieldLine('MODELO ', model, margin, y, 70);
+
+    // Fila 3: AL CHOFER O ENCARGADO _____
+    y += 9.5;
+    drawFieldLine('AL CHOFER O ENCARGADO ', entryDriverName, margin, y, contentWidth);
+
+    // Fila 4: DE LA EMPRESA _____
+    y += 9.5;
+    drawFieldLine('DE LA EMPRESA ', entryCompany, margin, y, contentWidth);
+
+    // Fila 5: CON NUMERO DE IDENTIFICACIÓN _____
+    y += 9.5;
+    drawFieldLine('CON NUMERO DE IDENTIFICACIÓN ', entryIneNumber, margin, y, 95);
+
+    // Fila 6: NOMBRE DE QUIEN REALIZAR REPORTE _____
+    y += 12;
+    drawFieldLine('NOMBRE DE QUIEN REALIZAR REPORTE ', entryReporter, margin, y, contentWidth);
+
+    // Espacio de Firma Chofer Entrada
+    y += 24;
+    const sigLineW = 75;
+    const sigX = (pageWidth - sigLineW) / 2;
+    doc.setDrawColor(...lineGray);
+    doc.setLineWidth(0.4);
+    doc.line(sigX, y, sigX + sigLineW, y);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...textDark);
+    doc.text('FIRMA DE CHOFER O ENCARGADO', pageWidth / 2, y + 5, { align: 'center' });
+
+    // ==========================================
+    // 3. SECCIÓN: SALIDA DE UNIDAD (Entrega)
+    // ==========================================
+    y += 34;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...textDark);
+
+    const s1Part1 = 'EL DIA ';
+    doc.text(s1Part1, margin, y);
+    curX = margin + doc.getTextWidth(s1Part1) + 1;
+    doc.line(curX, y + 0.8, curX + 46, y + 0.8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...redWine);
+    doc.text(exitDateStr, curX + 2, y - 0.2);
+
+    curX += 48;
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...textDark);
+    const s1Part2 = 'SE LE HACE ENTREGA DE LA UNIDAD CON PLACAS ';
+    doc.text(s1Part2, curX, y);
+    curX += doc.getTextWidth(s1Part2) + 1;
+    const exitPlacasW = (margin + contentWidth) - curX;
+    doc.line(curX, y + 0.8, curX + exitPlacasW, y + 0.8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...redWine);
+    doc.text(exitPlates, curX + 2, y - 0.2);
+
+    // Fila 2 Salida: MODELO _____
+    y += 9.5;
+    drawFieldLine('MODELO ', exitModel, margin, y, 70);
+
+    // Fila 3 Salida: AL CHOFER O ENCARGADO _____
+    y += 9.5;
+    drawFieldLine('AL CHOFER O ENCARGADO ', exitDriverName, margin, y, contentWidth);
+
+    // Fila 4 Salida: DE LA EMPRESA _____
+    y += 9.5;
+    drawFieldLine('DE LA EMPRESA ', exitCompany, margin, y, contentWidth);
+
+    // Fila 5 Salida: CON NUMERO DE IDENTIFICACIÓN _____
+    y += 9.5;
+    drawFieldLine('CON NUMERO DE IDENTIFICACIÓN ', exitIneNumber, margin, y, 95);
+
+    // Fila 6 Salida: NOMBRE DE QUIEN REALIZAR REPORTE _____
+    y += 12;
+    drawFieldLine('NOMBRE DE QUIEN REALIZAR REPORTE ', exitReporter, margin, y, contentWidth);
+
+    // Espacio de Firma Chofer Salida
+    y += 24;
+    doc.setDrawColor(...lineGray);
+    doc.setLineWidth(0.4);
+    doc.line(sigX, y, sigX + sigLineW, y);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...textDark);
+    doc.text('FIRMA DE SALIDA DE CHOFER O ENCARGADO.', pageWidth / 2, y + 5, { align: 'center' });
+
+    // ==========================================
+    // 4. PIE DE PÁGINA (DATOS Y ONDA ROJA INFERIOR)
+    // ==========================================
+    const footerY = pageHeight - 24;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...textDark);
+    doc.text('999 163 9673', margin + 5, footerY);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.2);
+    doc.setTextColor(...textMuted);
+    doc.text('talleralfonso@hotmail.com', margin + 5, footerY + 4.2);
+    doc.text('Calle: 136 No. 1157 x 73 y 75', margin + 5, footerY + 8.4);
+    doc.text('Col. Susula Xoclan, Mérida, Yucatán, Mex.', margin + 5, footerY + 12.2);
+
+    // Onda decorativa en la parte inferior derecha
+    doc.setFillColor(...redWine);
+    const waveStartX = pageWidth * 0.42;
+    doc.lines([
+        [pageWidth - waveStartX, 0],
+        [0, 14],
+        [-(pageWidth - waveStartX), 0]
+    ], waveStartX, pageHeight - 14, [1, 1], 'F');
+
+    // ==========================================
+    // 5. PÁGINA DE ANEXOS: IDENTIFICACIONES (INE)
+    // ==========================================
+    const hasEntryIne = Boolean(job.entryDriver?.ineFrontUrl || job.entryDriver?.ineBackUrl);
+    const hasExitIne = Boolean(exitDriverData.ineFrontUrl || exitDriverData.ineBackUrl);
+
+    if (hasEntryIne || hasExitIne) {
+        doc.addPage();
+
+        // Banner superior anexo
+        doc.setFillColor(...redWine);
+        doc.rect(0, 0, pageWidth, 22, 'F');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(255, 255, 255);
+        doc.text('ANEXO: IDENTIFICACIÓN OFICIAL (INE)', margin, 14);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(240, 240, 240);
+        doc.text(`Unidad: ${plates}  •  Folio: ${job.id ? job.id.substring(0, 8) : 'S/F'}`, pageWidth - margin, 14, { align: 'right' });
+
+        let anexoY = 32;
+
+        // --- INE Entrada ---
+        if (hasEntryIne) {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(...darkWine);
+            doc.text(`1. INE DE ENTRADA — Chofer: ${entryDriverName} (${entryCompany})`, margin, anexoY);
+            anexoY += 6;
+
+            const boxW = 80;
+            const boxH = 50;
+
+            if (job.entryDriver?.ineFrontUrl) {
+                const frontData = await loadImageAsDataUrl(job.entryDriver.ineFrontUrl, 3500);
+                if (frontData) {
+                    doc.addImage(frontData.dataUrl, 'JPEG', margin, anexoY, boxW, boxH, undefined, 'FAST');
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(7.5);
+                    doc.setTextColor(...textMuted);
+                    doc.text('Anverso (Frente)', margin + (boxW / 2), anexoY + boxH + 4, { align: 'center' });
+                }
+            }
+
+            if (job.entryDriver?.ineBackUrl) {
+                const backData = await loadImageAsDataUrl(job.entryDriver.ineBackUrl, 3500);
+                if (backData) {
+                    const xBack = margin + boxW + 10;
+                    doc.addImage(backData.dataUrl, 'JPEG', xBack, anexoY, boxW, boxH, undefined, 'FAST');
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(7.5);
+                    doc.setTextColor(...textMuted);
+                    doc.text('Reverso (Vuelta)', xBack + (boxW / 2), anexoY + boxH + 4, { align: 'center' });
+                }
+            }
+
+            anexoY += boxH + 16;
+        }
+
+        // --- INE Salida ---
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(...darkWine);
+        doc.text(`2. INE DE SALIDA — Chofer: ${exitDriverName} (${exitCompany})`, margin, anexoY);
+        anexoY += 6;
+
+        if (isSameDriver) {
+            doc.setFillColor(236, 253, 245);
+            doc.setDrawColor(16, 185, 129);
+            doc.setLineWidth(0.4);
+            doc.roundedRect(margin, anexoY, contentWidth, 16, 2, 2, 'FD');
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8.5);
+            doc.setTextColor(4, 120, 87);
+            doc.text('✓ Mismo chofer en entrada y salida. La entrega se acredita con la identificación de entrada registrada.', margin + 8, anexoY + 10);
+        } else if (hasExitIne) {
+            const boxW = 80;
+            const boxH = 50;
+
+            if (exitDriverData.ineFrontUrl) {
+                const frontData = await loadImageAsDataUrl(exitDriverData.ineFrontUrl, 3500);
+                if (frontData) {
+                    doc.addImage(frontData.dataUrl, 'JPEG', margin, anexoY, boxW, boxH, undefined, 'FAST');
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(7.5);
+                    doc.setTextColor(...textMuted);
+                    doc.text('Anverso (Frente)', margin + (boxW / 2), anexoY + boxH + 4, { align: 'center' });
+                }
+            }
+
+            if (exitDriverData.ineBackUrl) {
+                const backData = await loadImageAsDataUrl(exitDriverData.ineBackUrl, 3500);
+                if (backData) {
+                    const xBack = margin + boxW + 10;
+                    doc.addImage(backData.dataUrl, 'JPEG', xBack, anexoY, boxW, boxH, undefined, 'FAST');
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(7.5);
+                    doc.setTextColor(...textMuted);
+                    doc.text('Reverso (Vuelta)', xBack + (boxW / 2), anexoY + boxH + 4, { align: 'center' });
+                }
+            }
+        } else {
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(8);
+            doc.setTextColor(...textMuted);
+            doc.text('No se adjuntaron fotografías de identificación de salida.', margin, anexoY + 6);
+        }
+    }
+
+    const cleanPlates = (plates || 'UNIDAD').replace(/[^a-zA-Z0-9]/g, '_');
+    doc.save(`Entrada_Salida_${cleanPlates}.pdf`);
 }

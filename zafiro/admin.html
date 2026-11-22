@@ -148,7 +148,8 @@
             <div class="modal-body" id="detailBody"></div>
             <div class="modal-footer">
                 <button class="btn btn-secondary close-modal">Cerrar</button>
-                <button class="btn btn-primary" id="generatePdf" style="margin-left:8px;"><i class="fas fa-file-pdf"></i> Generar Reporte PDF</button>
+                <button class="btn btn-primary" id="generatePdf" style="margin-left:8px;"><i class="fas fa-file-pdf"></i> Reporte de Servicio</button>
+                <button class="btn btn-danger" id="generateEntryExitPdf" style="margin-left:8px; background: #8B1E1E; border-color: #7A1215;"><i class="fas fa-file-contract"></i> Reporte Entrada y Salida</button>
             </div>
         </div>
     </div>
@@ -183,6 +184,130 @@
             <div class="status-modal-footer">
                 <button class="btn btn-secondary" id="cancelStatusUpdate">Cancelar</button>
                 <button class="btn btn-primary" id="confirmStatusUpdate">Actualizar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Formulario de Entrega y Salida de Unidad (Finalizar Trabajo) -->
+    <div class="modal" id="exitModal">
+        <div class="modal-content exit-modal-content" style="max-width: 680px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header exit-modal-header" style="background: linear-gradient(135deg, #8B1E1E, #5C1414); color: white;">
+                <h2><i class="fas fa-truck-loading"></i> Salida y Entrega de Unidad</h2>
+                <button class="close-modal" id="closeExitModalBtn">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="exit-banner" style="display: flex; align-items: center; gap: 14px; background: #fff5f5; border: 1px solid #fed7d7; padding: 14px; border-radius: 10px; margin-bottom: 20px;">
+                    <i class="fas fa-clipboard-check" style="font-size: 28px; color: #8B1E1E;"></i>
+                    <div>
+                        <strong style="color: #741616; font-size: 14px;">Registro Oficial de Entrega de Unidad</strong>
+                        <p style="margin: 2px 0 0; color: #64748b; font-size: 12.5px;">Completa la información de salida para finalizar el trabajo y generar el reporte oficial de Entrada y Salida.</p>
+                    </div>
+                </div>
+
+                <form id="exitForm">
+                    <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 1 1 240px;">
+                            <label for="exitDate" class="required" style="font-weight: 600; font-size: 13px;">Fecha de Entrega</label>
+                            <input type="date" id="exitDate" name="exitDate" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                            <small class="field-hint" style="color: #64748b; font-size: 11.5px; display: block; margin-top: 4px;">
+                                <i class="fas fa-info-circle"></i> La fecha no puede ser anterior al día de hoy.
+                            </small>
+                        </div>
+                        <div class="form-group" style="flex: 1 1 240px;">
+                            <label for="exitPlates" class="required" style="font-weight: 600; font-size: 13px;">Placas de la Unidad</label>
+                            <input type="text" id="exitPlates" name="exitPlates" required placeholder="Placas" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px;">
+                        <div class="form-group" style="flex: 1 1 240px;">
+                            <label for="exitModel" class="required" style="font-weight: 600; font-size: 13px;">Modelo / Unidad</label>
+                            <input type="text" id="exitModel" name="exitModel" required placeholder="Modelo o Unidad" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        </div>
+                        <div class="form-group" style="flex: 1 1 240px;">
+                            <label for="exitCompany" class="required" style="font-weight: 600; font-size: 13px;">Nombre de la Empresa</label>
+                            <input type="text" id="exitCompany" name="exitCompany" required placeholder="Empresa del cliente" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        </div>
+                    </div>
+
+                    <!-- Selector Inteligente de Mismo Chofer -->
+                    <div class="same-driver-card" style="margin-top: 18px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc;">
+                        <label class="same-driver-toggle" for="sameDriverCheck" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="sameDriverCheck" checked style="width: 20px; height: 20px; cursor: pointer; accent-color: #8B1E1E;">
+                            <span class="toggle-text" style="font-size: 13.5px; color: #1e293b;"><strong>¿El chofer que retira la unidad es el mismo que la ingresó?</strong></span>
+                        </label>
+                        <div class="same-driver-info" id="sameDriverInfoBox" style="margin-top: 12px; padding: 12px; background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <div class="entry-driver-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px; background: #ecfdf5; color: #047857; font-size: 12px; font-weight: 600;">
+                                <i class="fas fa-check-circle"></i> Se conservarán los datos e INE del chofer de entrada
+                            </div>
+                            <p id="sameDriverSummary" style="font-size: 13px; color: #1e293b; margin: 8px 0 6px; font-weight: 500;"></p>
+                            <div class="entry-ine-previews" id="entryInePreviews" style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Campos cuando el chofer de salida es diferente -->
+                    <div id="differentDriverFields" style="display: none; margin-top: 15px;">
+                        <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            <div class="form-group" style="width: 100%;">
+                                <label for="exitDriverName" class="required" style="font-weight: 600; font-size: 13px;">Nombre del Chofer que Retira</label>
+                                <input type="text" id="exitDriverName" placeholder="Nombre completo del chofer" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                            </div>
+                        </div>
+
+                        <div class="ine-capture-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 15px;">
+                            <div class="ine-capture-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px;">
+                                <label class="ine-label" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;"><i class="fas fa-camera"></i> Foto INE - Anverso (Frente)</label>
+                                <div class="ine-upload-area" id="exitIneFrontArea" style="min-height: 140px; border: 2px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+                                    <div class="ine-placeholder" id="exitIneFrontPlaceholder" style="padding: 15px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                                        <i class="fas fa-address-card" style="font-size: 28px; color: #94a3b8;"></i>
+                                        <p style="font-size: 12px; color: #64748b; margin: 0;">Tomar foto del <strong>frente de la INE</strong></p>
+                                        <label class="btn-camera-capture" for="exitIneFrontInput" style="background: #8B1E1E; color: #ffffff !important; padding: 6px 14px; border-radius: 16px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                                            <i class="fas fa-camera"></i> Tomar Foto
+                                        </label>
+                                        <input type="file" id="exitIneFrontInput" accept="image/*" capture="environment" style="display: none;">
+                                    </div>
+                                    <div class="ine-preview-container" id="exitIneFrontPreview" style="display: none; width: 100%; height: 150px; position: relative; background: #0f172a; align-items: center; justify-content: center;">
+                                        <img id="exitIneFrontImg" src="" alt="Frente INE Salida" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                        <button type="button" class="btn-remove-ine" id="removeExitIneFront" title="Eliminar foto" style="position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%; background: rgba(220, 38, 38, 0.9); color: white; border: none; cursor: pointer;"><i class="fas fa-times"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ine-capture-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px;">
+                                <label class="ine-label" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;"><i class="fas fa-camera"></i> Foto INE - Reverso (Vuelta)</label>
+                                <div class="ine-upload-area" id="exitIneBackArea" style="min-height: 140px; border: 2px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+                                    <div class="ine-placeholder" id="exitIneBackPlaceholder" style="padding: 15px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                                        <i class="fas fa-barcode" style="font-size: 28px; color: #94a3b8;"></i>
+                                        <p style="font-size: 12px; color: #64748b; margin: 0;">Tomar foto del <strong>reverso de la INE</strong></p>
+                                        <label class="btn-camera-capture" for="exitIneBackInput" style="background: #8B1E1E; color: #ffffff !important; padding: 6px 14px; border-radius: 16px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                                            <i class="fas fa-camera"></i> Tomar Foto
+                                        </label>
+                                        <input type="file" id="exitIneBackInput" accept="image/*" capture="environment" style="display: none;">
+                                    </div>
+                                    <div class="ine-preview-container" id="exitIneBackPreview" style="display: none; width: 100%; height: 150px; position: relative; background: #0f172a; align-items: center; justify-content: center;">
+                                        <img id="exitIneBackImg" src="" alt="Reverso INE Salida" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                        <button type="button" class="btn-remove-ine" id="removeExitIneBack" title="Eliminar foto" style="position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%; background: rgba(220, 38, 38, 0.9); color: white; border: none; cursor: pointer;"><i class="fas fa-times"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="margin-top: 15px;">
+                        <div class="form-group" style="width: 100%;">
+                            <label for="exitReportBy" style="font-weight: 600; font-size: 13px;">Nombre de Quien Realiza el Reporte</label>
+                            <input type="text" id="exitReportBy" readonly style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f1f5f9; cursor: not-allowed; font-weight: 600; color: #1e293b;">
+                        </div>
+                    </div>
+
+                    <div class="status-message" id="exitStatusMessage" style="display: none; margin-top: 10px;"></div>
+                </form>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; padding: 15px 20px; border-top: 1px solid #e2e8f0;">
+                <button type="button" class="btn btn-secondary" id="cancelExitModalBtn">Cancelar</button>
+                <button type="button" class="btn btn-success" id="confirmExitAndFinishBtn" style="background: #10b981; border-color: #059669; color: white;">
+                    <i class="fas fa-check-double"></i> Confirmar Entrega y Finalizar
+                </button>
             </div>
         </div>
     </div>

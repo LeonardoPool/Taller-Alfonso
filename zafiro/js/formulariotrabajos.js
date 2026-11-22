@@ -31,6 +31,8 @@ const imageFiles = {
 let usedParts = [];
 let modalParts = [];
 let selectedParts = [];
+let ineFrontFile = null;
+let ineBackFile = null;
 
 // Elementos DOM
 const jobForm = document.getElementById('jobForm');
@@ -82,6 +84,7 @@ onReady(async () => {
     setupClientSearch();
     setupPartsModal();
     setupPhotoUploads();
+    setupIneUploads();
     setupFormSubmit();
 });
 
@@ -159,6 +162,10 @@ function setupClientSearch() {
                         div.addEventListener('click', () => {
                             clientNameInput.value = c.clientName || '';
                             if (companyInput) companyInput.value = c.company || '';
+                            const driverCompanyInput = document.getElementById('driverCompany');
+                            if (driverCompanyInput && !driverCompanyInput.value.trim()) {
+                                driverCompanyInput.value = c.company || '';
+                            }
                             clientResults.style.display = 'none';
                         });
 
@@ -360,6 +367,74 @@ function renderPreviews(cat, container) {
     });
 }
 
+function setupIneUploads() {
+    const frontInput = document.getElementById('ineFrontInput');
+    const frontPlaceholder = document.getElementById('ineFrontPlaceholder');
+    const frontPreview = document.getElementById('ineFrontPreview');
+    const frontImg = document.getElementById('ineFrontImg');
+    const removeFrontBtn = document.getElementById('removeIneFront');
+
+    const backInput = document.getElementById('ineBackInput');
+    const backPlaceholder = document.getElementById('ineBackPlaceholder');
+    const backPreview = document.getElementById('ineBackPreview');
+    const backImg = document.getElementById('ineBackImg');
+    const removeBackBtn = document.getElementById('removeIneBack');
+
+    if (frontInput) {
+        frontInput.addEventListener('change', (e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+                ineFrontFile = file;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    if (frontImg) frontImg.src = ev.target.result;
+                    if (frontPlaceholder) frontPlaceholder.style.display = 'none';
+                    if (frontPreview) frontPreview.style.display = 'flex';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    if (removeFrontBtn) {
+        removeFrontBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            ineFrontFile = null;
+            if (frontInput) frontInput.value = '';
+            if (frontImg) frontImg.src = '';
+            if (frontPreview) frontPreview.style.display = 'none';
+            if (frontPlaceholder) frontPlaceholder.style.display = 'flex';
+        });
+    }
+
+    if (backInput) {
+        backInput.addEventListener('change', (e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+                ineBackFile = file;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    if (backImg) backImg.src = ev.target.result;
+                    if (backPlaceholder) backPlaceholder.style.display = 'none';
+                    if (backPreview) backPreview.style.display = 'flex';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    if (removeBackBtn) {
+        removeBackBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            ineBackFile = null;
+            if (backInput) backInput.value = '';
+            if (backImg) backImg.src = '';
+            if (backPreview) backPreview.style.display = 'none';
+            if (backPlaceholder) backPlaceholder.style.display = 'flex';
+        });
+    }
+}
+
 function setupFormSubmit() {
     if (!jobForm) return;
 
@@ -369,6 +444,7 @@ function setupFormSubmit() {
         const clientName = clientNameInput?.value?.trim();
         const unit = document.getElementById('unit')?.value?.trim();
         const driverName = document.getElementById('driverName')?.value?.trim();
+        const driverCompany = document.getElementById('driverCompany')?.value?.trim() || companyInput?.value?.trim() || "Particular";
         const diagnosis = document.getElementById('diagnosis')?.value?.trim();
 
         if (!clientName || !unit || !driverName || !diagnosis) {
@@ -378,7 +454,7 @@ function setupFormSubmit() {
 
         // Manejo de modo sin conexión
         if (!navigator.onLine) {
-            const hasImages = Object.values(imageFiles).some(files => files.length > 0);
+            const hasImages = Object.values(imageFiles).some(files => files.length > 0) || ineFrontFile || ineBackFile;
             if (hasImages) {
                 alert("Estás sin conexión a internet. La subida de fotografías requiere conexión a la red. Conéctate a internet para registrar la orden con imágenes.");
                 return;
@@ -398,8 +474,16 @@ function setupFormSubmit() {
                         engineNumber: document.getElementById('engineNumber')?.value?.trim() || "N/A",
                         plates: document.getElementById('plates')?.value?.trim() || "N/A"
                     },
+                    entryDriver: {
+                        driverName: driverName,
+                        company: driverCompany,
+                        ineFrontUrl: null,
+                        ineBackUrl: null,
+                        capturedAt: new Date().toISOString()
+                    },
                     workDetails: {
                         driverName: driverName,
+                        driverCompany: driverCompany,
                         diagnosis: diagnosis,
                         engineStart: engineStartEl ? engineStartEl.value : "no_especificado",
                         hasSpare: hasSpareEl ? hasSpareEl.value : "no_especificado",
@@ -432,10 +516,41 @@ function setupFormSubmit() {
         if (progressContainer) {
             progressContainer.style.display = 'block';
             progressBar.style.width = '10%';
-            progressText.textContent = 'Subiendo evidencias...';
+            progressText.textContent = 'Subiendo evidencias e identificaciones...';
         }
 
         try {
+            const cleanUnit = (unit || 'unidad').replace(/[^a-zA-Z0-9_-]/g, '_');
+
+            // 1. Subir fotos de INE del chofer
+            let ineFrontUrl = null;
+            let ineBackUrl = null;
+
+            if (ineFrontFile) {
+                try {
+                    const cleanName = (ineFrontFile.name || 'ine_frente.jpg').replace(/[^a-zA-Z0-9._-]/g, '_');
+                    const sRef = storageRef(storage, `trabajos/ine/${cleanUnit}_entrada_frente_${Date.now()}_${cleanName}`);
+                    const uploadTask = await uploadBytesResumable(sRef, ineFrontFile);
+                    ineFrontUrl = await getDownloadURL(uploadTask.ref);
+                } catch (ineErr) {
+                    console.warn("[Zafiro] Error al subir INE frente:", ineErr);
+                }
+            }
+
+            if (ineBackFile) {
+                try {
+                    const cleanName = (ineBackFile.name || 'ine_reverso.jpg').replace(/[^a-zA-Z0-9._-]/g, '_');
+                    const sRef = storageRef(storage, `trabajos/ine/${cleanUnit}_entrada_reverso_${Date.now()}_${cleanName}`);
+                    const uploadTask = await uploadBytesResumable(sRef, ineBackFile);
+                    ineBackUrl = await getDownloadURL(uploadTask.ref);
+                } catch (ineErr) {
+                    console.warn("[Zafiro] Error al subir INE reverso:", ineErr);
+                }
+            }
+
+            if (progressBar) progressBar.style.width = '35%';
+
+            // 2. Subir fotos de la unidad
             const uploadedPhotos = {};
             const categories = Object.keys(imageFiles);
 
@@ -445,7 +560,6 @@ function setupFormSubmit() {
                     uploadedPhotos[cat] = [];
                     for (const file of files) {
                         try {
-                            const cleanUnit = (unit || 'unidad').replace(/[^a-zA-Z0-9_-]/g, '_');
                             const cleanName = (file.name || 'foto.jpg').replace(/[^a-zA-Z0-9._-]/g, '_');
                             const sRef = storageRef(storage, `trabajos/${cleanUnit}_${Date.now()}_${cleanName}`);
                             const uploadTask = await uploadBytesResumable(sRef, file);
@@ -459,7 +573,7 @@ function setupFormSubmit() {
             }
 
             if (progressBar) progressBar.style.width = '80%';
-            if (progressText) progressText.textContent = 'Guardando orden en Firestore...';
+            progressText.textContent = 'Guardando orden en Firestore...';
 
             const engineStartEl = document.querySelector('input[name="engineStart"]:checked');
             const hasSpareEl = document.querySelector('input[name="hasSpare"]:checked');
@@ -481,9 +595,17 @@ function setupFormSubmit() {
                     engineNotes: document.getElementById('engineNotes')?.value?.trim() || "",
                     engineSize: document.getElementById('engineSize')?.value?.trim() || ""
                 },
+                entryDriver: {
+                    driverName: driverName,
+                    company: driverCompany,
+                    ineFrontUrl: ineFrontUrl,
+                    ineBackUrl: ineBackUrl,
+                    capturedAt: new Date().toISOString()
+                },
                 workDetails: {
                     hasSpare: hasSpareEl ? hasSpareEl.value : "no",
                     driverName: driverName,
+                    driverCompany: driverCompany,
                     diagnosis: diagnosis,
                     additionalNotes: document.getElementById('additionalNotes')?.value?.trim() || "",
                     usedParts: usedParts.map(p => ({ id: p.id, name: p.name, serial: p.serial })),
@@ -512,6 +634,17 @@ function setupFormSubmit() {
             jobForm.reset();
             usedParts = [];
             renderUsedParts();
+            ineFrontFile = null;
+            ineBackFile = null;
+            const ifp = document.getElementById('ineFrontPreview');
+            const ibp = document.getElementById('ineBackPreview');
+            const ifph = document.getElementById('ineFrontPlaceholder');
+            const ibph = document.getElementById('ineBackPlaceholder');
+            if (ifp) ifp.style.display = 'none';
+            if (ibp) ibp.style.display = 'none';
+            if (ifph) ifph.style.display = 'flex';
+            if (ibph) ibph.style.display = 'flex';
+
             Object.keys(imageFiles).forEach(k => imageFiles[k] = []);
             document.querySelectorAll('[id$="Preview"]').forEach(c => c.innerHTML = '');
             document.querySelectorAll('[id$="Count"]').forEach(c => c.textContent = '0');

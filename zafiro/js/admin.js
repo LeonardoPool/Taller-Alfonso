@@ -1,6 +1,6 @@
 // Panel de Trabajos para Mecánicos - Portal Mecánicos (Zafiro)
 import { checkMechanicAuth, clearMechanicSession } from './auth-guard.js';
-import { generateJobServiceReport } from './pdf-report-generator.js';
+import { generateJobServiceReport, generateEntryExitReport } from './pdf-report-generator.js';
 import { 
     db, 
     collection, 
@@ -11,7 +11,11 @@ import {
     getDocs, 
     doc, 
     updateDoc, 
-    serverTimestamp 
+    serverTimestamp,
+    storage,
+    storageRef,
+    uploadBytesResumable,
+    getDownloadURL
 } from './firebase-config.js';
 import { enqueueOfflineOperation } from './pwa-manager.js';
 
@@ -19,6 +23,9 @@ let currentMechanic = null;
 let jobsCache = [];
 let currentJobId = null;
 let currentActiveJob = null;
+let pendingExitJob = null;
+let exitIneFrontFile = null;
+let exitIneBackFile = null;
 let timers = {};
 let unsubscribeJobs = null;
 let modalParts = [];
@@ -83,6 +90,35 @@ const confirmPartsSelection = document.getElementById('confirmPartsSelection');
 
 const closeModalBtns = document.querySelectorAll('.close-modal');
 const logoutBtn = document.getElementById('logoutBtn');
+
+// Elementos de Modal de Salida / Entrega de Unidad
+const exitModal = document.getElementById('exitModal');
+const exitDateInput = document.getElementById('exitDate');
+const exitPlatesInput = document.getElementById('exitPlates');
+const exitModelInput = document.getElementById('exitModel');
+const exitCompanyInput = document.getElementById('exitCompany');
+const sameDriverCheck = document.getElementById('sameDriverCheck');
+const sameDriverInfoBox = document.getElementById('sameDriverInfoBox');
+const sameDriverSummary = document.getElementById('sameDriverSummary');
+const entryInePreviews = document.getElementById('entryInePreviews');
+const differentDriverFields = document.getElementById('differentDriverFields');
+const exitDriverNameInput = document.getElementById('exitDriverName');
+const exitIneFrontInput = document.getElementById('exitIneFrontInput');
+const exitIneFrontArea = document.getElementById('exitIneFrontArea');
+const exitIneFrontPlaceholder = document.getElementById('exitIneFrontPlaceholder');
+const exitIneFrontPreview = document.getElementById('exitIneFrontPreview');
+const exitIneFrontImg = document.getElementById('exitIneFrontImg');
+const removeExitIneFrontBtn = document.getElementById('removeExitIneFront');
+const exitIneBackInput = document.getElementById('exitIneBackInput');
+const exitIneBackArea = document.getElementById('exitIneBackArea');
+const exitIneBackPlaceholder = document.getElementById('exitIneBackPlaceholder');
+const exitIneBackPreview = document.getElementById('exitIneBackPreview');
+const exitIneBackImg = document.getElementById('exitIneBackImg');
+const removeExitIneBackBtn = document.getElementById('removeExitIneBack');
+const exitReportByInput = document.getElementById('exitReportBy');
+const confirmExitAndFinishBtn = document.getElementById('confirmExitAndFinishBtn');
+const cancelExitModalBtn = document.getElementById('cancelExitModalBtn');
+const generateEntryExitPdfBtn = document.getElementById('generateEntryExitPdf');
 
 function onReady(fn) {
     if (document.readyState === 'loading') {
@@ -673,6 +709,7 @@ function createJobCard(job) {
                 <button class="job-btn detail-btn" data-id="${job.id}" title="Ver detalles"><i class="fas fa-eye"></i></button>
                 <button class="job-btn status-btn" data-id="${job.id}" title="Cambiar estado"><i class="fas fa-exchange-alt"></i></button>
                 <button class="job-btn edit-btn" data-id="${job.id}" title="Editar trabajo"><i class="fas fa-edit"></i></button>
+                ${(isJobFinished(job) || job.exitDriver || job.entryDriver) ? `<button class="job-btn entry-exit-btn" data-id="${job.id}" title="Reporte Entrada y Salida (PDF)" style="color:#8B1E1E;"><i class="fas fa-file-contract"></i></button>` : ''}
             </div>
         </div>
     `;
@@ -750,6 +787,16 @@ function setupEventListeners() {
             openEditModal(jobId);
             return;
         }
+
+        const entryExitBtn = e.target.closest('.entry-exit-btn');
+        if (entryExitBtn) {
+            const jobId = entryExitBtn.dataset.id;
+            const j = jobsCache.find(x => x.id === jobId);
+            if (j) {
+                generateEntryExitReport(j);
+            }
+            return;
+        }
     });
 
     // Opciones de estado en statusModal
@@ -807,10 +854,17 @@ function setupEventListeners() {
             if (statusModal) statusModal.classList.remove('active');
             if (editModal) editModal.classList.remove('active');
             if (partsModal) partsModal.classList.remove('active');
+            if (exitModal) exitModal.classList.remove('active');
         });
     });
 
-    // Generar PDF
+    if (cancelExitModalBtn) {
+        cancelExitModalBtn.addEventListener('click', () => {
+            if (exitModal) exitModal.classList.remove('active');
+        });
+    }
+
+    // Generar PDF de Orden de Servicio
     const generatePdfBtn = document.getElementById('generatePdf');
     if (generatePdfBtn) {
         generatePdfBtn.addEventListener('click', async () => {
@@ -828,6 +882,27 @@ function setupEventListeners() {
             }
         });
     }
+
+    // Generar PDF de Entrada y Salida de Unidades
+    if (generateEntryExitPdfBtn) {
+        generateEntryExitPdfBtn.addEventListener('click', async () => {
+            if (!currentActiveJob) return;
+            try {
+                generateEntryExitPdfBtn.disabled = true;
+                generateEntryExitPdfBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+                await generateEntryExitReport(currentActiveJob);
+            } catch (err) {
+                console.error("Error al generar Reporte de Entrada y Salida:", err);
+                alert("Ocurrió un error al generar el Reporte de Entrada y Salida: " + err.message);
+            } finally {
+                generateEntryExitPdfBtn.disabled = false;
+                generateEntryExitPdfBtn.innerHTML = '<i class="fas fa-file-contract"></i> Reporte Entrada y Salida (PDF)';
+            }
+        });
+    }
+
+    // Configurar manejadores del formulario de salida / entrega
+    setupExitModalHandlers();
 
     // Cerrar sesión
     if (logoutBtn && !logoutBtn.dataset.listenerAttached) {
@@ -863,10 +938,44 @@ function openDetailModal(jobId) {
             </div>
             <div style="background:#f8f9fa;padding:15px;border-radius:8px;">
                 <h4 style="margin:0 0 10px;color:#2c3e50;"><i class="fas fa-user"></i> Chofer</h4>
-                <p><strong>Nombre:</strong> ${escapeHtml(job.workDetails?.driverName || 'N/A')}</p>
-                <p><strong>Empresa:</strong> ${escapeHtml(job.workDetails?.driverCompany || job.client?.company || 'N/A')}</p>
+                <p><strong>Nombre:</strong> ${escapeHtml(job.entryDriver?.driverName || job.workDetails?.driverName || 'N/A')}</p>
+                <p><strong>Empresa:</strong> ${escapeHtml(job.entryDriver?.company || job.workDetails?.driverCompany || job.client?.company || 'N/A')}</p>
                 <p><strong>Teléfono:</strong> ${escapeHtml(job.workDetails?.driverPhone || 'N/A')}</p>
             </div>
+            ${(job.entryDriver || job.exitDriver) ? `
+                <div style="grid-column:span 2;background:#fef2f2;padding:14px 16px;border-radius:10px;border:1px solid #fecaca;">
+                    <h4 style="margin:0 0 10px;color:#8B1E1E;display:flex;align-items:center;gap:8px;">
+                        <i class="fas fa-id-card"></i> Control de Custodia: Choferes de Entrada y Salida
+                    </h4>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:14px;">
+                        <div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #fee2e2;">
+                            <strong style="color:#7f1d1d;font-size:13px;display:flex;align-items:center;gap:6px;">
+                                <i class="fas fa-sign-in-alt"></i> Entrada a Taller
+                            </strong>
+                            <p style="margin:6px 0 2px;font-size:12.5px;"><strong>Chofer:</strong> ${escapeHtml(job.entryDriver?.driverName || job.workDetails?.driverName || 'No registrado')}</p>
+                            <p style="margin:2px 0;font-size:12.5px;"><strong>Empresa:</strong> ${escapeHtml(job.entryDriver?.company || job.workDetails?.driverCompany || job.client?.company || 'N/A')}</p>
+                            <div style="display:flex;gap:8px;margin-top:8px;">
+                                ${job.entryDriver?.ineFrontUrl ? `<a href="${job.entryDriver.ineFrontUrl}" target="_blank" rel="noopener" style="font-size:11px;padding:4px 8px;background:#8B1E1E;color:white;border-radius:4px;text-decoration:none;"><i class="fas fa-id-card"></i> INE Frente</a>` : ''}
+                                ${job.entryDriver?.ineBackUrl ? `<a href="${job.entryDriver.ineBackUrl}" target="_blank" rel="noopener" style="font-size:11px;padding:4px 8px;background:#8B1E1E;color:white;border-radius:4px;text-decoration:none;"><i class="fas fa-id-card"></i> INE Reverso</a>` : ''}
+                            </div>
+                        </div>
+                        <div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #fee2e2;">
+                            <strong style="color:#7f1d1d;font-size:13px;display:flex;align-items:center;gap:6px;">
+                                <i class="fas fa-sign-out-alt"></i> Entrega y Salida
+                            </strong>
+                            ${job.exitDriver ? `
+                                <p style="margin:6px 0 2px;font-size:12.5px;"><strong>Fecha Entrega:</strong> ${escapeHtml(job.exitDriver.exitDate || 'N/A')}</p>
+                                <p style="margin:2px 0;font-size:12.5px;"><strong>Chofer:</strong> ${escapeHtml(job.exitDriver.driverName || 'Mismo chofer')}</p>
+                                <p style="margin:2px 0;font-size:12.5px;"><strong>Reportó:</strong> ${escapeHtml(job.exitDriver.reportedBy || 'Taller Alfonso')}</p>
+                                <div style="display:flex;gap:8px;margin-top:8px;">
+                                    ${job.exitDriver.ineFrontUrl ? `<a href="${job.exitDriver.ineFrontUrl}" target="_blank" rel="noopener" style="font-size:11px;padding:4px 8px;background:#8B1E1E;color:white;border-radius:4px;text-decoration:none;"><i class="fas fa-id-card"></i> INE Frente</a>` : ''}
+                                    ${job.exitDriver.ineBackUrl ? `<a href="${job.exitDriver.ineBackUrl}" target="_blank" rel="noopener" style="font-size:11px;padding:4px 8px;background:#8B1E1E;color:white;border-radius:4px;text-decoration:none;"><i class="fas fa-id-card"></i> INE Reverso</a>` : ''}
+                                </div>
+                            ` : `<p style="color:#64748b;font-size:12px;margin-top:6px;font-style:italic;">Pendiente de entrega</p>`}
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
             <div style="grid-column:span 2;background:#f8f9fa;padding:16px;border-radius:10px;border:1px solid #e2e8f0;">
                 <h4 style="margin:0 0 12px;color:#0f172a;display:flex;align-items:center;justify-content:space-between;">
                     <span><i class="fas fa-stopwatch" style="color:var(--primary);"></i> Control y Justificación de Tiempos</span>
@@ -985,6 +1094,13 @@ async function handleConfirmStatusUpdate() {
     const job = jobsCache.find(j => j.id === currentJobId);
     if (!job) return;
 
+    // Si el mecánico marca el trabajo como finalizado, abrir el formulario oficial de entrega y salida
+    if (selectedStatus === JOB_STATUS.FINISHED) {
+        if (statusModal) statusModal.classList.remove('active');
+        openExitModal(job);
+        return;
+    }
+
     const now = serverTimestamp();
     const b = getJobTimeBreakdown(job);
 
@@ -1001,10 +1117,6 @@ async function handleConfirmStatusUpdate() {
         updateData.startTime = now;
     }
 
-    if (selectedStatus === JOB_STATUS.FINISHED) {
-        updateData.endTime = now;
-    }
-
     // Actualización local inmediata
     job.status = selectedStatus;
     job.lastStatusChange = new Date();
@@ -1014,9 +1126,6 @@ async function handleConfirmStatusUpdate() {
     job.totalTimeSeconds = b.activeSeconds;
     if (selectedStatus === JOB_STATUS.WORKING && !job.startTime) {
         job.startTime = new Date();
-    }
-    if (selectedStatus === JOB_STATUS.FINISHED) {
-        job.endTime = new Date();
     }
     renderJobs(jobsCache);
 
@@ -1054,6 +1163,313 @@ async function handleConfirmStatusUpdate() {
     } finally {
         confirmStatusUpdate.disabled = false;
         confirmStatusUpdate.textContent = 'Actualizar';
+    }
+}
+
+// ==============================================================
+// GESTIÓN DEL MODAL DE SALIDA / ENTREGA DE UNIDADES
+// ==============================================================
+
+function setupExitModalHandlers() {
+    if (!exitModal) return;
+
+    // Toggle de mismo chofer vs diferente chofer
+    if (sameDriverCheck) {
+        sameDriverCheck.addEventListener('change', () => {
+            const isSame = sameDriverCheck.checked;
+            if (sameDriverInfoBox) sameDriverInfoBox.style.display = isSame ? 'block' : 'none';
+            if (differentDriverFields) differentDriverFields.style.display = isSame ? 'none' : 'block';
+        });
+    }
+
+    // Manejo de captura de foto INE Frente
+    if (exitIneFrontInput) {
+        exitIneFrontInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            exitIneFrontFile = file;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                if (exitIneFrontImg) exitIneFrontImg.src = event.target.result;
+                if (exitIneFrontPlaceholder) exitIneFrontPlaceholder.style.display = 'none';
+                if (exitIneFrontPreview) exitIneFrontPreview.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (removeExitIneFrontBtn) {
+        removeExitIneFrontBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            exitIneFrontFile = null;
+            if (exitIneFrontInput) exitIneFrontInput.value = '';
+            if (exitIneFrontImg) exitIneFrontImg.src = '';
+            if (exitIneFrontPreview) exitIneFrontPreview.style.display = 'none';
+            if (exitIneFrontPlaceholder) exitIneFrontPlaceholder.style.display = 'flex';
+        });
+    }
+
+    // Manejo de captura de foto INE Reverso
+    if (exitIneBackInput) {
+        exitIneBackInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            exitIneBackFile = file;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                if (exitIneBackImg) exitIneBackImg.src = event.target.result;
+                if (exitIneBackPlaceholder) exitIneBackPlaceholder.style.display = 'none';
+                if (exitIneBackPreview) exitIneBackPreview.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (removeExitIneBackBtn) {
+        removeExitIneBackBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            exitIneBackFile = null;
+            if (exitIneBackInput) exitIneBackInput.value = '';
+            if (exitIneBackImg) exitIneBackImg.src = '';
+            if (exitIneBackPreview) exitIneBackPreview.style.display = 'none';
+            if (exitIneBackPlaceholder) exitIneBackPlaceholder.style.display = 'flex';
+        });
+    }
+
+    // Confirmar entrega y finalizar
+    if (confirmExitAndFinishBtn) {
+        confirmExitAndFinishBtn.addEventListener('click', handleConfirmExitAndFinish);
+    }
+}
+
+function resetExitIneInputs() {
+    exitIneFrontFile = null;
+    exitIneBackFile = null;
+
+    if (exitIneFrontInput) exitIneFrontInput.value = '';
+    if (exitIneFrontImg) exitIneFrontImg.src = '';
+    if (exitIneFrontPreview) exitIneFrontPreview.style.display = 'none';
+    if (exitIneFrontPlaceholder) exitIneFrontPlaceholder.style.display = 'flex';
+
+    if (exitIneBackInput) exitIneBackInput.value = '';
+    if (exitIneBackImg) exitIneBackImg.src = '';
+    if (exitIneBackPreview) exitIneBackPreview.style.display = 'none';
+    if (exitIneBackPlaceholder) exitIneBackPlaceholder.style.display = 'flex';
+
+    if (exitDriverNameInput) exitDriverNameInput.value = '';
+}
+
+function openExitModal(job) {
+    if (!job || !exitModal) return;
+    pendingExitJob = job;
+
+    // Validación de fecha: no puede ser anterior a la actual
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    if (exitDateInput) {
+        exitDateInput.min = todayStr;
+        exitDateInput.value = todayStr;
+    }
+
+    // Auto-completar datos preexistentes del trabajo
+    if (exitPlatesInput) {
+        exitPlatesInput.value = job.vehicle?.plates || '';
+    }
+    if (exitModelInput) {
+        exitModelInput.value = job.vehicle?.model || job.vehicle?.unit || '';
+    }
+    if (exitCompanyInput) {
+        exitCompanyInput.value = job.entryDriver?.company || job.client?.company || job.workDetails?.driverCompany || '';
+    }
+    if (exitReportByInput) {
+        exitReportByInput.value = currentMechanic?.fullName || currentMechanic?.name || 'Taller Mecánico Alfonso';
+    }
+
+    // Resumen del chofer de entrada
+    const entry = job.entryDriver || {};
+    const entryName = entry.driverName || job.workDetails?.driverName || 'Sin registrar';
+    const entryCompany = entry.company || job.client?.company || job.workDetails?.driverCompany || 'N/A';
+
+    if (sameDriverSummary) {
+        sameDriverSummary.innerHTML = `<strong>Chofer Registrado al Ingreso:</strong> ${escapeHtml(entryName)} &bull; <strong>Empresa:</strong> ${escapeHtml(entryCompany)}`;
+    }
+
+    // Miniaturas de la INE del chofer de entrada si existen
+    if (entryInePreviews) {
+        entryInePreviews.innerHTML = '';
+        if (entry.ineFrontUrl) {
+            entryInePreviews.innerHTML += `
+                <div style="text-align: center;">
+                    <span style="display: block; font-size: 11px; color: #64748b; margin-bottom: 2px;">INE Frente</span>
+                    <a href="${entry.ineFrontUrl}" target="_blank" rel="noopener">
+                        <img src="${entry.ineFrontUrl}" alt="INE Frente" style="width: 75px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    </a>
+                </div>
+            `;
+        }
+        if (entry.ineBackUrl) {
+            entryInePreviews.innerHTML += `
+                <div style="text-align: center;">
+                    <span style="display: block; font-size: 11px; color: #64748b; margin-bottom: 2px;">INE Reverso</span>
+                    <a href="${entry.ineBackUrl}" target="_blank" rel="noopener">
+                        <img src="${entry.ineBackUrl}" alt="INE Reverso" style="width: 75px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    </a>
+                </div>
+            `;
+        }
+        if (!entry.ineFrontUrl && !entry.ineBackUrl) {
+            entryInePreviews.innerHTML = `<span style="font-size: 11.5px; color: #94a3b8; font-style: italic;">No se capturaron fotos de INE al ingreso.</span>`;
+        }
+    }
+
+    // Estado por defecto del selector inteligente
+    if (sameDriverCheck) sameDriverCheck.checked = true;
+    if (sameDriverInfoBox) sameDriverInfoBox.style.display = 'block';
+    if (differentDriverFields) differentDriverFields.style.display = 'none';
+
+    resetExitIneInputs();
+    exitModal.classList.add('active');
+}
+
+async function handleConfirmExitAndFinish() {
+    if (!pendingExitJob) return;
+
+    const valDate = exitDateInput ? exitDateInput.value : '';
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // Validación estricta de fecha: no puede ser antes de la fecha actual
+    if (!valDate || valDate < todayStr) {
+        alert("La fecha de entrega es obligatoria y no puede ser anterior a la fecha actual.");
+        if (exitDateInput) exitDateInput.focus();
+        return;
+    }
+
+    const plates = exitPlatesInput ? exitPlatesInput.value.trim() : '';
+    const model = exitModelInput ? exitModelInput.value.trim() : '';
+    const company = exitCompanyInput ? exitCompanyInput.value.trim() : '';
+
+    if (!plates || !model || !company) {
+        alert("Por favor completa los campos requeridos: Placas, Modelo y Nombre de la Empresa.");
+        return;
+    }
+
+    const isSame = sameDriverCheck ? sameDriverCheck.checked : true;
+    const entry = pendingExitJob.entryDriver || {};
+    let finalDriverName = '';
+    let finalIneFrontUrl = '';
+    let finalIneBackUrl = '';
+
+    if (isSame) {
+        finalDriverName = entry.driverName || pendingExitJob.workDetails?.driverName || '';
+        finalIneFrontUrl = entry.ineFrontUrl || '';
+        finalIneBackUrl = entry.ineBackUrl || '';
+    } else {
+        finalDriverName = exitDriverNameInput ? exitDriverNameInput.value.trim() : '';
+
+        if (!finalDriverName) {
+            alert("Por favor indica el nombre del nuevo chofer que retira la unidad.");
+            if (exitDriverNameInput) exitDriverNameInput.focus();
+            return;
+        }
+    }
+
+    const reportedBy = exitReportByInput ? exitReportByInput.value.trim() : (currentMechanic?.fullName || 'Taller Mecánico Alfonso');
+
+    try {
+        confirmExitAndFinishBtn.disabled = true;
+        confirmExitAndFinishBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando entrega...';
+
+        // Subir fotos de INE del nuevo chofer si se capturaron
+        if (!isSame && (exitIneFrontFile || exitIneBackFile)) {
+            const cleanUnit = (pendingExitJob.vehicle?.unit || 'unidad').replace(/[^a-zA-Z0-9_-]/g, '_');
+            const timestamp = Date.now();
+
+            if (exitIneFrontFile) {
+                confirmExitAndFinishBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo INE Frente...';
+                const sRef = storageRef(storage, `trabajos/ine/${cleanUnit}_salida_frente_${timestamp}`);
+                await uploadBytesResumable(sRef, exitIneFrontFile);
+                finalIneFrontUrl = await getDownloadURL(sRef);
+            }
+
+            if (exitIneBackFile) {
+                confirmExitAndFinishBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo INE Reverso...';
+                const sRef = storageRef(storage, `trabajos/ine/${cleanUnit}_salida_reverso_${timestamp}`);
+                await uploadBytesResumable(sRef, exitIneBackFile);
+                finalIneBackUrl = await getDownloadURL(sRef);
+            }
+        }
+
+        const exitDriverData = {
+            exitDate: valDate,
+            plates: plates,
+            model: model,
+            company: company,
+            isSameDriver: isSame,
+            driverName: finalDriverName,
+            ineFrontUrl: finalIneFrontUrl,
+            ineBackUrl: finalIneBackUrl,
+            reportedBy: reportedBy,
+            completedAt: new Date().toISOString()
+        };
+
+        const now = serverTimestamp();
+        const b = getJobTimeBreakdown(pendingExitJob);
+
+        const updateData = {
+            status: JOB_STATUS.FINISHED,
+            lastStatusChange: now,
+            endTime: now,
+            activeTimeSeconds: b.activeSeconds,
+            pausedPartsSeconds: b.pausedPartsSeconds,
+            pausedExitSeconds: b.pausedExitSeconds,
+            totalTimeSeconds: b.activeSeconds,
+            exitDriver: exitDriverData
+        };
+
+        // Modo offline
+        if (!navigator.onLine) {
+            await enqueueOfflineOperation('UPDATE_JOB_STATUS_AND_EXIT', {
+                jobId: pendingExitJob.id,
+                ...updateData,
+                exitDriver: exitDriverData
+            });
+            exitModal.classList.remove('active');
+            showStatus('Entrega registrada localmente (Offline). Se sincronizará al conectar.', 'info');
+        } else {
+            const jobRef = doc(db, "Trabajos", pendingExitJob.id);
+            await updateDoc(jobRef, updateData);
+        }
+
+        // Actualización local inmediata
+        pendingExitJob.status = JOB_STATUS.FINISHED;
+        pendingExitJob.endTime = new Date();
+        pendingExitJob.exitDriver = exitDriverData;
+        renderJobs(jobsCache);
+
+        exitModal.classList.remove('active');
+        showStatus('Trabajo finalizado y registro de salida completado con éxito.', 'success');
+
+        // Preguntar al mecánico si desea generar y descargar el reporte de Entrada y Salida
+        setTimeout(async () => {
+            const wantsPdf = confirm("¡Trabajo finalizado con éxito!\n\n¿Deseas generar y descargar el Reporte Oficial de Entrada y Salida (PDF) ahora mismo?");
+            if (wantsPdf) {
+                try {
+                    await generateEntryExitReport(pendingExitJob);
+                } catch (pdfErr) {
+                    console.error("Error generando PDF de Entrada y Salida:", pdfErr);
+                    alert("No se pudo generar el PDF automáticamente: " + pdfErr.message);
+                }
+            }
+        }, 300);
+
+    } catch (err) {
+        console.error("Error al finalizar trabajo y registrar salida:", err);
+        alert(`Error al registrar salida: ${err.message}`);
+    } finally {
+        confirmExitAndFinishBtn.disabled = false;
+        confirmExitAndFinishBtn.innerHTML = '<i class="fas fa-check-double"></i> Confirmar Entrega y Finalizar';
     }
 }
 

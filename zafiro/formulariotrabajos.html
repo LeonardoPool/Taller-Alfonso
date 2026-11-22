@@ -307,10 +307,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label for="driverName" class="required">Nombre del Chofer</label>
-                            <input type="text" id="driverName" name="driverName" required>
-                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -340,6 +336,61 @@
                     </div>
                 </div>
                 
+                <!-- Datos del Chofer (Entrada / Recepción de Unidad) -->
+                <div class="form-section" id="sectionDriverData">
+                    <h2 class="section-title"><i class="fas fa-id-card"></i> Datos del Chofer (Recepción de Unidad)</h2>
+                    <p class="section-hint" style="color: #64748b; font-size: 13px; margin-bottom: 15px;">Registro de identificación del chofer o encargado que ingresa la unidad al taller.</p>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="driverName" class="required">Nombre del Chofer o Encargado</label>
+                            <input type="text" id="driverName" name="driverName" required placeholder="Nombre completo del chofer">
+                        </div>
+                        <div class="form-group">
+                            <label for="driverCompany" class="required">Nombre de la Empresa</label>
+                            <input type="text" id="driverCompany" name="driverCompany" required placeholder="Empresa a la que pertenece">
+                        </div>
+                    </div>
+
+                    <div class="ine-capture-grid">
+                        <div class="ine-capture-card">
+                            <label class="ine-label"><i class="fas fa-camera"></i> Foto INE - Anverso (Frente)</label>
+                            <div class="ine-upload-area" id="ineFrontArea">
+                                <div class="ine-placeholder" id="ineFrontPlaceholder">
+                                    <i class="fas fa-address-card"></i>
+                                    <p>Tomar foto del <strong>frente de la INE</strong></p>
+                                    <label class="btn-camera-capture" for="ineFrontInput">
+                                        <i class="fas fa-camera"></i> Tomar Foto
+                                    </label>
+                                    <input type="file" id="ineFrontInput" accept="image/*" capture="environment" style="display: none;">
+                                </div>
+                                <div class="ine-preview-container" id="ineFrontPreview" style="display: none;">
+                                    <img id="ineFrontImg" src="" alt="Frente INE">
+                                    <button type="button" class="btn-remove-ine" id="removeIneFront" title="Eliminar foto"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ine-capture-card">
+                            <label class="ine-label"><i class="fas fa-camera"></i> Foto INE - Reverso (Vuelta)</label>
+                            <div class="ine-upload-area" id="ineBackArea">
+                                <div class="ine-placeholder" id="ineBackPlaceholder">
+                                    <i class="fas fa-barcode"></i>
+                                    <p>Tomar foto del <strong>reverso de la INE</strong></p>
+                                    <label class="btn-camera-capture" for="ineBackInput">
+                                        <i class="fas fa-camera"></i> Tomar Foto
+                                    </label>
+                                    <input type="file" id="ineBackInput" accept="image/*" capture="environment" style="display: none;">
+                                </div>
+                                <div class="ine-preview-container" id="ineBackPreview" style="display: none;">
+                                    <img id="ineBackImg" src="" alt="Reverso INE">
+                                    <button type="button" class="btn-remove-ine" id="removeIneBack" title="Eliminar foto"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Firma de conformidad -->
                 <div class="form-section">
                     <h2 class="section-title"><i class="fas fa-signature"></i> Firma de Conformidad</h2>
